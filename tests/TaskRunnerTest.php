@@ -42,7 +42,11 @@ final class TaskRunnerTest extends TestCase
 
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertSame(1, $provider->calls);
+        self::assertIsInt($this->stateAt($store->state, 'tasks.docs:refresh.last_finished_at'));
         self::assertTrue($this->stateAt($store->state, 'tasks.docs:refresh.last_successful'));
+        self::assertSame('Documentation refresh completed.', $this->stateAt($store->state, 'tasks.docs:refresh.last_message'));
+        self::assertIsArray($store->state['tasks'] ?? null);
+        self::assertArrayNotHasKey('.last_finished_at', $store->state['tasks']);
         self::assertSame(1, $this->stateAt($store->state, 'providers.local-null-provider.usage.' . gmdate('Y-m-d')));
     }
 

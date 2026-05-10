@@ -18,7 +18,15 @@ final class HousekeepingStateCommandTest extends TestCase
         $configFile = $dir . '/tasks.php';
         $stateFile = $dir . '/state/state.json';
         (new Filesystem())->mkdir(dirname($stateFile));
-        file_put_contents($stateFile, json_encode(['tasks' => ['demo' => ['last_message' => 'ok']]], JSON_PRETTY_PRINT) . PHP_EOL);
+        file_put_contents($stateFile, json_encode([
+            'tasks' => [
+                'demo' => [
+                    'last_message' => 'ok',
+                    'url' => 'https://example.com/docs',
+                    'symbol' => '☃',
+                ],
+            ],
+        ], JSON_PRETTY_PRINT) . PHP_EOL);
         file_put_contents($configFile, '<?php return ' . var_export([
             'paths' => [
                 'state' => $stateFile,
@@ -39,6 +47,8 @@ final class HousekeepingStateCommandTest extends TestCase
 
             self::assertSame(ExitCode::SUCCESS, $exitCode);
             self::assertStringContainsString('"last_message": "ok"', $tester->getDisplay());
+            self::assertStringContainsString('"url": "https://example.com/docs"', $tester->getDisplay());
+            self::assertStringContainsString('"symbol": "☃"', $tester->getDisplay());
         } finally {
             (new Filesystem())->remove($dir);
         }

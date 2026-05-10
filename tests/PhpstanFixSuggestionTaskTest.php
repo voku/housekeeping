@@ -79,6 +79,8 @@ final class PhpstanFixSuggestionTaskTest extends TestCase
             self::assertSame('PHPStan suggestions prepared.', $result->message);
             self::assertSame(1, $provider->calls);
             self::assertIsArray($provider->payload);
+            self::assertSame($workingDirectory, $provider->payload['working_directory'] ?? null);
+            self::assertSame(['php', '-r', 'fwrite(STDOUT, "Found issue"); exit(1);'], $provider->payload['command'] ?? null);
             self::assertSame('Found issue', $provider->payload['analysis_output'] ?? null);
         } finally {
             (new Filesystem())->remove($workingDirectory);

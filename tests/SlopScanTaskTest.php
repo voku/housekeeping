@@ -90,6 +90,8 @@ final class SlopScanTaskTest extends TestCase
             self::assertSame('slop-scan suggestions prepared.', $result->message);
             self::assertSame(1, $provider->calls);
             self::assertIsArray($provider->payload);
+            self::assertSame($workingDirectory, $provider->payload['working_directory'] ?? null);
+            self::assertSame($taskCommand = ['php', '-r', 'fwrite(STDOUT, ' . var_export($report, true) . '); exit(1);'], $provider->payload['command'] ?? null);
             self::assertIsArray($provider->payload['report'] ?? null);
             self::assertIsArray($provider->payload['report']['summary'] ?? null);
             self::assertSame(1, $provider->payload['report']['summary']['findingCount'] ?? null);
@@ -169,6 +171,7 @@ final class SlopScanTaskTest extends TestCase
             self::assertTrue($result->successful);
             self::assertTrue($result->skipped);
             self::assertSame('slop-scan PHAR requires PHP 8.4+; the configured runtime is incompatible.', $result->message);
+            self::assertSame(['php', '-r', 'fwrite(STDERR, \'Your Composer dependencies require a PHP version ">= 8.4.0".\'); exit(255);'], $result->context['command'] ?? null);
         } finally {
             (new Filesystem())->remove($workingDirectory);
         }
