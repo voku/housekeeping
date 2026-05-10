@@ -1,0 +1,40 @@
+name: agent-cron-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent-cron
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer analyse
+      - run: composer test
+
+  ai-slop:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent-cron
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: xdebug
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer analyse
+      - run: composer install-slop-scan
+      - run: php bin/agent-cron housekeeping:run --task=slop:scan
+      - run: composer install-infection
+      - run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml
+      - run: php tools/infection.phar --configuration=infection.json5 --skip-initial-tests --coverage=build/coverage --no-progress --no-interaction
