@@ -41,6 +41,22 @@ return [
             'command' => ['vendor/bin/phpstan', 'analyse', '--level=max', 'src', 'tests', '--no-progress'],
             'timeout_seconds' => 300,
         ],
+        'slop:scan' => [
+            'enabled' => true,
+            'interval_seconds' => 43200,
+            'provider' => 'local-null-provider',
+            'working_directory' => $packageRoot,
+            'command' => [
+                PHP_BINARY,
+                $packageRoot . '/tools/slop-scan.phar',
+                'scan',
+                '.',
+                '--json',
+                '--config-file',
+                $packageRoot . '/slop-scan.config.json',
+            ],
+            'timeout_seconds' => 300,
+        ],
     ],
     'providers' => [
         'local-null-provider' => [

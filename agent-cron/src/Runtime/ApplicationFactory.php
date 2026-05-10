@@ -14,6 +14,7 @@ use HousekeepingAgentCron\State\JsonStateStore;
 use HousekeepingAgentCron\Task\DependencyAuditTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
+use HousekeepingAgentCron\Task\SlopScanTask;
 use HousekeepingAgentCron\Task\TodoRefinementTask;
 use RuntimeException;
 
@@ -163,6 +164,7 @@ final class ApplicationFactory
             'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles),
             'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
             'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
+            'slop:scan' => new SlopScanTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
             default => throw new RuntimeException('Unknown task configuration: ' . $name),
         };
     }

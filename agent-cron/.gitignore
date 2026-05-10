@@ -7,3 +7,5 @@
 !var/lock/.gitkeep
 
 /.phpunit.result.cache
+/tools/*.phar
+!/tools/.gitkeep
