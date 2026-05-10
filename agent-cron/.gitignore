@@ -1,0 +1,7 @@
+/vendor/
+/var/logs/*.log
+/var/state/*.json
+/var/lock/*
+!var/logs/.gitkeep
+!var/state/.gitkeep
+!var/lock/.gitkeep
