@@ -12,6 +12,23 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class HousekeepingProvidersCommandTest extends TestCase
 {
+    /**
+     * @return list<string>
+     */
+    private function resourceCommand(string $label, int $remainingPercent, int $resetInSeconds): array
+    {
+        return [
+            PHP_BINARY,
+            '-r',
+            sprintf(
+                'echo json_encode(["session" => ["label" => "%s", "remaining_percent" => %d, "reset_in_seconds" => %d]], JSON_UNESCAPED_UNICODE);',
+                $label,
+                $remainingPercent,
+                $resetInSeconds,
+            ),
+        ];
+    }
+
     public function testProvidersCommandPrintsRecommendedProviderAndJson(): void
     {
         $dir = sys_get_temp_dir() . '/agent-cron-providers-' . bin2hex(random_bytes(4));
@@ -39,14 +56,14 @@ final class HousekeepingProvidersCommandTest extends TestCase
                     'daily_budget' => 10,
                     'cooldown_seconds' => 0,
                     'working_directory' => __DIR__,
-                    'resource_command' => [PHP_BINARY, '-r', 'echo json_encode(["session" => ["label" => "grüße codex", "remaining_percent" => 70, "reset_in_seconds" => 7200]], JSON_UNESCAPED_UNICODE);'],
+                    'resource_command' => $this->resourceCommand('grüße codex', 70, 7200),
                 ],
                 'gemini' => [
                     'enabled' => true,
                     'daily_budget' => 20,
                     'cooldown_seconds' => 0,
                     'working_directory' => __DIR__,
-                    'resource_command' => [PHP_BINARY, '-r', 'echo json_encode(["session" => ["label" => "grüße gemini", "remaining_percent" => 90, "reset_in_seconds" => 3600]], JSON_UNESCAPED_UNICODE);'],
+                    'resource_command' => $this->resourceCommand('grüße gemini', 90, 3600),
                 ],
             ],
         ], true) . ';');

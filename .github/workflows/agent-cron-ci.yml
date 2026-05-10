@@ -42,8 +42,9 @@ jobs:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
         run: |
+          zero_sha='0000000000000000000000000000000000000000'
           base_sha="${PR_BASE_SHA:-$PUSH_BEFORE_SHA}"
-          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+          if [ -z "$base_sha" ] || [ "$base_sha" = "$zero_sha" ]; then
             base_sha="$(git rev-parse HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)"
           fi
           echo "sha=$base_sha" >> "$GITHUB_OUTPUT"

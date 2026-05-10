@@ -209,6 +209,8 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame(1, $method->invoke($inspector, 1));
         self::assertSame(0, $method->invoke($inspector, 0));
         self::assertSame(0, $method->invoke($inspector, -1));
+        self::assertSame(0, $method->invoke($inspector, 2.5));
         self::assertSame(0, $method->invoke($inspector, '2'));
+        self::assertSame(0, $method->invoke($inspector, ['2']));
     }
 }
