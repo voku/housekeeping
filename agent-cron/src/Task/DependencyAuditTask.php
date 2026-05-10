@@ -40,15 +40,24 @@ final readonly class DependencyAuditTask extends AbstractProviderTask
 
         $process = $this->processExecutor->execute($this->command, $this->workingDirectory, $this->timeoutSeconds);
         if ($process->timedOut) {
-            return TaskResult::failure('Dependency audit command timed out.', ['command' => $process->command]);
+            return TaskResult::failure('Dependency audit command timed out.', [
+                'command' => $process->command,
+                'working_directory' => $process->workingDirectory,
+            ]);
         }
         if (!$process->successful()) {
-            return TaskResult::failure('Dependency audit command failed.', [
+            $context = [
                 'command' => $process->command,
+                'working_directory' => $process->workingDirectory,
                 'exit_code' => $process->exitCode,
                 'stderr' => $process->stderr,
                 'stdout' => $process->stdout,
-            ]);
+            ];
+            if ($process->exceptionMessage !== null) {
+                $context['exception'] = $process->exceptionMessage;
+            }
+
+            return TaskResult::failure('Dependency audit command failed.', $context);
         }
 
         return $this->executeProvider(

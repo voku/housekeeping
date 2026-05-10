@@ -15,12 +15,14 @@ final readonly class ProcessResult
         public string $stdout,
         public string $stderr,
         public bool $timedOut,
+        public string $workingDirectory,
+        public ?string $exceptionMessage = null,
     ) {
     }
 
     public function successful(): bool
     {
-        return !$this->timedOut && $this->exitCode === 0;
+        return !$this->timedOut && $this->exceptionMessage === null && $this->exitCode === 0;
     }
 
     public function combinedOutput(): string

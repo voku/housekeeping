@@ -56,4 +56,44 @@ final class HousekeepingRunCommandTest extends TestCase
             (new Filesystem())->remove($dir);
         }
     }
+
+    public function testUnknownTaskOptionReturnsInvalidConfig(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-command-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        (new Filesystem())->mkdir($dir);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'max_run_seconds' => 900,
+            'max_tasks_per_run' => 3,
+            'paths' => [
+                'logs' => $dir . '/logs',
+                'state' => $dir . '/state/state.json',
+                'lock' => $dir . '/lock',
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'interval_seconds' => 3600,
+                    'provider' => 'local-null-provider',
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                    'daily_budget' => 24,
+                    'cooldown_seconds' => 0,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingRunCommand($configFile));
+            $exitCode = $tester->execute(['--task' => 'unknown']);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            self::assertStringContainsString('Unknown task configured for --task: unknown', $tester->getDisplay());
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
 }

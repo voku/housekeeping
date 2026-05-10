@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace HousekeepingAgentCron\Command;
 
+use HousekeepingAgentCron\Contract\HousekeepingTask;
 use HousekeepingAgentCron\Runtime\ApplicationFactory;
 use HousekeepingAgentCron\Runtime\ExitCode;
 use HousekeepingAgentCron\Runtime\RunContext;
@@ -39,6 +40,7 @@ final class HousekeepingRunCommand extends Command
     {
         try {
             $config = $this->factory->loadConfig($this->configFile);
+            $tasks = $this->factory->tasks($config);
             $lockDir = $this->factory->lockDir($config);
             (new Filesystem())->mkdir($lockDir);
             $lock = (new LockFactory(new FlockStore($lockDir)))->createLock('housekeeping-run', 1.0, false);
@@ -53,7 +55,7 @@ final class HousekeepingRunCommand extends Command
                 $logger = $this->factory->logger($config);
                 $context = new RunContext(
                     (bool) $input->getOption('dry-run'),
-                    $this->taskOption($input),
+                    $this->taskOption($input, $tasks),
                     time(),
                     $config,
                     $stateStore->load(),
@@ -65,7 +67,7 @@ final class HousekeepingRunCommand extends Command
                     'dry_run' => $context->dryRun,
                     'task_filter' => $context->taskFilter,
                 ]);
-                $exitCode = (new TaskRunner($this->factory->tasks($config)))->run($context);
+                $exitCode = (new TaskRunner($tasks))->run($context);
                 $logger->log($exitCode === ExitCode::SUCCESS ? 'info' : 'error', 'run_finished', ['exit_code' => $exitCode]);
                 $output->writeln($exitCode === ExitCode::SUCCESS ? '<info>Housekeeping run completed.</info>' : '<error>Housekeeping run completed with errors.</error>');
 
@@ -80,7 +82,10 @@ final class HousekeepingRunCommand extends Command
         }
     }
 
-    private function taskOption(InputInterface $input): ?string
+    /**
+     * @param list<HousekeepingTask> $tasks
+     */
+    private function taskOption(InputInterface $input, array $tasks): ?string
     {
         $task = $input->getOption('task');
         if ($task === null) {
@@ -88,6 +93,10 @@ final class HousekeepingRunCommand extends Command
         }
         if (!is_string($task) || $task === '') {
             throw new RuntimeException('The --task option must be a non-empty task name.');
+        }
+        $knownTasks = array_map(static fn (HousekeepingTask $configuredTask): string => $configuredTask->name(), $tasks);
+        if (!in_array($task, $knownTasks, true)) {
+            throw new RuntimeException('Unknown task configured for --task: ' . $task);
         }
 
         return $task;

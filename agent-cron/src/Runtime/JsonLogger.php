@@ -4,13 +4,35 @@ declare(strict_types=1);
 
 namespace HousekeepingAgentCron\Runtime;
 
+use RuntimeException;
+
 final readonly class JsonLogger
 {
     public function __construct(private string $logFile)
     {
         $dir = dirname($this->logFile);
         if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+            $mkdirError = null;
+            set_error_handler(static function (int $severity, string $message) use (&$mkdirError): bool {
+                $mkdirError = $message;
+
+                return true;
+            });
+
+            try {
+                $created = mkdir($dir, 0775, true);
+            } finally {
+                restore_error_handler();
+            }
+
+            if (!$created && !is_dir($dir)) {
+                $message = 'Unable to create log directory: ' . $dir . ' for ' . $this->logFile;
+                if (is_string($mkdirError) && $mkdirError !== '') {
+                    $message .= ' (' . $mkdirError . ')';
+                }
+
+                throw new RuntimeException($message);
+            }
         }
     }
 
