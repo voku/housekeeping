@@ -200,7 +200,7 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame(0, $method->invoke($inspector, 'unknown'));
     }
 
-    public function testPositiveIntReturnsOnlyPositiveIntegers(): void
+    public function testPositiveIntSanitizesInputToNonNegativeIntegers(): void
     {
         $inspector = new ProviderCapacityInspector();
         $method = new ReflectionMethod($inspector, 'positiveInt');
