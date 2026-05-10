@@ -1,7 +1,15 @@
 {
-    "name": "voku/housekeeping-agent-cron",
-    "description": "Standalone Symfony Console housekeeping cron runner.",
+    "name": "voku/housekeeping",
+    "description": "Standalone Symfony Console housekeeping cron runner for safe, scheduled project maintenance.",
     "type": "project",
+    "license": "MIT",
+    "keywords": [
+        "automation",
+        "cron",
+        "housekeeping",
+        "maintenance",
+        "symfony-console"
+    ],
     "require": {
         "php": "^8.2",
         "symfony/console": "^7.4",

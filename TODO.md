@@ -29,7 +29,7 @@ DESIGN / PLAN
 
 1. Package layout
 
-agent-cron/
+./
 ├── bin/
 │   └── agent-cron
 ├── config/
@@ -190,7 +190,7 @@ php bin/agent-cron housekeeping:state
 
 Hourly:
 
-7 * * * * cd /path/to/agent-cron && /usr/bin/php bin/agent-cron housekeeping:run >> var/logs/cron.log 2>&1
+7 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron housekeeping:run >> var/logs/cron.log 2>&1
 
 Use minute 7, not 0, to avoid every machine on earth waking up at the same minute like a cursed choir.
 
@@ -227,7 +227,7 @@ Acceptance criteria
 The first version is done when:
 
 composer install
-vendor/bin/phpstan analyse --level=max src
+vendor/bin/phpstan analyse --level=max src tests
 vendor/bin/phpunit
 php bin/agent-cron housekeeping:list
 php bin/agent-cron housekeeping:run --dry-run

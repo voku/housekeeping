@@ -13,18 +13,8 @@ final readonly class JsonStateStore implements StateStore
     {
         $dir = dirname($this->path);
         if (!is_dir($dir)) {
-            $mkdirError = null;
-            set_error_handler(static function (int $severity, string $message) use (&$mkdirError): bool {
-                $mkdirError = $message;
-
-                return true;
-            });
-
-            try {
-                $created = mkdir($dir, 0775, true);
-            } finally {
-                restore_error_handler();
-            }
+            $created = @mkdir($dir, 0775, true);
+            $mkdirError = error_get_last()['message'] ?? null;
 
             if (!$created && !is_dir($dir)) {
                 $message = 'Unable to create state directory: ' . $dir . ' for ' . $this->path;
