@@ -35,7 +35,7 @@ abstract readonly class CliProvider implements ProviderAdapter
         }
 
         $prompt = $this->formatPrompt($request);
-        $command = $this->commandWithPrompt($prompt);
+        $command = $this->commandWithYoloFlag();
         if ($prompt === '') {
             return ProviderResult::failure('Unable to encode provider request payload.');
         }
@@ -81,22 +81,12 @@ abstract readonly class CliProvider implements ProviderAdapter
     /**
      * @return list<string>
      */
-    private function commandWithPrompt(string $prompt): array
+    private function commandWithYoloFlag(): array
     {
         $command = $this->command;
         if (!in_array('--yolo', $command, true)) {
             $command[] = '--yolo';
         }
-
-        foreach ($command as $index => $argument) {
-            if ($argument === '%PROMPT%') {
-                $command[$index] = $prompt;
-
-                return $command;
-            }
-        }
-
-        $command[] = $prompt;
 
         return $command;
     }

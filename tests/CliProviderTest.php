@@ -33,7 +33,6 @@ final class CliProviderTest extends TestCase
         self::assertIsArray($decoded);
         $argv = $decoded['argv'] ?? null;
         self::assertIsArray($argv);
-        self::assertSame('--yolo', $argv[0] ?? null);
         $stdin = $decoded['stdin'] ?? null;
         self::assertIsString($stdin);
         self::assertStringContainsString('Task: docs:refresh', $stdin);

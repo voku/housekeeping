@@ -102,7 +102,7 @@ final readonly class CommitLearningTask extends AbstractProviderTask
     }
 
     /**
-     * @return list<array{sha: string, committed_at: string, subject: string, body: string, files: list<string>}>
+     * @return list<array{sha: string, committed_at: ?string, subject: string, body: string, files: list<string>}>
      */
     private function parseCommits(string $output): array
     {
@@ -141,7 +141,7 @@ final readonly class CommitLearningTask extends AbstractProviderTask
 
             $commits[] = [
                 'sha' => $sha,
-                'committed_at' => is_numeric($timestamp) ? gmdate(DATE_ATOM, (int) $timestamp) : '',
+                'committed_at' => is_numeric($timestamp) ? gmdate(DATE_ATOM, (int) $timestamp) : null,
                 'subject' => $subject,
                 'body' => trim($body),
                 'files' => array_values(array_unique($files)),

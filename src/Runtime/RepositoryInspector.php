@@ -126,7 +126,13 @@ final readonly class RepositoryInspector
             return false;
         }
 
-        return $fileInfo->getExtension() === '' || in_array(strtolower($fileInfo->getExtension()), ['md', 'txt'], true) || str_starts_with($relativePath, 'docs/');
+        if (str_starts_with($relativePath, 'docs/')) {
+            return true;
+        }
+
+        $extension = strtolower($fileInfo->getExtension());
+
+        return $extension === '' || in_array($extension, ['md', 'txt'], true);
     }
 
     /**
