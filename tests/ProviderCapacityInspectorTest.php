@@ -6,6 +6,7 @@ namespace HousekeepingAgentCron\Tests;
 
 use HousekeepingAgentCron\Runtime\ProviderCapacityInspector;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 final class ProviderCapacityInspectorTest extends TestCase
 {
@@ -182,5 +183,32 @@ final class ProviderCapacityInspectorTest extends TestCase
 
         self::assertCount(1, $reports);
         self::assertSame(gmmktime(15, 0, 0, 5, 10, 2026), $reports[0]->externalResetAt);
+    }
+
+    public function testStatusPriorityValuesRemainStable(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $method = new ReflectionMethod($inspector, 'statusPriority');
+
+        self::assertSame(7, $method->invoke($inspector, 'ready'));
+        self::assertSame(6, $method->invoke($inspector, 'ready-no-probe'));
+        self::assertSame(5, $method->invoke($inspector, 'probe-failed'));
+        self::assertSame(4, $method->invoke($inspector, 'external-exhausted'));
+        self::assertSame(3, $method->invoke($inspector, 'cooldown-active'));
+        self::assertSame(2, $method->invoke($inspector, 'budget-exhausted'));
+        self::assertSame(1, $method->invoke($inspector, 'disabled'));
+        self::assertSame(0, $method->invoke($inspector, 'unknown'));
+    }
+
+    public function testPositiveIntReturnsOnlyPositiveIntegers(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $method = new ReflectionMethod($inspector, 'positiveInt');
+
+        self::assertSame(2, $method->invoke($inspector, 2));
+        self::assertSame(1, $method->invoke($inspector, 1));
+        self::assertSame(0, $method->invoke($inspector, 0));
+        self::assertSame(0, $method->invoke($inspector, -1));
+        self::assertSame(0, $method->invoke($inspector, '2'));
     }
 }

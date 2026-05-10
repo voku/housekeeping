@@ -38,7 +38,7 @@ final class HousekeepingProvidersCommand extends Command
             $config = $this->factory->loadConfig($this->configFile);
             $reports = $this->inspector->inspect($config, $this->factory->stateStore($config)->load());
 
-            if ((bool) $input->getOption('json')) {
+            if ($input->getOption('json') === true) {
                 $json = json_encode([
                     'recommended_provider' => $this->recommendedProvider($reports),
                     'providers' => array_map(static fn (ProviderCapacityReport $report): array => $report->toArray(), $reports),

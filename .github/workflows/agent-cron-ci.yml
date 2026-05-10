@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -34,4 +36,15 @@ jobs:
       - run: php bin/agent-cron housekeeping:run --task=slop:scan
       - run: composer install-infection
       - run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml
-      - run: php tools/infection.phar --configuration=infection.json5 --skip-initial-tests --coverage=build/coverage --no-progress --no-interaction
+      - name: Determine Infection diff base
+        id: infection-base
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          base_sha="${PR_BASE_SHA:-$PUSH_BEFORE_SHA}"
+          if [ -z "$base_sha" ] || [ "$base_sha" = "0000000000000000000000000000000000000000" ]; then
+            base_sha="$(git rev-parse HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)"
+          fi
+          echo "sha=$base_sha" >> "$GITHUB_OUTPUT"
+      - run: php tools/infection.phar --configuration=infection.json5 --skip-initial-tests --coverage=build/coverage --git-diff-filter=AM --git-diff-base=${{ steps.infection-base.outputs.sha }} --min-msi=100 --min-covered-msi=100 --ignore-msi-with-no-mutations --no-progress --no-interaction

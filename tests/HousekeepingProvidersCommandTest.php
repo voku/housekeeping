@@ -39,14 +39,14 @@ final class HousekeepingProvidersCommandTest extends TestCase
                     'daily_budget' => 10,
                     'cooldown_seconds' => 0,
                     'working_directory' => __DIR__,
-                    'resource_command' => ['php', '-r', 'echo json_encode(["session" => ["remaining_percent" => 70, "reset_in_seconds" => 7200]]);'],
+                    'resource_command' => [PHP_BINARY, '-r', 'echo json_encode(["session" => ["label" => "grüße codex", "remaining_percent" => 70, "reset_in_seconds" => 7200]], JSON_UNESCAPED_UNICODE);'],
                 ],
                 'gemini' => [
                     'enabled' => true,
                     'daily_budget' => 20,
                     'cooldown_seconds' => 0,
                     'working_directory' => __DIR__,
-                    'resource_command' => ['php', '-r', 'echo json_encode(["session" => ["remaining_percent" => 90, "reset_in_seconds" => 3600]]);'],
+                    'resource_command' => [PHP_BINARY, '-r', 'echo json_encode(["session" => ["label" => "grüße gemini", "remaining_percent" => 90, "reset_in_seconds" => 3600]], JSON_UNESCAPED_UNICODE);'],
                 ],
             ],
         ], true) . ';');
@@ -56,19 +56,38 @@ final class HousekeepingProvidersCommandTest extends TestCase
             $exitCode = $tester->execute([]);
 
             self::assertSame(ExitCode::SUCCESS, $exitCode);
-            self::assertStringContainsString('Recommended provider: gemini', $tester->getDisplay());
-            self::assertStringContainsString('External capacity', $tester->getDisplay());
+            $display = $tester->getDisplay();
+            self::assertStringContainsString('Recommended provider: gemini', $display);
+            self::assertStringContainsString('External capacity', $display);
+            self::assertMatchesRegularExpression('/\bProvider\s+Status\s+Budget\b/', $display);
+            self::assertMatchesRegularExpression('/\bgemini\s+ready\s+20\/20 left\b/', $display);
+            self::assertMatchesRegularExpression('/\bcodex\s+ready\s+9\/10 left\b/', $display);
 
             $jsonTester = new CommandTester(new HousekeepingProvidersCommand($configFile));
             $jsonExitCode = $jsonTester->execute(['--json' => true]);
 
             self::assertSame(ExitCode::SUCCESS, $jsonExitCode);
-            $decoded = json_decode($jsonTester->getDisplay(), true);
+            $jsonDisplay = $jsonTester->getDisplay();
+            self::assertStringContainsString("\n    \"providers\": [\n", $jsonDisplay);
+            self::assertStringContainsString(PHP_BINARY, $jsonDisplay);
+            self::assertStringContainsString('grüße gemini', $jsonDisplay);
+            self::assertStringNotContainsString('\\/', $jsonDisplay);
+            self::assertStringNotContainsString('\u00fc', $jsonDisplay);
+
+            $decoded = json_decode($jsonDisplay, true);
             self::assertIsArray($decoded);
             self::assertSame('gemini', $decoded['recommended_provider'] ?? null);
             $providers = $decoded['providers'] ?? null;
             self::assertIsArray($providers);
             self::assertCount(2, $providers);
+            self::assertIsArray($providers[0] ?? null);
+            $firstProvider = $providers[0];
+            self::assertSame('gemini', $firstProvider['provider'] ?? null);
+            self::assertIsArray($firstProvider['probe_command'] ?? null);
+            self::assertSame(PHP_BINARY, $firstProvider['probe_command'][0] ?? null);
+            self::assertIsArray($firstProvider['external_metrics'] ?? null);
+            self::assertIsArray($firstProvider['external_metrics'][0] ?? null);
+            self::assertSame('grüße gemini', $firstProvider['external_metrics'][0]['label'] ?? null);
         } finally {
             (new Filesystem())->remove($dir);
         }
