@@ -52,6 +52,17 @@ final readonly class SlopScanTask extends AbstractProviderTask
                 'exception' => $process->exceptionMessage,
             ]);
         }
+        if (
+            !$process->successful()
+            && str_contains($process->stderr, 'require a PHP version ">= 8.4.0"')
+        ) {
+            return TaskResult::skipped('slop-scan PHAR requires PHP 8.4+; the configured runtime is incompatible.', [
+                'command' => $process->command,
+                'working_directory' => $process->workingDirectory,
+                'exit_code' => $process->exitCode,
+                'stderr' => $process->stderr,
+            ]);
+        }
         if ($process->stdout === '') {
             if (!$process->successful()) {
                 return TaskResult::failure('slop-scan command failed.', [

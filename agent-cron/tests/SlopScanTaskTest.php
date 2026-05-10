@@ -139,4 +139,38 @@ final class SlopScanTaskTest extends TestCase
             (new Filesystem())->remove($workingDirectory);
         }
     }
+
+    public function testPhpRuntimeMismatchIsSkippedWithActionableMessage(): void
+    {
+        $workingDirectory = sys_get_temp_dir() . '/agent-cron-slop-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($workingDirectory);
+
+        $task = new SlopScanTask(
+            3600,
+            'local-null-provider',
+            new ProcessExecutor(),
+            $workingDirectory,
+            ['php', '-r', 'fwrite(STDERR, \'Your Composer dependencies require a PHP version ">= 8.4.0".\'); exit(255);'],
+            30,
+        );
+
+        try {
+            $result = $task->run(new RunContext(
+                false,
+                null,
+                time(),
+                ['providers' => []],
+                ['tasks' => [], 'providers' => [], 'runs' => []],
+                new InMemoryStateStore(),
+                new JsonLogger($workingDirectory . '/logs/housekeeping.log'),
+                [],
+            ));
+
+            self::assertTrue($result->successful);
+            self::assertTrue($result->skipped);
+            self::assertSame('slop-scan PHAR requires PHP 8.4+; the configured runtime is incompatible.', $result->message);
+        } finally {
+            (new Filesystem())->remove($workingDirectory);
+        }
+    }
 }
