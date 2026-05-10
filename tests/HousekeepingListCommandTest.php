@@ -20,6 +20,8 @@ final class HousekeepingListCommandTest extends TestCase
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertStringContainsString('Task', $tester->getDisplay());
         self::assertStringContainsString('Provider', $tester->getDisplay());
+        self::assertStringContainsString('project:discover', $tester->getDisplay());
+        self::assertStringContainsString('commits:learn', $tester->getDisplay());
         self::assertStringContainsString('docs:refresh', $tester->getDisplay());
         self::assertStringContainsString('todo:refine', $tester->getDisplay());
         self::assertStringContainsString('deps:audit', $tester->getDisplay());

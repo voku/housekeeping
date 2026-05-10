@@ -34,16 +34,13 @@ abstract readonly class CliProvider implements ProviderAdapter
             return ProviderResult::failure('Provider command is not configured.', ['provider' => $this->name()]);
         }
 
-        $input = json_encode([
-            'task' => $request->taskName,
-            'prompt' => $request->prompt,
-            'payload' => $request->payload,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        if ($input === false) {
+        $prompt = $this->formatPrompt($request);
+        $command = $this->commandWithYoloFlag();
+        if ($prompt === '') {
             return ProviderResult::failure('Unable to encode provider request payload.');
         }
 
-        $process = $this->processExecutor->execute($this->command, $this->workingDirectory, $this->timeoutSeconds, $input);
+        $process = $this->processExecutor->execute($command, $this->workingDirectory, $this->timeoutSeconds, $prompt);
         if ($process->timedOut) {
             return ProviderResult::failure('Provider command timed out.', ['provider' => $this->name(), 'command' => $process->command]);
         }
@@ -60,8 +57,37 @@ abstract readonly class CliProvider implements ProviderAdapter
         return ProviderResult::success('Provider command completed.', [
             'provider' => $this->name(),
             'command' => $process->command,
+            'prompt' => $prompt,
             'stdout' => trim($process->stdout),
             'stderr' => trim($process->stderr),
         ]);
+    }
+
+    private function formatPrompt(ProviderRequest $request): string
+    {
+        $payload = json_encode($request->payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if ($payload === false) {
+            return '';
+        }
+
+        return trim(implode(PHP_EOL . PHP_EOL, [
+            'You are an autonomous housekeeping coding agent running from cron.',
+            'Task: ' . $request->taskName,
+            'Goal: ' . $request->prompt,
+            'Payload:' . PHP_EOL . $payload,
+        ]));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function commandWithYoloFlag(): array
+    {
+        $command = $this->command;
+        if (!in_array('--yolo', $command, true)) {
+            $command[] = '--yolo';
+        }
+
+        return $command;
     }
 }

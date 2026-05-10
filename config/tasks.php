@@ -11,23 +11,41 @@ return [
         'logs' => $packageRoot . '/var/logs',
         'state' => $packageRoot . '/var/state/state.json',
         'lock' => $packageRoot . '/var/lock',
+        'repository_root' => $packageRoot,
     ],
     'tasks' => [
+        'project:discover' => [
+            'enabled' => true,
+            'interval_seconds' => 21600,
+            'priority' => 300,
+        ],
+        'commits:learn' => [
+            'enabled' => true,
+            'interval_seconds' => 3600,
+            'priority' => 200,
+            'provider' => 'local-null-provider',
+            'working_directory' => $packageRoot,
+            'max_commits' => 10,
+        ],
         'docs:refresh' => [
             'enabled' => true,
             'interval_seconds' => 86400,
+            'priority' => 100,
             'provider' => 'local-null-provider',
-            'input_files' => [$packageRoot . '/TODO.md'],
+            'input_files' => [$packageRoot . '/README.md', $packageRoot . '/TODO.md'],
+            'context_files' => [$packageRoot . '/composer.json', $packageRoot . '/config/tasks.php', $packageRoot . '/bin/agent-cron'],
         ],
         'todo:refine' => [
             'enabled' => true,
             'interval_seconds' => 21600,
+            'priority' => 90,
             'provider' => 'local-null-provider',
             'input_files' => [$packageRoot . '/TODO.md'],
         ],
         'deps:audit' => [
             'enabled' => true,
             'interval_seconds' => 86400,
+            'priority' => 50,
             'provider' => 'local-null-provider',
             'working_directory' => $packageRoot,
             'command' => ['composer', 'outdated', '--direct', '--format=json'],
@@ -35,6 +53,7 @@ return [
         'phpstan:suggest-fixes' => [
             'enabled' => true,
             'interval_seconds' => 43200,
+            'priority' => 40,
             'provider' => 'local-null-provider',
             'working_directory' => $packageRoot,
             'command' => ['vendor/bin/phpstan', 'analyse', '--level=max', 'src', 'tests', '--no-progress'],
@@ -43,6 +62,7 @@ return [
         'slop:scan' => [
             'enabled' => true,
             'interval_seconds' => 43200,
+            'priority' => 30,
             'provider' => 'local-null-provider',
             'working_directory' => $packageRoot,
             'command' => [

@@ -70,6 +70,26 @@ final class RunContext
         return $this->logger;
     }
 
+    public function repositoryRoot(): string
+    {
+        $paths = $this->config['paths'] ?? null;
+        if (is_array($paths) && is_string($paths['repository_root'] ?? null) && $paths['repository_root'] !== '') {
+            return rtrim($paths['repository_root'], '/');
+        }
+
+        return dirname(__DIR__, 2);
+    }
+
+    public function metadataValue(string $path): mixed
+    {
+        return $this->stateValue('metadata.' . $path);
+    }
+
+    public function setMetadataValue(string $path, mixed $value): void
+    {
+        $this->setStateValue('metadata.' . $path, $value);
+    }
+
     public function provider(string $name): ?ProviderAdapter
     {
         return $this->providers[$name] ?? null;

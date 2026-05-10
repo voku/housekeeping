@@ -9,15 +9,25 @@ use HousekeepingAgentCron\Runtime\TaskResult;
 
 final readonly class DocumentationRefreshTask extends AbstractProviderTask
 {
+    /** @var list<string> */
+    private array $inputFiles;
+
+    /** @var list<string> */
+    private array $contextFiles;
+
     /**
      * @param list<string> $inputFiles
+     * @param list<string> $contextFiles
      */
     public function __construct(
         int $intervalSeconds,
         string $providerName,
-        private array $inputFiles,
+        array $inputFiles,
+        array $contextFiles = [],
     ) {
         parent::__construct($intervalSeconds, $providerName);
+        $this->inputFiles = $inputFiles;
+        $this->contextFiles = $contextFiles;
     }
 
     public function name(): string
@@ -27,36 +37,23 @@ final readonly class DocumentationRefreshTask extends AbstractProviderTask
 
     public function run(RunContext $context): TaskResult
     {
-        $documents = $this->collectFiles();
+        $documents = $this->collectRepositoryFiles($context, $this->inputFiles, 'project.documentation_files');
         if ($documents === []) {
             return TaskResult::skipped('No documentation inputs were found for refresh.');
         }
 
+        $codeContext = $this->collectRepositoryFiles($context, $this->contextFiles, 'project.key_files');
+
         return $this->executeProvider(
             $context,
-            'Review the provided documentation inputs and return a concise maintenance report with safe patch suggestions only.',
-            ['documents' => $documents],
+            'Compare the project documentation against the current code and learned repository patterns. Return concise housekeeping guidance and safe doc-sync patch suggestions only.',
+            [
+                'documents' => $documents,
+                'code_context' => $codeContext,
+                'project_metadata' => $context->metadataValue('project'),
+                'learning_metadata' => $context->metadataValue('learning'),
+            ],
             'Documentation refresh completed.',
         );
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function collectFiles(): array
-    {
-        $documents = [];
-        foreach ($this->inputFiles as $path) {
-            if (!is_file($path)) {
-                continue;
-            }
-            $contents = file_get_contents($path);
-            if ($contents === false) {
-                continue;
-            }
-            $documents[$path] = $contents;
-        }
-
-        return $documents;
     }
 }
