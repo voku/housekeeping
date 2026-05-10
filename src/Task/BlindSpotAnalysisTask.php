@@ -74,12 +74,7 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
                 $context->setMetadataValue('blind_spots.last_run_exit_code', $latestRun['exit_code']);
             }
             if (is_array($latestRun['results'] ?? null)) {
-                $context->setMetadataValue('blind_spots.last_run_tasks', array_values(array_filter(array_map(
-                    static fn (mixed $taskResult): ?string => is_array($taskResult) && is_string($taskResult['task'] ?? null)
-                        ? $taskResult['task']
-                        : null,
-                    $latestRun['results'],
-                ))));
+                $context->setMetadataValue('blind_spots.last_run_tasks', $this->extractTaskNames($latestRun['results']));
             }
 
             $providerOutput = $result->context['stdout'] ?? null;
@@ -89,5 +84,22 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
         }
 
         return $result;
+    }
+
+    /**
+     * @param array<mixed, mixed> $results
+     * @return list<string>
+     */
+    private function extractTaskNames(array $results): array
+    {
+        $taskNames = [];
+
+        foreach ($results as $taskResult) {
+            if (is_array($taskResult) && is_string($taskResult['task'] ?? null)) {
+                $taskNames[] = $taskResult['task'];
+            }
+        }
+
+        return $taskNames;
     }
 }

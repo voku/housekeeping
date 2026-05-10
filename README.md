@@ -41,7 +41,7 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
-Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `docs:refresh`, and `todo:refine` first. On later runs, `blindspots:analyze` uses the previous experiment result to feed blind-spot guidance back into the provider-backed tasks.
+Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `docs:refresh`, and `todo:refine` first. On later runs, `blindspots:analyze` uses the previous housekeeping run result to feed blind-spot guidance back into the provider-backed tasks.
 
 ## Usage
 

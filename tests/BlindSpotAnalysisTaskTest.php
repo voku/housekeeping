@@ -103,6 +103,7 @@ final class BlindSpotAnalysisTaskTest extends TestCase
             self::assertIsArray($learningMetadata);
             self::assertSame('Keep prompts conservative.', $learningMetadata['last_provider_output'] ?? null);
             self::assertSame('Prefer adding QUICKSTART.md to blind-spot context.', $this->stateAt($context->state(), 'metadata.blind_spots.last_provider_output'));
+            self::assertIsInt($this->stateAt($context->state(), 'metadata.blind_spots.last_analyzed_at'));
             self::assertSame(1700000000, $this->stateAt($context->state(), 'metadata.blind_spots.last_analyzed_run_started_at'));
             self::assertSame(['project:discover', 'docs:refresh'], $this->stateAt($context->state(), 'metadata.blind_spots.last_run_tasks'));
         } finally {
