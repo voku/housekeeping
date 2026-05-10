@@ -35,6 +35,13 @@ List configured tasks:
 php bin/agent-cron housekeeping:list
 ```
 
+Inspect provider budgets, cooldowns, and free-resource probes:
+
+```bash
+php bin/agent-cron housekeeping:providers
+php bin/agent-cron housekeeping:providers --json
+```
+
 Run due tasks without executing providers:
 
 ```bash
@@ -69,9 +76,11 @@ An example crontab entry is available in [`crontab.example`](crontab.example):
 
 ## Configuration
 
-Tasks, provider budgets, cooldowns, command timeouts, task priority, learned metadata paths, and runtime paths are configured in [`config/tasks.php`](config/tasks.php).
+Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, and runtime paths are configured in [`config/tasks.php`](config/tasks.php).
 
 The default configuration uses `local-null-provider`, so fresh installs can run safely without external AI tools or credentials. External providers are disabled by default and must be enabled intentionally.
+
+The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), and Copilot (`copilot-api check-usage --json`), but you can replace those commands with any compatible local tool that prints JSON or percentage-based text.
 
 Default runs now start with `project:discover` and `commits:learn`, then continue with documentation, TODO, audit, and analysis tasks using the discovered metadata.
 
