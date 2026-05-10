@@ -1,0 +1,553 @@
+<?xml version="1.0"?>
+<phpunit xmlns="https://schema.phpunit.de/coverage/1.0">
+  <file name="ConfigFileResolver.php" path="/Runtime">
+    <totals>
+      <lines total="55" comments="4" code="51" executable="24" executed="23" percent="95.83"/>
+      <methods count="1" tested="0" percent="0.00"/>
+      <functions count="0" tested="0" percent="0"/>
+      <classes count="1" tested="0" percent="0.00"/>
+      <traits count="0" tested="0" percent="0"/>
+    </totals>
+    <class name="HousekeepingAgentCron\Runtime\ConfigFileResolver" start="9" executable="24" executed="23" crap="9">
+      <namespace name="HousekeepingAgentCron\Runtime"/>
+      <method name="resolve" signature="resolve(array $argv, string $defaultConfigFile, ?string $environmentConfigFile): array" start="15" end="53" crap="9" executable="24" executed="23" coverage="95.833333333333"/>
+    </class>
+    <coverage>
+      <line nr="17">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="18">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="19">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="21">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="22">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="24">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="25">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="26">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="27">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="28">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="30">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+      <line nr="31">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+      <line nr="33">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+      <line nr="36">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="37">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+      </line>
+      <line nr="38">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+      </line>
+      <line nr="41">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+      </line>
+      <line nr="43">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+      </line>
+      <line nr="46">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverRejectsMissingConfigValue"/>
+      </line>
+      <line nr="50">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+      <line nr="51">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+      <line nr="49">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+      <line nr="52">
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesDefaultConfigWhenNoOverrideIsPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverUsesEnvironmentConfigWhenPresent"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverLetsCliConfigOverrideEnvironment"/>
+        <covered by="HousekeepingAgentCron\Tests\ConfigFileResolverTest::testResolverSupportsSeparateConfigArgument"/>
+      </line>
+    </coverage>
+    <source>
+      <line no="1">
+        <token name="T_OPEN_TAG">&lt;?php</token>
+      </line>
+      <line no="2"/>
+      <line no="3">
+        <token name="T_DECLARE">declare</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">strict_types</token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_LNUMBER">1</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="4"/>
+      <line no="5">
+        <token name="T_NAMESPACE">namespace</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Runtime</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="6"/>
+      <line no="7">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="8"/>
+      <line no="9">
+        <token name="T_FINAL">final</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLASS">class</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">ConfigFileResolver</token>
+      </line>
+      <line no="10">
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="11">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="12">
+        <token name="T_DOC_COMMENT">     * @param list&lt;string&gt; $argv</token>
+      </line>
+      <line no="13">
+        <token name="T_DOC_COMMENT">     * @return array{config_file: string, argv: list&lt;string&gt;}</token>
+      </line>
+      <line no="14">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="15">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">resolve</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$argv</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$defaultConfigFile</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$environmentConfigFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="16">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="17">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$sanitizedArgv</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="18">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$configFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$environmentConfigFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_NOT_IDENTICAL">!==</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_AND">&amp;&amp;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$environmentConfigFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_NOT_IDENTICAL">!==</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">''</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$environmentConfigFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$defaultConfigFile</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="19">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$argc</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">count</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$argv</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="20"/>
+      <line no="21">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_FOR">for</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$index</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">0</token>
+        <token name="T_SEMICOLON">;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$index</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LT">&lt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$argc</token>
+        <token name="T_SEMICOLON">;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$index</token>
+        <token name="T_INC">++</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="22">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$argument</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$argv</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$index</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="23"/>
+      <line no="24">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$argument</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_IDENTICAL">===</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'--config'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="25">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$nextIndex</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$index</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_PLUS">+</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">1</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="26">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$argv</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$nextIndex</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="27">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_OR">||</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_IDENTICAL">===</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">''</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="28">
+        <token name="T_WHITESPACE">                    </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'The --config option requires a non-empty file path.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="29">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="30">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$configFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="31">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$index</token>
+        <token name="T_INC">++</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="32"/>
+      <line no="33">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_CONTINUE">continue</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="34">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="35"/>
+      <line no="36">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">str_starts_with</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$argument</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'--config='</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="37">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">substr</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$argument</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">9</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="38">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_IDENTICAL">===</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">''</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="39">
+        <token name="T_WHITESPACE">                    </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'The --config option requires a non-empty file path.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="40">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="41">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$configFile</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="42"/>
+      <line no="43">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_CONTINUE">continue</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="44">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="45"/>
+      <line no="46">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$sanitizedArgv</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$argument</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="47">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="48"/>
+      <line no="49">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+      </line>
+      <line no="50">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'config_file'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$configFile</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="51">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'argv'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$sanitizedArgv</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="52">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="53">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="54">
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="55"/>
+    </source>
+  </file>
+</phpunit>

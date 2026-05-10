@@ -50,7 +50,7 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
         }
 
         $contextDocuments = $this->collectRepositoryFiles($context, $this->contextFiles, 'project.key_files');
-        $recentRuns = array_slice(array_values(array_filter($runs, 'is_array')), -3);
+        $recentRuns = $this->extractRecentRuns($runs);
 
         $result = $this->executeProvider(
             $context,
@@ -101,5 +101,27 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
         }
 
         return $taskNames;
+    }
+
+    /**
+     * @param array<mixed, mixed> $runs
+     * @return list<array<mixed, mixed>>
+     */
+    private function extractRecentRuns(array $runs): array
+    {
+        $recentRuns = [];
+
+        foreach ($runs as $run) {
+            if (!is_array($run)) {
+                continue;
+            }
+
+            $recentRuns[] = $run;
+            if (count($recentRuns) > 3) {
+                array_shift($recentRuns);
+            }
+        }
+
+        return $recentRuns;
     }
 }
