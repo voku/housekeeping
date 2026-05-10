@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace HousekeepingAgentCron\Tests;
 
-use HousekeepingAgentCron\Provider\NullProvider;
+use HousekeepingAgentCron\Contract\ProviderAdapter;
 use HousekeepingAgentCron\Runtime\JsonLogger;
+use HousekeepingAgentCron\Runtime\ProviderRequest;
+use HousekeepingAgentCron\Runtime\ProviderResult;
 use HousekeepingAgentCron\Runtime\ProcessExecutor;
 use HousekeepingAgentCron\Runtime\RunContext;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
@@ -19,7 +21,30 @@ final class PhpstanFixSuggestionTaskTest extends TestCase
         $workingDirectory = sys_get_temp_dir() . '/agent-cron-phpstan-' . bin2hex(random_bytes(4));
         (new Filesystem())->mkdir($workingDirectory);
 
-        $provider = new NullProvider();
+        $provider = new class implements ProviderAdapter {
+            public int $calls = 0;
+
+            /** @var array<string, mixed>|null */
+            public ?array $payload = null;
+
+            public function name(): string
+            {
+                return 'local-null-provider';
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                ++$this->calls;
+                $this->payload = $request->payload;
+
+                return ProviderResult::success('Accepted.');
+            }
+        };
         $task = new PhpstanFixSuggestionTask(
             3600,
             'local-null-provider',
@@ -53,6 +78,8 @@ final class PhpstanFixSuggestionTaskTest extends TestCase
             self::assertFalse($result->skipped);
             self::assertSame('PHPStan suggestions prepared.', $result->message);
             self::assertSame(1, $provider->calls);
+            self::assertIsArray($provider->payload);
+            self::assertSame('Found issue', $provider->payload['analysis_output'] ?? null);
         } finally {
             (new Filesystem())->remove($workingDirectory);
         }

@@ -19,6 +19,6 @@ final class ProcessExecutorTest extends TestCase
         self::assertFalse($result->timedOut);
         self::assertSame($workingDirectory, $result->workingDirectory);
         self::assertNotNull($result->exceptionMessage);
-        self::assertStringContainsString($workingDirectory, $result->stderr);
+        self::assertStringContainsString($workingDirectory, $result->exceptionMessage);
     }
 }
