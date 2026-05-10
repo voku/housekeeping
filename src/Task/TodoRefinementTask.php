@@ -9,15 +9,19 @@ use HousekeepingAgentCron\Runtime\TaskResult;
 
 final readonly class TodoRefinementTask extends AbstractProviderTask
 {
+    /** @var list<string> */
+    private array $inputFiles;
+
     /**
      * @param list<string> $inputFiles
      */
     public function __construct(
         int $intervalSeconds,
         string $providerName,
-        private array $inputFiles,
+        array $inputFiles,
     ) {
         parent::__construct($intervalSeconds, $providerName);
+        $this->inputFiles = $inputFiles;
     }
 
     public function name(): string

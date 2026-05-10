@@ -81,10 +81,12 @@ final class CommitLearningTaskTest extends TestCase
             self::assertTrue($result->successful);
             self::assertIsArray($provider->payload);
             self::assertSame($repositoryRoot, $provider->payload['repository_root'] ?? null);
-            self::assertIsArray($provider->payload['commits'] ?? null);
-            self::assertCount(2, $provider->payload['commits']);
-            self::assertSame('Add worker', $provider->payload['commits'][0]['subject'] ?? null);
-            self::assertSame(['src/Worker.php'], $provider->payload['commits'][0]['files'] ?? null);
+            $commits = $provider->payload['commits'] ?? null;
+            self::assertIsArray($commits);
+            self::assertCount(2, $commits);
+            self::assertIsArray($commits[0] ?? null);
+            self::assertSame('Add worker', $commits[0]['subject'] ?? null);
+            self::assertSame(['src/Worker.php'], $commits[0]['files'] ?? null);
             self::assertSame('Follow the existing commit patterns.', $this->stateAt($context->state(), 'metadata.learning.last_provider_output'));
             self::assertSame(2, $this->stateAt($context->state(), 'metadata.learning.last_commit_count'));
             self::assertIsString($this->stateAt($context->state(), 'metadata.learning.last_learned_head'));

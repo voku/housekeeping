@@ -34,8 +34,9 @@ final readonly class CommitLearningTask extends AbstractProviderTask
         }
 
         $head = trim($headResult->stdout);
-        $lastLearnedHead = $context->metadataValue('learning.last_learned_head');
-        if (is_string($lastLearnedHead) && $lastLearnedHead !== '' && $lastLearnedHead === $head) {
+        $lastLearnedHeadValue = $context->metadataValue('learning.last_learned_head');
+        $lastLearnedHead = is_string($lastLearnedHeadValue) && $lastLearnedHeadValue !== '' ? $lastLearnedHeadValue : null;
+        if ($lastLearnedHead === $head) {
             return TaskResult::skipped('No new commits were found to learn from.');
         }
 
@@ -64,10 +65,10 @@ final readonly class CommitLearningTask extends AbstractProviderTask
             $context->setMetadataValue('learning.last_learned_head', $head);
             $context->setMetadataValue('learning.last_learned_at', time());
             $context->setMetadataValue('learning.last_commit_count', count($commits));
-            $context->setMetadataValue('learning.last_commit_subjects', array_values(array_map(
+            $context->setMetadataValue('learning.last_commit_subjects', array_map(
                 static fn (array $commit): string => $commit['subject'],
                 $commits,
-            )));
+            ));
 
             $providerOutput = $result->context['stdout'] ?? null;
             if (is_string($providerOutput) && $providerOutput !== '') {
@@ -89,11 +90,11 @@ final readonly class CommitLearningTask extends AbstractProviderTask
             'log',
             '--no-decorate',
             '--name-only',
-            '--pretty=format:%H%x1f%ct%x1f%s%x1f%b%x1e',
+            '--pretty=format:%x1e%H%x1f%ct%x1f%s%x1f%b',
             '--max-count=' . $this->maxCommits,
         ];
 
-        if (is_string($lastLearnedHead) && $lastLearnedHead !== '') {
+        if ($lastLearnedHead !== null) {
             $command[] = $lastLearnedHead . '..HEAD';
         }
 
@@ -108,20 +109,17 @@ final readonly class CommitLearningTask extends AbstractProviderTask
         $commits = [];
 
         foreach (explode("\x1e", $output) as $record) {
-            $record = trim($record);
+            $record = ltrim($record);
             if ($record === '') {
                 continue;
             }
 
             $lines = preg_split('/\R/', $record);
-            if (!is_array($lines) || $lines === []) {
+            if (!is_array($lines)) {
                 continue;
             }
 
             $header = array_shift($lines);
-            if (!is_string($header)) {
-                continue;
-            }
 
             $parts = explode("\x1f", $header, 4);
             if (count($parts) !== 4) {
@@ -135,10 +133,6 @@ final readonly class CommitLearningTask extends AbstractProviderTask
 
             $files = [];
             foreach ($lines as $line) {
-                if (!is_string($line)) {
-                    continue;
-                }
-
                 $line = trim($line);
                 if ($line !== '') {
                     $files[] = $line;

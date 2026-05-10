@@ -15,7 +15,7 @@ final class CliProviderTest extends TestCase
     {
         $provider = new CodexProvider(
             new ProcessExecutor(),
-            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);'],
+            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
             __DIR__,
             30,
         );
@@ -23,13 +23,20 @@ final class CliProviderTest extends TestCase
         $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
 
         self::assertTrue($result->successful);
-        self::assertContains('--yolo', $result->context['command'] ?? []);
-        self::assertIsString($result->context['stdout'] ?? null);
+        $command = $result->context['command'] ?? null;
+        self::assertIsArray($command);
+        self::assertContains('--yolo', $command);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
 
-        $decoded = json_decode($result->context['stdout'], true);
+        $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded);
-        self::assertSame('--yolo', $decoded['argv'][0] ?? null);
-        self::assertStringContainsString('Task: docs:refresh', $decoded['stdin'] ?? '');
-        self::assertStringContainsString('"documents"', $decoded['stdin'] ?? '');
+        $argv = $decoded['argv'] ?? null;
+        self::assertIsArray($argv);
+        self::assertSame('--yolo', $argv[0] ?? null);
+        $stdin = $decoded['stdin'] ?? null;
+        self::assertIsString($stdin);
+        self::assertStringContainsString('Task: docs:refresh', $stdin);
+        self::assertStringContainsString('"documents"', $stdin);
     }
 }

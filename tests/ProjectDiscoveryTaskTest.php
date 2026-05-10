@@ -44,14 +44,14 @@ final class ProjectDiscoveryTaskTest extends TestCase
         try {
             $result = (new ProjectDiscoveryTask(3600))->run($context);
             $context->saveState();
+            $keyFiles = $this->stateAt($store->state, 'metadata.project.key_files');
 
             self::assertTrue($result->successful);
             self::assertSame(['README.md', 'docs/guide.md'], $this->stateAt($store->state, 'metadata.project.documentation_files'));
             self::assertSame(['TODO.txt'], $this->stateAt($store->state, 'metadata.project.todo_files'));
-            self::assertSame(['README.md', 'composer.json'], array_values(array_intersect(
-                ['README.md', 'composer.json'],
-                $this->stateAt($store->state, 'metadata.project.key_files'),
-            )));
+            self::assertIsArray($keyFiles);
+            self::assertContains('README.md', $keyFiles);
+            self::assertContains('composer.json', $keyFiles);
         } finally {
             (new Filesystem())->remove($repositoryRoot);
         }

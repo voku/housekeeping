@@ -55,7 +55,7 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
     {
         $paths = [];
         foreach ($configuredPaths as $configuredPath) {
-            if (is_string($configuredPath) && $configuredPath !== '') {
+            if ($configuredPath !== '') {
                 $paths[$this->displayPath($context->repositoryRoot(), $configuredPath)] = $configuredPath;
             }
         }
@@ -85,7 +85,7 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
         $absolutePaths = [];
 
         foreach ($paths as $path) {
-            if (!is_string($path) || $path === '') {
+            if ($path === '') {
                 continue;
             }
 
