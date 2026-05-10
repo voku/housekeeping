@@ -1,0 +1,226 @@
+<?php
+
+declare(strict_types=1);
+
+namespace HousekeepingAgentCron\Runtime;
+
+use HousekeepingAgentCron\Contract\HousekeepingTask;
+use HousekeepingAgentCron\Contract\ProviderAdapter;
+use HousekeepingAgentCron\Provider\CodexProvider;
+use HousekeepingAgentCron\Provider\CopilotProvider;
+use HousekeepingAgentCron\Provider\GeminiProvider;
+use HousekeepingAgentCron\Provider\NullProvider;
+use HousekeepingAgentCron\State\JsonStateStore;
+use HousekeepingAgentCron\Task\DependencyAuditTask;
+use HousekeepingAgentCron\Task\DocumentationRefreshTask;
+use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
+use HousekeepingAgentCron\Task\SlopScanTask;
+use HousekeepingAgentCron\Task\TodoRefinementTask;
+use RuntimeException;
+
+final class ApplicationFactory
+{
+    public function __construct(private readonly ProcessExecutor $processExecutor = new ProcessExecutor())
+    {
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function loadConfig(string $configFile): array
+    {
+        $config = require $configFile;
+        if (!is_array($config)) {
+            throw new RuntimeException('Config file must return an array.');
+        }
+        /** @var array<string, mixed> $typedConfig */
+        $typedConfig = $config;
+
+        return $typedConfig;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     * @return list<HousekeepingTask>
+     */
+    public function tasks(array $config): array
+    {
+        $definitions = $this->taskDefinitions($config);
+        $tasks = [];
+        foreach ($definitions as $name => $taskConfig) {
+            if (($taskConfig['enabled'] ?? false) !== true) {
+                continue;
+            }
+            $tasks[] = $this->createTask($name, $taskConfig);
+        }
+
+        return $tasks;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     * @return array<string, ProviderAdapter>
+     */
+    public function providers(array $config): array
+    {
+        $providers = [];
+        $nullProvider = new NullProvider();
+        $providers[$nullProvider->name()] = $nullProvider;
+
+        foreach ($this->providerDefinitions($config) as $name => $providerConfig) {
+            if ($name === 'local-null-provider' || ($providerConfig['enabled'] ?? false) !== true) {
+                continue;
+            }
+            $providers[$name] = $this->createProvider($name, $providerConfig);
+        }
+
+        return $providers;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function stateStore(array $config): JsonStateStore
+    {
+        return new JsonStateStore($this->path($config, 'state', __DIR__ . '/../../var/state/state.json'));
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function logger(array $config): JsonLogger
+    {
+        return new JsonLogger(rtrim($this->path($config, 'logs', __DIR__ . '/../../var/logs'), '/') . '/housekeeping.log');
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function lockDir(array $config): string
+    {
+        return $this->path($config, 'lock', __DIR__ . '/../../var/lock');
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     * @return array<string, array<string, mixed>>
+     */
+    private function taskDefinitions(array $config): array
+    {
+        $tasks = $config['tasks'] ?? [];
+        if (!is_array($tasks)) {
+            throw new RuntimeException('Config key "tasks" must be an array.');
+        }
+        $typedTasks = [];
+        foreach ($tasks as $name => $taskConfig) {
+            if (!is_string($name) || !is_array($taskConfig)) {
+                throw new RuntimeException('Each task definition must be a named array.');
+            }
+            /** @var array<string, mixed> $typedTaskConfig */
+            $typedTaskConfig = $taskConfig;
+            $typedTasks[$name] = $typedTaskConfig;
+        }
+
+        return $typedTasks;
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     * @return array<string, array<string, mixed>>
+     */
+    private function providerDefinitions(array $config): array
+    {
+        $providers = $config['providers'] ?? [];
+        if (!is_array($providers)) {
+            throw new RuntimeException('Config key "providers" must be an array.');
+        }
+        $typedProviders = [];
+        foreach ($providers as $name => $providerConfig) {
+            if (!is_string($name) || !is_array($providerConfig)) {
+                throw new RuntimeException('Each provider definition must be a named array.');
+            }
+            /** @var array<string, mixed> $typedProviderConfig */
+            $typedProviderConfig = $providerConfig;
+            $typedProviders[$name] = $typedProviderConfig;
+        }
+
+        return $typedProviders;
+    }
+
+    /**
+     * @param array<string, mixed> $taskConfig
+     */
+    private function createTask(string $name, array $taskConfig): HousekeepingTask
+    {
+        $intervalSeconds = $this->positiveInt($taskConfig['interval_seconds'] ?? 3600, 3600);
+        $providerName = is_string($taskConfig['provider'] ?? null) ? $taskConfig['provider'] : 'local-null-provider';
+        $inputFiles = $this->stringList($taskConfig['input_files'] ?? []);
+        $workingDirectory = is_string($taskConfig['working_directory'] ?? null) ? $taskConfig['working_directory'] : dirname(__DIR__, 2);
+        $command = $this->stringList($taskConfig['command'] ?? []);
+        $timeoutSeconds = $this->positiveInt($taskConfig['timeout_seconds'] ?? 120, 120);
+
+        return match ($name) {
+            'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles),
+            'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles),
+            'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
+            'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
+            'slop:scan' => new SlopScanTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
+            default => throw new RuntimeException('Unknown task configuration: ' . $name),
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $providerConfig
+     */
+    private function createProvider(string $name, array $providerConfig): ProviderAdapter
+    {
+        $command = $this->stringList($providerConfig['command'] ?? []);
+        $workingDirectory = is_string($providerConfig['working_directory'] ?? null) ? $providerConfig['working_directory'] : dirname(__DIR__, 2);
+        $timeoutSeconds = $this->positiveInt($providerConfig['timeout_seconds'] ?? 600, 600);
+
+        return match ($name) {
+            'codex' => new CodexProvider($this->processExecutor, $command, $workingDirectory, $timeoutSeconds),
+            'gemini' => new GeminiProvider($this->processExecutor, $command, $workingDirectory, $timeoutSeconds),
+            'copilot' => new CopilotProvider($this->processExecutor, $command, $workingDirectory, $timeoutSeconds),
+            default => throw new RuntimeException('Unknown provider configuration: ' . $name),
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function path(array $config, string $key, string $default): string
+    {
+        $paths = $config['paths'] ?? [];
+        if (is_array($paths) && is_string($paths[$key] ?? null)) {
+            return $paths[$key];
+        }
+
+        return $default;
+    }
+
+    /**
+     * @param mixed $value
+     * @return list<string>
+     */
+    private function stringList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($value as $item) {
+            if (is_string($item) && $item !== '') {
+                $items[] = $item;
+            }
+        }
+
+        return $items;
+    }
+
+    private function positiveInt(mixed $value, int $default): int
+    {
+        return is_int($value) && $value > 0 ? $value : $default;
+    }
+}

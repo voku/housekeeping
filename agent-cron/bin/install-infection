@@ -1,0 +1,46 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$version = '0.32.7';
+$expectedSha256 = '91ade5625c397719cd39a135bb68b9993242e92ca72b8a94e8fcc12364588937';
+$sourceUrl = 'https://github.com/infection/infection/releases/download/' . $version . '/infection.phar';
+$targetDir = dirname(__DIR__) . '/tools';
+$targetFile = $targetDir . '/infection.phar';
+
+if (!is_dir($targetDir) && !mkdir($targetDir, 0775, true) && !is_dir($targetDir)) {
+    fwrite(STDERR, "Unable to create tools directory: {$targetDir}\n");
+
+    exit(1);
+}
+
+$context = stream_context_create([
+    'http' => [
+        'timeout' => 60,
+        'user_agent' => 'housekeeping-agent-cron/1.0',
+    ],
+]);
+
+$contents = file_get_contents($sourceUrl, false, $context);
+if ($contents === false) {
+    fwrite(STDERR, "Unable to download Infection PHAR from {$sourceUrl}\n");
+
+    exit(1);
+}
+
+if (hash('sha256', $contents) !== $expectedSha256) {
+    fwrite(STDERR, "Downloaded Infection PHAR failed SHA-256 verification.\n");
+
+    exit(1);
+}
+
+if (file_put_contents($targetFile, $contents) === false) {
+    fwrite(STDERR, "Unable to write Infection PHAR to {$targetFile}\n");
+
+    exit(1);
+}
+
+chmod($targetFile, 0755);
+
+fwrite(STDOUT, "Installed Infection {$version} to {$targetFile}\n");

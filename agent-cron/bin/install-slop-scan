@@ -1,0 +1,46 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+$version = '0.1.2';
+$expectedSha256 = '57e8ef2fcd659b76a28a1280b997de99cff79b1de48c4647b7dcd815ea24a69a';
+$sourceUrl = 'https://github.com/voku/slop-scan/releases/download/' . $version . '/slop-scan.phar';
+$targetDir = dirname(__DIR__) . '/tools';
+$targetFile = $targetDir . '/slop-scan.phar';
+
+if (!is_dir($targetDir) && !mkdir($targetDir, 0775, true) && !is_dir($targetDir)) {
+    fwrite(STDERR, "Unable to create tools directory: {$targetDir}\n");
+
+    exit(1);
+}
+
+$context = stream_context_create([
+    'http' => [
+        'timeout' => 60,
+        'user_agent' => 'housekeeping-agent-cron/1.0',
+    ],
+]);
+
+$contents = file_get_contents($sourceUrl, false, $context);
+if ($contents === false) {
+    fwrite(STDERR, "Unable to download slop-scan PHAR from {$sourceUrl}\n");
+
+    exit(1);
+}
+
+if (hash('sha256', $contents) !== $expectedSha256) {
+    fwrite(STDERR, "Downloaded slop-scan PHAR failed SHA-256 verification.\n");
+
+    exit(1);
+}
+
+if (file_put_contents($targetFile, $contents) === false) {
+    fwrite(STDERR, "Unable to write slop-scan PHAR to {$targetFile}\n");
+
+    exit(1);
+}
+
+chmod($targetFile, 0755);
+
+fwrite(STDOUT, "Installed slop-scan {$version} to {$targetFile}\n");
