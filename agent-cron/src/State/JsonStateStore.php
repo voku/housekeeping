@@ -12,8 +12,8 @@ final readonly class JsonStateStore implements StateStore
     public function __construct(private string $path)
     {
         $dir = dirname($this->path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new RuntimeException('Unable to create state directory: ' . $dir . ' for ' . $this->path);
         }
     }
 
