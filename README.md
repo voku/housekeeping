@@ -15,7 +15,7 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 - Discover repository docs and TODO files automatically so later runs can sync docs with code.
 - Execute safe default tasks with a local null provider.
 - Keep provider-backed Codex, Gemini, and Copilot integrations disabled unless explicitly configured.
-- Enforce `--yolo` for external coding-agent adapters.
+- Support per-project config files and configurable external coding-agent CLI flags.
 - Validate the project with PHPStan and PHPUnit.
 
 ## Requirements
@@ -47,6 +47,7 @@ List configured tasks:
 
 ```bash
 php bin/agent-cron housekeeping:list
+php bin/agent-cron --config=/path/to/project-a.php housekeeping:list
 ```
 
 Inspect provider budgets, cooldowns, and free-resource probes:
@@ -60,12 +61,14 @@ Run due tasks without executing providers:
 
 ```bash
 php bin/agent-cron housekeeping:run --dry-run
+php bin/agent-cron --config=/path/to/project-a.php housekeeping:run --dry-run
 ```
 
 Run due tasks:
 
 ```bash
 php bin/agent-cron housekeeping:run
+php bin/agent-cron --config=/path/to/project-b.php housekeeping:run
 ```
 
 Run one task:
@@ -85,12 +88,13 @@ php bin/agent-cron housekeeping:state
 An example crontab entry is available in [`crontab.example`](crontab.example):
 
 ```cron
-7 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron housekeeping:run >> var/logs/cron.log 2>&1
+7 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron --config=/path/to/housekeeping/config/project-a.php housekeeping:run >> var/logs/project-a-cron.log 2>&1
+37 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron --config=/path/to/housekeeping/config/project-b.php housekeeping:run >> var/logs/project-b-cron.log 2>&1
 ```
 
 ## Configuration
 
-Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, and runtime paths are configured in [`config/tasks.php`](config/tasks.php).
+Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, provider CLI arguments, and runtime paths are configured in [`config/tasks.php`](config/tasks.php) or in additional project-specific config files selected with `--config=/absolute/path/to/tasks.php` or `HOUSEKEEPING_CONFIG=/absolute/path/to/tasks.php`.
 
 The default configuration uses `local-null-provider`, so fresh installs can run safely without external AI tools or credentials. External providers are disabled by default and must be enabled intentionally.
 
@@ -101,9 +105,22 @@ For real use, treat `config/tasks.php` as the control plane for one target repos
 - Point task `working_directory` values at that same target repository when the task shells out to `git`, Composer, PHPStan, or other project-local tools.
 - Set `input_files` and `context_files` to docs, TODOs, and key files from the target repository.
 
-The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated.
+The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated. If you share one workspace across multiple cron jobs, give each job its own config file with separate state, log, and lock paths.
 
 The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), and Copilot (`copilot-api check-usage --json`), but you can replace those commands with any compatible local tool that prints JSON or percentage-based text.
+
+External providers can be tuned from config instead of code changes:
+
+```php
+'codex' => [
+    'enabled' => true,
+    'command' => ['codex', 'exec'],
+    'arguments' => ['--yolo', '--sandbox', 'project-only'],
+    'append_yolo' => false,
+],
+```
+
+When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default.
 
 Default runs now start with `project:discover` and `commits:learn`, then continue with documentation, TODO, audit, and analysis tasks using the discovered metadata.
 

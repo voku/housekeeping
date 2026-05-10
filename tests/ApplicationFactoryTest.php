@@ -76,6 +76,35 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame(['local-null-provider'], array_keys($providers));
     }
 
+    public function testFactoryUsesRepositoryRootForProviderWorkingDirectoryByDefault(): void
+    {
+        $repositoryRoot = sys_get_temp_dir() . '/agent-cron-provider-root-' . bin2hex(random_bytes(4));
+        mkdir($repositoryRoot, 0777, true);
+
+        try {
+            $factory = new ApplicationFactory();
+            $providers = $factory->providers([
+                'paths' => [
+                    'repository_root' => $repositoryRoot,
+                ],
+                'providers' => [
+                    'codex' => [
+                        'enabled' => true,
+                        'command' => ['php', '-r', 'echo getcwd();'],
+                        'append_yolo' => false,
+                    ],
+                ],
+            ]);
+
+            $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
+
+            self::assertTrue($result->successful);
+            self::assertSame($repositoryRoot, $result->context['stdout'] ?? null);
+        } finally {
+            rmdir($repositoryRoot);
+        }
+    }
+
     /**
      * @param array<string, \HousekeepingAgentCron\Contract\ProviderAdapter> $providers
      */

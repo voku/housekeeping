@@ -16,6 +16,7 @@ final class CliProviderTest extends TestCase
         $provider = new CodexProvider(
             new ProcessExecutor(),
             ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
+            [],
             __DIR__,
             30,
         );
@@ -37,5 +38,28 @@ final class CliProviderTest extends TestCase
         self::assertIsString($stdin);
         self::assertStringContainsString('Task: docs:refresh', $stdin);
         self::assertStringContainsString('"documents"', $stdin);
+    }
+
+    public function testCliProvidersAllowConfigurableArgumentsAndOptionalYolo(): void
+    {
+        $provider = new CodexProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(["cwd" => getcwd(), "argv" => array_slice($argv, 1)], JSON_UNESCAPED_SLASHES);', '--'],
+            ['--sandbox', 'project-only'],
+            sys_get_temp_dir(),
+            30,
+            false,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(sys_get_temp_dir(), $decoded['cwd'] ?? null);
+        self::assertSame(['--sandbox', 'project-only'], $decoded['argv'] ?? null);
     }
 }
