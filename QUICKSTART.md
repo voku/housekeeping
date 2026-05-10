@@ -74,19 +74,8 @@ Then update the existing config values to follow this pattern:
 ],
 ```
 
-```php
-'codex' => [
-    'working_directory' => $targetProjectRoot,
-],
-'gemini' => [
-    'working_directory' => $targetProjectRoot,
-],
-'copilot' => [
-    'working_directory' => $targetProjectRoot,
-],
-```
-
 Keep one Housekeeping workspace per maintained project if you want isolated state, logs, budgets, and prompts.
+Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else.
 
 ## 3. Start with dry runs
 
@@ -99,6 +88,8 @@ php bin/agent-cron housekeeping:run --dry-run
 ```
 
 This lets you confirm the task list, provider status, and file discovery before any provider-backed work runs.
+
+If you want the first real run to process more than the default top three due tasks, raise `max_tasks_per_run` in the config before scheduling it.
 
 ## 4. Keep the maintenance scope conservative
 
@@ -117,5 +108,5 @@ Keep provider-backed tasks focused on no-breaking-changes maintenance work.
 Example cron entry:
 
 ```cron
-7 * * * * cd /absolute/path/to/housekeeping-tool && /usr/bin/php bin/agent-cron housekeeping:run >> var/logs/cron.log 2>&1
+7 * * * * cd /absolute/path/to/housekeeping-tool && /usr/bin/php bin/agent-cron --config=/absolute/path/to/housekeeping-tool/config/project-a.php housekeeping:run >> var/logs/project-a-cron.log 2>&1
 ```

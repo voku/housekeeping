@@ -41,6 +41,8 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
+Dogfooding note: with the default `max_tasks_per_run` of `3`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, and `docs:refresh` first. Later due tasks run on subsequent invocations unless you raise that cap.
+
 ## Usage
 
 List configured tasks:
@@ -103,7 +105,7 @@ For real use, treat `config/tasks.php` as the control plane for one target repos
 - Keep the Housekeeping checkout, logs, state, and lock files in the standalone Housekeeping directory.
 - Point `paths.repository_root` at the repository you want to maintain.
 - Point task `working_directory` values at that same target repository when the task shells out to `git`, Composer, PHPStan, or other project-local tools.
-- Set `input_files` and `context_files` to docs, TODOs, and key files from the target repository.
+- Set `input_files` and `context_files` to the actual docs and key files you want the doc-sync task to compare. In this repository's default dogfood config, `docs:refresh` tracks `README.md` and `QUICKSTART.md`, while `todo:refine` owns `TODO.md`.
 
 The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated. If you share one workspace across multiple cron jobs, give each job its own config file with separate state, log, and lock paths.
 
@@ -120,7 +122,7 @@ External providers can be tuned from config instead of code changes:
 ],
 ```
 
-When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default.
+When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, or Copilot against a copied config will run them inside the maintained repository unless you override it.
 
 Default runs now start with `project:discover` and `commits:learn`, then continue with documentation, TODO, audit, and analysis tasks using the discovered metadata.
 

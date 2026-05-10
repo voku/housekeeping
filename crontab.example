@@ -1,1 +1,1 @@
-7 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron housekeeping:run >> var/logs/cron.log 2>&1
+7 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron --config=/path/to/housekeeping/config/project-a.php housekeeping:run >> var/logs/project-a-cron.log 2>&1

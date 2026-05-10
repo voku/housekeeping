@@ -141,7 +141,7 @@ final readonly class RepositoryInspector
     private function keyFiles(string $repositoryRoot): array
     {
         $paths = [];
-        foreach (['composer.json', 'config/tasks.php', 'bin/agent-cron', 'README.md', 'TODO.md'] as $relativePath) {
+        foreach (['composer.json', 'config/tasks.php', 'bin/agent-cron', 'README.md', 'QUICKSTART.md', 'TODO.md', 'crontab.example'] as $relativePath) {
             if (is_file($repositoryRoot . '/' . $relativePath)) {
                 $paths[] = $relativePath;
             }
