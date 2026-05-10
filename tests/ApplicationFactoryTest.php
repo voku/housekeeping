@@ -105,6 +105,27 @@ final class ApplicationFactoryTest extends TestCase
         }
     }
 
+    public function testFactoryFiltersNonStringProviderArguments(): void
+    {
+        $factory = new ApplicationFactory();
+        $providers = $factory->providers([
+            'providers' => [
+                'codex' => [
+                    'enabled' => true,
+                    'command' => ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+                    'arguments' => ['--sandbox', 123, null, 'project-only'],
+                    'working_directory' => __DIR__,
+                    'append_yolo' => false,
+                ],
+            ],
+        ]);
+
+        $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
+
+        self::assertTrue($result->successful);
+        self::assertSame('["--sandbox","project-only"]', $result->context['stdout'] ?? null);
+    }
+
     /**
      * @param array<string, \HousekeepingAgentCron\Contract\ProviderAdapter> $providers
      */
