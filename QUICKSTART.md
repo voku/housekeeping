@@ -33,9 +33,6 @@ declare(strict_types=1);
 
 $housekeepingRoot = dirname(__DIR__);
 $targetProjectRoot = '/absolute/path/to/target-project';
-
-$packageRoot = $housekeepingRoot;
-$targetProjectRoot = '/absolute/path/to/target-project';
 ```
 
 Then update the existing config values to follow this pattern:
