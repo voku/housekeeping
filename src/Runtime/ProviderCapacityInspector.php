@@ -138,10 +138,7 @@ final readonly class ProviderCapacityInspector
         }
 
         $remainingRatios = array_map(static fn (array $metric): float => $metric['remaining_ratio'], $metrics);
-        $resetValues = array_values(array_filter(
-            array_map(static fn (array $metric): ?int => $metric['reset_at'], $metrics),
-            static fn (?int $metricResetAt): bool => $metricResetAt !== null,
-        ));
+        $resetValues = $this->collectResetValues($metrics);
         $resetAt = $resetValues === [] ? null : max($resetValues);
 
         return [
@@ -196,12 +193,11 @@ final readonly class ProviderCapacityInspector
         }
 
         $metrics = [];
-        foreach ([trim($stdout), trim($stderr)] as $textOutput) {
-            if ($textOutput === '') {
-                continue;
-            }
-            foreach ($this->metricsFromText($providerName, $textOutput, $now) as $metric) {
-                $metrics[] = $metric;
+        foreach ([$this->trimmedOrNull($stdout), $this->trimmedOrNull($stderr)] as $textOutput) {
+            if ($textOutput !== null) {
+                foreach ($this->metricsFromText($providerName, $textOutput, $now) as $metric) {
+                    $metrics[] = $metric;
+                }
             }
         }
 
@@ -225,7 +221,7 @@ final readonly class ProviderCapacityInspector
             if (!is_string($key) || !is_array($value)) {
                 continue;
             }
-            foreach ($this->metricsFromJson($value, [...$path, $key], $now) as $childMetric) {
+            foreach ($this->metricsFromJson($value, $this->appendPath($path, $key), $now) as $childMetric) {
                 $metrics[] = $childMetric;
             }
         }
@@ -286,7 +282,7 @@ final readonly class ProviderCapacityInspector
     {
         $unique = [];
         foreach ($metrics as $metric) {
-            $key = json_encode([$metric['label'], $metric['remaining_ratio'], $metric['reset_at']]);
+            $key = json_encode($metric);
             if ($key === false) {
                 continue;
             }
@@ -371,6 +367,40 @@ final readonly class ProviderCapacityInspector
         }
 
         return 'limit';
+    }
+
+    /**
+     * @param list<array{label: string, remaining_ratio: float, reset_at: int|null}> $metrics
+     * @return list<int>
+     */
+    private function collectResetValues(array $metrics): array
+    {
+        $resetValues = [];
+        foreach ($metrics as $metric) {
+            if ($metric['reset_at'] !== null) {
+                $resetValues[] = $metric['reset_at'];
+            }
+        }
+
+        return $resetValues;
+    }
+
+    private function trimmedOrNull(string $value): ?string
+    {
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * @param list<string> $path
+     * @return list<string>
+     */
+    private function appendPath(array $path, string $segment): array
+    {
+        $path[] = $segment;
+
+        return $path;
     }
 
     /**

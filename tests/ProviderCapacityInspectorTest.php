@@ -333,6 +333,26 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame($now + 7200, $metrics[0]['reset_at']);
     }
 
+    public function testMetricsFromOutputUsesTrimmedWhitespaceAwareStreams(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = time();
+
+        $metrics = $this->assertMetricList($this->invokePrivate(
+            $inspector,
+            'metricsFromOutput',
+            'fallback',
+            " \n\t ",
+            "\n fallback 25% left resets 2h \n",
+            $now,
+        ));
+
+        self::assertCount(1, $metrics);
+        self::assertSame('fallback', $metrics[0]['label']);
+        self::assertEqualsWithDelta(0.25, $metrics[0]['remaining_ratio'], 0.0001);
+        self::assertSame($now + 7200, $metrics[0]['reset_at']);
+    }
+
     public function testMetricsFromJsonKeepsScanningNestedArraysAndUsesPathLabels(): void
     {
         $inspector = new ProviderCapacityInspector();
@@ -359,6 +379,14 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame($now + 120, $metrics[1]['reset_at']);
     }
 
+    public function testAppendPathPreservesExistingSegments(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        self::assertSame(['limits', 'week'], $this->invokePrivate($inspector, 'appendPath', ['limits'], 'week'));
+        self::assertSame(['week'], $this->invokePrivate($inspector, 'appendPath', [], 'week'));
+    }
+
     public function testMetricsFromTextNormalizesUsedModeAndDeduplicatesMetrics(): void
     {
         $inspector = new ProviderCapacityInspector();
@@ -370,6 +398,21 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame('label-one', $metrics[0]['label']);
         self::assertEqualsWithDelta(0.965, $metrics[0]['remaining_ratio'], 0.0001);
         self::assertSame($now + 93784, $metrics[0]['reset_at']);
+    }
+
+    public function testUniqueMetricsKeepsDistinctLabelsWithSameRatioAndReset(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $metrics = $this->assertMetricList($this->invokePrivate($inspector, 'uniqueMetrics', [
+            ['label' => 'alpha', 'remaining_ratio' => 0.5, 'reset_at' => 100],
+            ['label' => 'beta', 'remaining_ratio' => 0.5, 'reset_at' => 100],
+            ['label' => 'beta', 'remaining_ratio' => 0.5, 'reset_at' => 100],
+        ]));
+
+        self::assertCount(2, $metrics);
+        self::assertSame('alpha', $metrics[0]['label']);
+        self::assertSame('beta', $metrics[1]['label']);
     }
 
     public function testExtractRemainingRatioSupportsUsedPercentAndUsedTotalPairs(): void
@@ -389,6 +432,25 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame('Primary', $this->invokePrivate($inspector, 'metricLabel', ['label' => '  Primary  '], []));
         self::assertSame('week', $this->invokePrivate($inspector, 'metricLabel', [], ['session', 'week']));
         self::assertSame('limit', $this->invokePrivate($inspector, 'metricLabel', [], []));
+    }
+
+    public function testCollectResetValuesDropsNullsAndReindexes(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        self::assertSame([100, 200], $this->invokePrivate($inspector, 'collectResetValues', [
+            ['label' => 'alpha', 'remaining_ratio' => 0.5, 'reset_at' => null],
+            ['label' => 'beta', 'remaining_ratio' => 0.5, 'reset_at' => 100],
+            ['label' => 'gamma', 'remaining_ratio' => 0.5, 'reset_at' => 200],
+        ]));
+    }
+
+    public function testTrimmedOrNullNormalizesWhitespaceOnlyInput(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        self::assertNull($this->invokePrivate($inspector, 'trimmedOrNull', " \n\t "));
+        self::assertSame('fallback 25% left', $this->invokePrivate($inspector, 'trimmedOrNull', "  fallback 25% left \n"));
     }
 
     public function testParseResetValueHandlesWhitespaceRelativeStringsAndInvalidValues(): void
