@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace HousekeepingAgentCron\Runtime;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use Throwable;
+
 final readonly class ProviderCapacityInspector
 {
     public function __construct(private ProcessExecutor $processExecutor = new ProcessExecutor())
@@ -21,6 +25,8 @@ final readonly class ProviderCapacityInspector
         if (!is_array($providers)) {
             return [];
         }
+        $now = time();
+        $today = gmdate('Y-m-d', $now);
 
         $reports = [];
         foreach ($providers as $providerName => $providerConfig) {
@@ -30,7 +36,7 @@ final readonly class ProviderCapacityInspector
             /** @var array<string, mixed> $typedProviderConfig */
             $typedProviderConfig = $providerConfig;
 
-            $reports[] = $this->inspectProvider($providerName, $typedProviderConfig, $state);
+            $reports[] = $this->inspectProvider($providerName, $typedProviderConfig, $state, $today, $now);
         }
 
         usort($reports, $this->compare(...));
@@ -42,14 +48,19 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $providerConfig
      * @param array<string, mixed> $state
      */
-    private function inspectProvider(string $providerName, array $providerConfig, array $state): ProviderCapacityReport
+    private function inspectProvider(string $providerName, array $providerConfig, array $state, string $today, int $now): ProviderCapacityReport
     {
         $enabled = ($providerConfig['enabled'] ?? false) === true;
         $budget = $this->positiveInt($providerConfig['daily_budget'] ?? 0);
-        $used = $this->providerUsage($state, $providerName);
+        $used = $this->providerUsage($state, $providerName, $today);
         $budgetRemaining = $budget > 0 ? max($budget - $used, 0) : null;
-        $cooldownRemaining = $this->cooldownRemainingSeconds($providerConfig, $state, $providerName);
-        $probe = $this->probeProvider($providerName, $providerConfig);
+        $cooldownRemaining = $this->cooldownRemainingSeconds($providerConfig, $state, $providerName, $now);
+        $probe = $enabled
+            ? $this->probeProvider($providerName, $providerConfig, $now)
+            : [
+                'status' => 'not-configured',
+                'probe_message' => 'Probe skipped because provider is disabled.',
+            ];
 
         $status = 'ready';
         if (!$enabled) {
@@ -93,7 +104,7 @@ final readonly class ProviderCapacityInspector
      *     external_metrics?: list<array{label: string, remaining_ratio: float, reset_at: int|null}>
      * }
      */
-    private function probeProvider(string $providerName, array $providerConfig): array
+    private function probeProvider(string $providerName, array $providerConfig, int $now): array
     {
         $command = $this->stringList($providerConfig['resource_command'] ?? []);
         if ($command === []) {
@@ -115,7 +126,7 @@ final readonly class ProviderCapacityInspector
             ];
         }
 
-        $metrics = $this->metricsFromOutput($providerName, $process->stdout, $process->stderr);
+        $metrics = $this->metricsFromOutput($providerName, $process->stdout, $process->stderr, $now);
         if ($metrics === []) {
             return [
                 'status' => 'failed',
@@ -131,7 +142,7 @@ final readonly class ProviderCapacityInspector
             if ($metricResetAt === null) {
                 continue;
             }
-            if ($resetAt === null || $metricResetAt < $resetAt) {
+            if ($resetAt === null || $metricResetAt > $resetAt) {
                 $resetAt = $metricResetAt;
             }
         }
@@ -149,9 +160,9 @@ final readonly class ProviderCapacityInspector
     /**
      * @param array<string, mixed> $state
      */
-    private function providerUsage(array $state, string $providerName): int
+    private function providerUsage(array $state, string $providerName, string $today): int
     {
-        $usage = $this->stateValue($state, 'providers.' . $providerName . '.usage.' . gmdate('Y-m-d'));
+        $usage = $this->stateValue($state, 'providers.' . $providerName . '.usage.' . $today);
 
         return is_int($usage) ? $usage : 0;
     }
@@ -160,7 +171,7 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $providerConfig
      * @param array<string, mixed> $state
      */
-    private function cooldownRemainingSeconds(array $providerConfig, array $state, string $providerName): int
+    private function cooldownRemainingSeconds(array $providerConfig, array $state, string $providerName, int $now): int
     {
         $cooldown = $this->positiveInt($providerConfig['cooldown_seconds'] ?? 0);
         $lastUsedAt = $this->stateValue($state, 'providers.' . $providerName . '.last_used_at');
@@ -168,19 +179,19 @@ final readonly class ProviderCapacityInspector
             return 0;
         }
 
-        return max(($lastUsedAt + $cooldown) - time(), 0);
+        return max(($lastUsedAt + $cooldown) - $now, 0);
     }
 
     /**
      * @return list<array{label: string, remaining_ratio: float, reset_at: int|null}>
      */
-    private function metricsFromOutput(string $providerName, string $stdout, string $stderr): array
+    private function metricsFromOutput(string $providerName, string $stdout, string $stderr, int $now): array
     {
         $output = trim($stdout);
         if ($output !== '') {
             $decoded = json_decode($output, true);
             if (is_array($decoded)) {
-                $metrics = $this->metricsFromJson($decoded);
+                $metrics = $this->metricsFromJson($decoded, '', $now);
                 if ($metrics !== []) {
                     return $metrics;
                 }
@@ -192,17 +203,18 @@ final readonly class ProviderCapacityInspector
             return [];
         }
 
-        return $this->metricsFromText($providerName, $combinedOutput);
+        return $this->metricsFromText($providerName, $combinedOutput, $now);
     }
 
     /**
      * @param array<mixed> $payload
      * @return list<array{label: string, remaining_ratio: float, reset_at: int|null}>
      */
-    private function metricsFromJson(array $payload, string $path = ''): array
+    private function metricsFromJson(array $payload, string $path = '', ?int $now = null): array
     {
+        $now ??= time();
         $metrics = [];
-        $metric = $this->metricFromArray($payload, $path);
+        $metric = $this->metricFromArray($payload, $path, $now);
         if ($metric !== null) {
             $metrics[] = $metric;
         }
@@ -211,7 +223,7 @@ final readonly class ProviderCapacityInspector
             if (!is_string($key) || !is_array($value)) {
                 continue;
             }
-            foreach ($this->metricsFromJson($value, $path === '' ? $key : $path . '.' . $key) as $childMetric) {
+            foreach ($this->metricsFromJson($value, $path === '' ? $key : $path . '.' . $key, $now) as $childMetric) {
                 $metrics[] = $childMetric;
             }
         }
@@ -223,7 +235,7 @@ final readonly class ProviderCapacityInspector
      * @param array<mixed> $payload
      * @return array{label: string, remaining_ratio: float, reset_at: int|null}|null
      */
-    private function metricFromArray(array $payload, string $path): ?array
+    private function metricFromArray(array $payload, string $path, int $now): ?array
     {
         $remainingRatio = $this->extractRemainingRatio($payload);
         if ($remainingRatio === null) {
@@ -231,7 +243,7 @@ final readonly class ProviderCapacityInspector
         }
 
         $label = $this->metricLabel($payload, $path);
-        $resetAt = $this->extractResetAt($payload);
+        $resetAt = $this->extractResetAt($payload, $now);
 
         return [
             'label' => $label,
@@ -243,9 +255,9 @@ final readonly class ProviderCapacityInspector
     /**
      * @return list<array{label: string, remaining_ratio: float, reset_at: int|null}>
      */
-    private function metricsFromText(string $providerName, string $output): array
+    private function metricsFromText(string $providerName, string $output, int $now): array
     {
-        preg_match_all('/^(?P<label>.+?)\s+(?P<percent>\d+(?:\.\d+)?)%\s*(?P<mode>left|remaining|used)?(?:[^\\n]*?resets?\s+(?P<reset>[^\\n]+))?$/mi', $output, $matches, PREG_SET_ORDER);
+        preg_match_all('/^(?P<label>.+?)\s+(?P<percent>\d+(?:\.\d+)?)%\s*(?P<mode>left|remaining|used)?(?:.*?resets?\s+(?P<reset>.+))?$/mi', $output, $matches, PREG_SET_ORDER);
 
         $metrics = [];
         foreach ($matches as $match) {
@@ -256,7 +268,7 @@ final readonly class ProviderCapacityInspector
             $metrics[] = [
                 'label' => $label !== '' ? $label : $providerName,
                 'remaining_ratio' => $this->clampRatio($remainingRatio),
-                'reset_at' => $this->parseResetValue($match['reset'] ?? null),
+                'reset_at' => $this->parseResetValue($match['reset'] ?? null, $now),
             ];
         }
 
@@ -316,10 +328,10 @@ final readonly class ProviderCapacityInspector
     /**
      * @param array<mixed> $payload
      */
-    private function extractResetAt(array $payload): ?int
+    private function extractResetAt(array $payload, int $now): ?int
     {
         foreach (['reset_at', 'resets_at', 'next_reset_at', 'resetAt', 'nextResetAt'] as $key) {
-            $resetAt = $this->parseResetValue($payload[$key] ?? null);
+            $resetAt = $this->parseResetValue($payload[$key] ?? null, $now);
             if ($resetAt !== null) {
                 return $resetAt;
             }
@@ -328,7 +340,7 @@ final readonly class ProviderCapacityInspector
         foreach (['reset_in_seconds', 'resets_in_seconds', 'seconds_until_reset', 'resetInSeconds'] as $key) {
             $value = $payload[$key] ?? null;
             if (is_int($value) || is_float($value)) {
-                return time() + (int) $value;
+                return $now + (int) $value;
             }
         }
 
@@ -372,7 +384,7 @@ final readonly class ProviderCapacityInspector
         return null;
     }
 
-    private function parseResetValue(mixed $value): ?int
+    private function parseResetValue(mixed $value, int $now): ?int
     {
         if (is_int($value)) {
             return $value > 1000000000000 ? (int) floor($value / 1000) : $value;
@@ -398,12 +410,17 @@ final readonly class ProviderCapacityInspector
 
         $relative = $this->relativeSeconds($trimmed);
         if ($relative !== null) {
-            return time() + $relative;
+            return $now + $relative;
         }
 
-        $timestamp = strtotime($trimmed);
+        try {
+            $timezone = new DateTimeZone('UTC');
+            $date = new DateTimeImmutable($trimmed, $timezone);
 
-        return $timestamp === false ? null : $timestamp;
+            return $date->getTimestamp();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function relativeSeconds(string $value): ?int
@@ -455,10 +472,6 @@ final readonly class ProviderCapacityInspector
         $rightBudgetRemaining = $right->internalBudgetRemaining ?? PHP_INT_MAX;
         if ($leftBudgetRemaining !== $rightBudgetRemaining) {
             return $rightBudgetRemaining <=> $leftBudgetRemaining;
-        }
-
-        if ($left->cooldownRemainingSeconds !== $right->cooldownRemainingSeconds) {
-            return $left->cooldownRemainingSeconds <=> $right->cooldownRemainingSeconds;
         }
 
         return strcmp($left->provider, $right->provider);
