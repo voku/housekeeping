@@ -282,7 +282,11 @@ final readonly class ProviderCapacityInspector
     {
         $unique = [];
         foreach ($metrics as $metric) {
-            $key = json_encode($metric);
+            $key = json_encode([
+                'label' => $metric['label'],
+                'remaining_ratio' => $metric['remaining_ratio'],
+                'reset_at' => $metric['reset_at'],
+            ]);
             if ($key === false) {
                 continue;
             }

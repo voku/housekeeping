@@ -1,0 +1,2784 @@
+<?xml version="1.0"?>
+<phpunit xmlns="https://schema.phpunit.de/coverage/1.0">
+  <file name="ApplicationFactory.php" path="/Runtime">
+    <totals>
+      <lines total="248" comments="44" code="204" executable="91" executed="81" percent="89.01"/>
+      <methods count="15" tested="8" percent="53.33"/>
+      <functions count="0" tested="0" percent="0"/>
+      <classes count="1" tested="0" percent="0.00"/>
+      <traits count="0" tested="0" percent="0"/>
+    </totals>
+    <class name="HousekeepingAgentCron\Runtime\ApplicationFactory" start="23" executable="91" executed="81" crap="57.87">
+      <namespace name="HousekeepingAgentCron\Runtime"/>
+      <method name="__construct" signature="__construct(HousekeepingAgentCron\Runtime\ProcessExecutor $processExecutor)" start="25" end="27" crap="1" executable="1" executed="1" coverage="100"/>
+      <method name="loadConfig" signature="loadConfig(string $configFile): array" start="32" end="42" crap="2.03" executable="5" executed="4" coverage="80"/>
+      <method name="tasks" signature="tasks(array $config): array" start="48" end="60" crap="3.03" executable="7" executed="6" coverage="85.714285714286"/>
+      <method name="providers" signature="providers(array $config): array" start="66" end="80" crap="4" executable="8" executed="8" coverage="100"/>
+      <method name="stateStore" signature="stateStore(array $config): HousekeepingAgentCron\State\JsonStateStore" start="85" end="88" crap="1" executable="1" executed="1" coverage="100"/>
+      <method name="logger" signature="logger(array $config): HousekeepingAgentCron\Runtime\JsonLogger" start="93" end="96" crap="1" executable="1" executed="1" coverage="100"/>
+      <method name="lockDir" signature="lockDir(array $config): string" start="101" end="104" crap="1" executable="1" executed="1" coverage="100"/>
+      <method name="taskDefinitions" signature="taskDefinitions(array $config): array" start="110" end="137" crap="6.20" executable="17" executed="14" coverage="82.352941176471"/>
+      <method name="providerDefinitions" signature="providerDefinitions(array $config): array" start="143" end="160" crap="5.20" executable="10" executed="8" coverage="80"/>
+      <method name="createTask" signature="createTask(string $name, array $taskConfig): HousekeepingAgentCron\Contract\HousekeepingTask" start="165" end="186" crap="11" executable="18" executed="18" coverage="100"/>
+      <method name="createProvider" signature="createProvider(string $name, array $providerConfig): HousekeepingAgentCron\Contract\ProviderAdapter" start="191" end="203" crap="6.05" executable="9" executed="8" coverage="88.888888888889"/>
+      <method name="path" signature="path(array $config, string $key, string $default): string" start="208" end="216" crap="3.14" executable="4" executed="3" coverage="75"/>
+      <method name="stringList" signature="stringList(mixed $value): array" start="222" end="236" crap="5.07" executable="7" executed="6" coverage="85.714285714286"/>
+      <method name="positiveInt" signature="positiveInt(mixed $value, int $default): int" start="238" end="241" crap="3" executable="1" executed="1" coverage="100"/>
+      <method name="intValue" signature="intValue(mixed $value, int $default): int" start="243" end="246" crap="2" executable="1" executed="1" coverage="100"/>
+    </class>
+    <coverage>
+      <line nr="27">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testFormattingHelpersHandleNullAndNonNullValues"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="34">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="35">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="39">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="41">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="50">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="51">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="52">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="53">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="56">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="59">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="68">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="69">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="70">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="72">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="73">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="74">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="76">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="79">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="87">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="95">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="103">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="112">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="113">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="116">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="117">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="118">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="122">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="123">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="126">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="127">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="128">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="129">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="133">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="134">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="136">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="145">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="146">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="149">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="150">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="151">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="155">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="156">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="159">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryAlwaysIncludesNullProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag"/>
+      </line>
+      <line nr="167">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="168">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="169">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="170">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="171">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="172">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="173">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="174">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="176">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="177">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="178">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="179">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="180">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="181">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="182">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="183">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="184">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="193">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="194">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="195">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="197">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="198">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="199">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="201">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+      <line nr="210">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="211">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="212">
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingProvidersCommandTest::testProvidersCommandPrintsRecommendedProviderAndJson"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingStateCommandTest::testStateCommandPrintsPersistedJson"/>
+      </line>
+      <line nr="224">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="228">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="229">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="230">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="231">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="235">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="240">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="245">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+      </line>
+      <line nr="185">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryBuildsConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingListCommandTest::testListDisplaysConfiguredTasks"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testLockPreventsConcurrentRuns"/>
+        <covered by="HousekeepingAgentCron\Tests\HousekeepingRunCommandTest::testUnknownTaskOptionReturnsInvalidConfig"/>
+      </line>
+      <line nr="202">
+        <covered by="HousekeepingAgentCron\Tests\ApplicationFactoryTest::testFactoryIncludesEveryExplicitlyEnabledExternalProvider"/>
+      </line>
+    </coverage>
+    <source>
+      <line no="1">
+        <token name="T_OPEN_TAG">&lt;?php</token>
+      </line>
+      <line no="2"/>
+      <line no="3">
+        <token name="T_DECLARE">declare</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">strict_types</token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_LNUMBER">1</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="4"/>
+      <line no="5">
+        <token name="T_NAMESPACE">namespace</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Runtime</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="6"/>
+      <line no="7">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Contract\HousekeepingTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="8">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Contract\ProviderAdapter</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="9">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Provider\CodexProvider</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="10">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Provider\CopilotProvider</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="11">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Provider\GeminiProvider</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="12">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Provider\NullProvider</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="13">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\State\JsonStateStore</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="14">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\CommitLearningTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="15">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\DependencyAuditTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="16">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\DocumentationRefreshTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="17">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\PhpstanFixSuggestionTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="18">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\ProjectDiscoveryTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="19">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\SlopScanTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="20">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NAME_QUALIFIED">HousekeepingAgentCron\Task\TodoRefinementTask</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="21">
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="22"/>
+      <line no="23">
+        <token name="T_FINAL">final</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CLASS">class</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">ApplicationFactory</token>
+      </line>
+      <line no="24">
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="25">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">__construct</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_READONLY">readonly</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">ProcessExecutor</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$processExecutor</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">ProcessExecutor</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+      </line>
+      <line no="26">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="27">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="28"/>
+      <line no="29">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="30">
+        <token name="T_DOC_COMMENT">     * @return array&lt;string, mixed&gt;</token>
+      </line>
+      <line no="31">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="32">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">loadConfig</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$configFile</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="33">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="34">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_REQUIRE">require</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$configFile</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="35">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="36">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Config file must return an array.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="37">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="38">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_DOC_COMMENT">/** @var array&lt;string, mixed&gt; $typedConfig */</token>
+      </line>
+      <line no="39">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$typedConfig</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="40"/>
+      <line no="41">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$typedConfig</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="42">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="43"/>
+      <line no="44">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="45">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="46">
+        <token name="T_DOC_COMMENT">     * @return list&lt;HousekeepingTask&gt;</token>
+      </line>
+      <line no="47">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="48">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">tasks</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="49">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="50">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$definitions</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">taskDefinitions</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="51">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$tasks</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="52">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_FOREACH">foreach</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$definitions</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_AS">as</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="53">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'enabled'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">false</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_NOT_IDENTICAL">!==</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">true</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="54">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_CONTINUE">continue</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="55">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="56">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$tasks</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">createTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="57">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="58"/>
+      <line no="59">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$tasks</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="60">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="61"/>
+      <line no="62">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="63">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="64">
+        <token name="T_DOC_COMMENT">     * @return array&lt;string, ProviderAdapter&gt;</token>
+      </line>
+      <line no="65">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="66">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">providers</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="67">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="68">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="69">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$nullProvider</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">NullProvider</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="70">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$nullProvider</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">name</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$nullProvider</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="71"/>
+      <line no="72">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_FOREACH">foreach</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">providerDefinitions</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_AS">as</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="73">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_IDENTICAL">===</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'local-null-provider'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_OR">||</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'enabled'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">false</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_NOT_IDENTICAL">!==</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">true</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="74">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_CONTINUE">continue</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="75">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="76">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">createProvider</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="77">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="78"/>
+      <line no="79">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="80">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="81"/>
+      <line no="82">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="83">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="84">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="85">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">stateStore</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">JsonStateStore</token>
+      </line>
+      <line no="86">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="87">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">JsonStateStore</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">path</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'state'</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DIR">__DIR__</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'/../../var/state/state.json'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="88">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="89"/>
+      <line no="90">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="91">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="92">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="93">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">logger</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">JsonLogger</token>
+      </line>
+      <line no="94">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="95">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">JsonLogger</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">rtrim</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">path</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'logs'</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DIR">__DIR__</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'/../../var/logs'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'/'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'/housekeeping.log'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="96">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="97"/>
+      <line no="98">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="99">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="100">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="101">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PUBLIC">public</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">lockDir</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+      </line>
+      <line no="102">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="103">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">path</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'lock'</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DIR">__DIR__</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'/../../var/lock'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="104">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="105"/>
+      <line no="106">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="107">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="108">
+        <token name="T_DOC_COMMENT">     * @return array&lt;string, array&lt;string, mixed&gt;&gt;</token>
+      </line>
+      <line no="109">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="110">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">taskDefinitions</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="111">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="112">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$tasks</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'tasks'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="113">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$tasks</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="114">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Config key "tasks" must be an array.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="115">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="116">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="117">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_FOREACH">foreach</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$tasks</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_AS">as</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="118">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_OR">||</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="119">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Each task definition must be a named array.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="120">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="121">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_DOC_COMMENT">/** @var array&lt;string, mixed&gt; $typedTaskConfig */</token>
+      </line>
+      <line no="122">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$typedTaskConfig</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="123">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$typedTaskConfig</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="124">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="125"/>
+      <line no="126">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_STRING">uksort</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$leftName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$rightName</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_USE">use</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">int</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="127">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$leftPriority</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">intValue</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$leftName</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'priority'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">0</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">0</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="128">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$rightPriority</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">intValue</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$rightName</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'priority'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">0</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">0</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="129">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$leftPriority</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_IDENTICAL">===</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$rightPriority</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="130">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">strcmp</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$leftName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$rightName</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="131">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="132"/>
+      <line no="133">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$rightPriority</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_SPACESHIP">&lt;=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$leftPriority</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="134">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="135"/>
+      <line no="136">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$typedTasks</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="137">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="138"/>
+      <line no="139">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="140">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="141">
+        <token name="T_DOC_COMMENT">     * @return array&lt;string, array&lt;string, mixed&gt;&gt;</token>
+      </line>
+      <line no="142">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="143">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">providerDefinitions</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="144">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="145">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'providers'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="146">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="147">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Config key "providers" must be an array.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="148">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="149">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$typedProviders</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="150">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_FOREACH">foreach</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providers</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_AS">as</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="151">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_OR">||</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="152">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Each provider definition must be a named array.'</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="153">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="154">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_DOC_COMMENT">/** @var array&lt;string, mixed&gt; $typedProviderConfig */</token>
+      </line>
+      <line no="155">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$typedProviderConfig</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="156">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_VARIABLE">$typedProviders</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$typedProviderConfig</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="157">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="158"/>
+      <line no="159">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$typedProviders</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="160">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="161"/>
+      <line no="162">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="163">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $taskConfig</token>
+      </line>
+      <line no="164">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="165">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">createTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">HousekeepingTask</token>
+      </line>
+      <line no="166">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="167">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">positiveInt</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'interval_seconds'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">3600</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">3600</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="168">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'provider'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'provider'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'local-null-provider'</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="169">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$inputFiles</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">stringList</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'input_files'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="170">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$contextFiles</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">stringList</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'context_files'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="171">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'working_directory'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'working_directory'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">dirname</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_DIR">__DIR__</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">2</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="172">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">stringList</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'command'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="173">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">positiveInt</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'timeout_seconds'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">120</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">120</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="174">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$maxCommits</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">positiveInt</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$taskConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'max_commits'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">10</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">10</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="175"/>
+      <line no="176">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_MATCH">match</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="177">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'project:discover'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">ProjectDiscoveryTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="178">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'commits:learn'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">CommitLearningTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$maxCommits</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="179">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'docs:refresh'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">DocumentationRefreshTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$inputFiles</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$contextFiles</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="180">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'todo:refine'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">TodoRefinementTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$inputFiles</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="181">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'deps:audit'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">DependencyAuditTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="182">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'phpstan:suggest-fixes'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">PhpstanFixSuggestionTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="183">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'slop:scan'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">SlopScanTask</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$intervalSeconds</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerName</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="184">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_DEFAULT">default</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Unknown task configuration: '</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="185">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="186">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="187"/>
+      <line no="188">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="189">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $providerConfig</token>
+      </line>
+      <line no="190">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="191">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">createProvider</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">ProviderAdapter</token>
+      </line>
+      <line no="192">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="193">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">stringList</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'command'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="194">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'working_directory'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'working_directory'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">dirname</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_DIR">__DIR__</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">2</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="195">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">positiveInt</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$providerConfig</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'timeout_seconds'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">600</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">600</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="196"/>
+      <line no="197">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_MATCH">match</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="198">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'codex'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">CodexProvider</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="199">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'gemini'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">GeminiProvider</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="200">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'copilot'</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">CopilotProvider</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$this</token>
+        <token name="T_OBJECT_OPERATOR">-&gt;</token>
+        <token name="T_STRING">processExecutor</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$command</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$workingDirectory</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$timeoutSeconds</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="201">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_DEFAULT">default</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOUBLE_ARROW">=&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_THROW">throw</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_NEW">new</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">RuntimeException</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'Unknown provider configuration: '</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_DOT">.</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$name</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COMMA">,</token>
+      </line>
+      <line no="202">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="203">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="204"/>
+      <line no="205">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="206">
+        <token name="T_DOC_COMMENT">     * @param array&lt;string, mixed&gt; $config</token>
+      </line>
+      <line no="207">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="208">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">path</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_ARRAY">array</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$key</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$default</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">string</token>
+      </line>
+      <line no="209">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="210">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$paths</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$config</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">'paths'</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="211">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$paths</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_AND">&amp;&amp;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$paths</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$key</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COALESCE">??</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">null</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="212">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$paths</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_VARIABLE">$key</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="213">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="214"/>
+      <line no="215">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$default</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="216">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="217"/>
+      <line no="218">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_DOC_COMMENT">/**</token>
+      </line>
+      <line no="219">
+        <token name="T_DOC_COMMENT">     * @param mixed $value</token>
+      </line>
+      <line no="220">
+        <token name="T_DOC_COMMENT">     * @return list&lt;string&gt;</token>
+      </line>
+      <line no="221">
+        <token name="T_DOC_COMMENT">     */</token>
+      </line>
+      <line no="222">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">stringList</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">mixed</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_ARRAY">array</token>
+      </line>
+      <line no="223">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="224">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_EXCLAMATION_MARK">!</token>
+        <token name="T_STRING">is_array</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="225">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="226">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="227"/>
+      <line no="228">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_VARIABLE">$items</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="229">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_FOREACH">foreach</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_AS">as</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$item</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="230">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_IF">if</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">is_string</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$item</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_AND">&amp;&amp;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$item</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_IS_NOT_IDENTICAL">!==</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_CONSTANT_ENCAPSED_STRING">''</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="231">
+        <token name="T_WHITESPACE">                </token>
+        <token name="T_VARIABLE">$items</token>
+        <token name="T_OPEN_SQUARE">[</token>
+        <token name="T_CLOSE_SQUARE">]</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_EQUAL">=</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$item</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="232">
+        <token name="T_WHITESPACE">            </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="233">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="234"/>
+      <line no="235">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$items</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="236">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="237"/>
+      <line no="238">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">positiveInt</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">mixed</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">int</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$default</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">int</token>
+      </line>
+      <line no="239">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="240">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_int</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_BOOLEAN_AND">&amp;&amp;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_GT">&gt;</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_LNUMBER">0</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$default</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="241">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="242"/>
+      <line no="243">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_PRIVATE">private</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_FUNCTION">function</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">intValue</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_STRING">mixed</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_COMMA">,</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">int</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$default</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">int</token>
+      </line>
+      <line no="244">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_OPEN_CURLY">{</token>
+      </line>
+      <line no="245">
+        <token name="T_WHITESPACE">        </token>
+        <token name="T_RETURN">return</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_STRING">is_int</token>
+        <token name="T_OPEN_BRACKET">(</token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_CLOSE_BRACKET">)</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_QUESTION_MARK">?</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$value</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_COLON">:</token>
+        <token name="T_WHITESPACE"> </token>
+        <token name="T_VARIABLE">$default</token>
+        <token name="T_SEMICOLON">;</token>
+      </line>
+      <line no="246">
+        <token name="T_WHITESPACE">    </token>
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="247">
+        <token name="T_CLOSE_CURLY">}</token>
+      </line>
+      <line no="248"/>
+    </source>
+  </file>
+</phpunit>
