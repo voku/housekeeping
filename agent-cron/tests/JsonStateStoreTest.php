@@ -17,7 +17,7 @@ final class JsonStateStoreTest extends TestCase
         file_put_contents($blockingFile, 'block');
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unable to create state directory: ' . $blockingFile . ' for ' . $blockingFile . '/state.json');
+        $this->expectExceptionMessageMatches('/^' . preg_quote('Unable to create state directory: ' . $blockingFile . ' for ' . $blockingFile . '/state.json', '/') . '/');
 
         try {
             new JsonStateStore($blockingFile . '/state.json');
