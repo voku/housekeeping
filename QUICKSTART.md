@@ -50,6 +50,12 @@ Then update the existing config values to follow this pattern:
 'commits:learn' => [
     'working_directory' => $targetProjectRoot,
 ],
+'blindspots:analyze' => [
+    'context_files' => [
+        $targetProjectRoot . '/README.md',
+        $targetProjectRoot . '/AGENTS.md',
+    ],
+],
 'docs:refresh' => [
     'input_files' => [
         $targetProjectRoot . '/README.md',
@@ -89,7 +95,7 @@ php bin/agent-cron housekeeping:run --dry-run
 
 This lets you confirm the task list, provider status, and file discovery before any provider-backed work runs.
 
-If you want the first real run to process more than the default top three due tasks, raise `max_tasks_per_run` in the config before scheduling it.
+If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it.
 
 ## 4. Keep the maintenance scope conservative
 
@@ -102,6 +108,7 @@ Housekeeping works best when it behaves like a careful junior developer:
 - sync docs with the current code, database, and infrastructure reality
 
 Keep provider-backed tasks focused on no-breaking-changes maintenance work.
+The default blind-spot loop works best when its context files point at the docs or agent instructions you expect Housekeeping to keep aligned over time.
 
 ## 5. Schedule it
 

@@ -62,12 +62,13 @@ final readonly class DependencyAuditTask extends AbstractProviderTask
 
         return $this->executeProvider(
             $context,
-            'Summarize the dependency audit output and propose safe manual follow-up actions only. Do not upgrade anything automatically.',
+            'Summarize the dependency audit output and propose safe manual follow-up actions only. Use the learned repository patterns and recent blind-spot guidance to prioritize follow-up. Do not upgrade anything automatically.',
             [
                 'working_directory' => $this->workingDirectory,
                 'command' => $process->command,
                 'stdout' => $process->stdout,
                 'stderr' => $process->stderr,
+                ...$this->sharedMetadata($context),
             ],
             'Dependency audit completed.',
         );

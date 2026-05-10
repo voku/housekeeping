@@ -13,6 +13,7 @@ use HousekeepingAgentCron\Provider\NullProvider;
 use HousekeepingAgentCron\State\JsonStateStore;
 use HousekeepingAgentCron\Task\CommitLearningTask;
 use HousekeepingAgentCron\Task\DependencyAuditTask;
+use HousekeepingAgentCron\Task\BlindSpotAnalysisTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
 use HousekeepingAgentCron\Task\ProjectDiscoveryTask;
@@ -176,6 +177,7 @@ final class ApplicationFactory
         return match ($name) {
             'project:discover' => new ProjectDiscoveryTask($intervalSeconds),
             'commits:learn' => new CommitLearningTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $maxCommits),
+            'blindspots:analyze' => new BlindSpotAnalysisTask($intervalSeconds, $providerName, $contextFiles),
             'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles, $contextFiles),
             'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles),
             'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),

@@ -6,7 +6,7 @@ $packageRoot = dirname(__DIR__);
 
 return [
     'max_run_seconds' => 900,
-    'max_tasks_per_run' => 3,
+    'max_tasks_per_run' => 4,
     'paths' => [
         'logs' => $packageRoot . '/var/logs',
         'state' => $packageRoot . '/var/state/state.json',
@@ -26,6 +26,13 @@ return [
             'provider' => 'local-null-provider',
             'working_directory' => $packageRoot,
             'max_commits' => 10,
+        ],
+        'blindspots:analyze' => [
+            'enabled' => true,
+            'interval_seconds' => 3600,
+            'priority' => 150,
+            'provider' => 'local-null-provider',
+            'context_files' => [$packageRoot . '/README.md', $packageRoot . '/QUICKSTART.md', $packageRoot . '/config/tasks.php', $packageRoot . '/crontab.example'],
         ],
         'docs:refresh' => [
             'enabled' => true,

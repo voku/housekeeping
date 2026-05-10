@@ -41,7 +41,7 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
-Dogfooding note: with the default `max_tasks_per_run` of `3`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, and `docs:refresh` first. Later due tasks run on subsequent invocations unless you raise that cap.
+Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `docs:refresh`, and `todo:refine` first. On later runs, `blindspots:analyze` uses the previous experiment result to feed blind-spot guidance back into the provider-backed tasks.
 
 ## Usage
 
@@ -124,7 +124,9 @@ External providers can be tuned from config instead of code changes:
 
 When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, or Copilot against a copied config will run them inside the maintained repository unless you override it.
 
-Default runs now start with `project:discover` and `commits:learn`, then continue with documentation, TODO, audit, and analysis tasks using the discovered metadata.
+Default runs now start with `project:discover` and `commits:learn`, then use `blindspots:analyze` to review the previous run before later provider-backed tasks continue with documentation, TODO, audit, and analysis work.
+
+`blindspots:analyze` is the self-optimization loop: it reviews the last completed housekeeping run, stores blind-spot guidance under `metadata.blind_spots`, and later provider-backed tasks receive that metadata alongside the normal repository-learning metadata.
 
 When you enable a real provider, keep the task scope conservative: review dependency updates, suggest or add missing tests, fix PHPDocs without runtime changes, refresh `AGENTS.md` or skills files from recent repository learnings, and sync docs with the current code, database, or infrastructure reality. Treat Housekeeping as a no-breaking-changes assistant, not an autonomous refactoring bot.
 

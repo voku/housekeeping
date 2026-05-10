@@ -38,11 +38,10 @@ final readonly class TodoRefinementTask extends AbstractProviderTask
 
         return $this->executeProvider(
             $context,
-            'Convert the project TODO notes into concise actionable maintenance items that respect the learned repository patterns. Do not suggest unsafe automation or unreviewed changes.',
+            'Convert the project TODO notes into concise actionable maintenance items that respect the learned repository patterns and recent blind-spot guidance. Do not suggest unsafe automation or unreviewed changes.',
             [
                 'todo_documents' => $todos,
-                'project_metadata' => $context->metadataValue('project'),
-                'learning_metadata' => $context->metadataValue('learning'),
+                ...$this->sharedMetadata($context),
             ],
             'TODO refinement completed.',
         );

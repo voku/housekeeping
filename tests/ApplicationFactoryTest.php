@@ -17,7 +17,7 @@ final class ApplicationFactoryTest extends TestCase
         $tasks = $factory->tasks($config);
 
         self::assertSame(
-            ['project:discover', 'commits:learn', 'docs:refresh', 'todo:refine', 'deps:audit', 'phpstan:suggest-fixes', 'slop:scan'],
+            ['project:discover', 'commits:learn', 'blindspots:analyze', 'docs:refresh', 'todo:refine', 'deps:audit', 'phpstan:suggest-fixes', 'slop:scan'],
             array_map(static fn ($task) => $task->name(), $tasks),
         );
     }

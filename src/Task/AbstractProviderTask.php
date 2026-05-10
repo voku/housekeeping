@@ -48,6 +48,18 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    final protected function sharedMetadata(RunContext $context): array
+    {
+        return [
+            'project_metadata' => $context->metadataValue('project'),
+            'learning_metadata' => $context->metadataValue('learning'),
+            'blind_spot_metadata' => $context->metadataValue('blind_spots'),
+        ];
+    }
+
+    /**
      * @param list<string> $configuredPaths
      * @return array<string, string>
      */

@@ -60,7 +60,19 @@ final class DocumentationRefreshTaskTest extends TestCase
                         ],
                     ],
                 ],
-                ['tasks' => [], 'providers' => [], 'runs' => []],
+                [
+                    'tasks' => [],
+                    'providers' => [],
+                    'runs' => [],
+                    'metadata' => [
+                        'learning' => [
+                            'last_provider_output' => 'Keep docs in sync with releases.',
+                        ],
+                        'blind_spots' => [
+                            'last_provider_output' => 'Quick start drifted from the default config.',
+                        ],
+                    ],
+                ],
                 new InMemoryStateStore(),
                 new JsonLogger($dir . '/logs/housekeeping.log'),
                 ['local-null-provider' => $provider],
@@ -73,6 +85,12 @@ final class DocumentationRefreshTaskTest extends TestCase
                 $firstFile => 'Readme contents',
                 $secondFile => 'Todo contents',
             ], $provider->payload['documents']);
+            $blindSpotMetadata = $provider->payload['blind_spot_metadata'] ?? null;
+            self::assertIsArray($blindSpotMetadata);
+            self::assertSame(
+                'Quick start drifted from the default config.',
+                $blindSpotMetadata['last_provider_output'] ?? null,
+            );
         } finally {
             (new Filesystem())->remove($dir);
         }
