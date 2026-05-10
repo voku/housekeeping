@@ -10,6 +10,8 @@ use Throwable;
 
 final readonly class ProviderCapacityInspector
 {
+    private const int DEFAULT_TIMEOUT_SECONDS = 60;
+
     public function __construct(private ProcessExecutor $processExecutor = new ProcessExecutor())
     {
     }
@@ -51,7 +53,7 @@ final readonly class ProviderCapacityInspector
     private function inspectProvider(string $providerName, array $providerConfig, array $state, string $today, int $now): ProviderCapacityReport
     {
         $enabled = ($providerConfig['enabled'] ?? false) === true;
-        $budget = $this->positiveInt($providerConfig['daily_budget'] ?? 0);
+        $budget = $this->configuredDailyBudget($providerConfig);
         $used = $this->providerUsage($state, $providerName, $today);
         $budgetRemaining = $budget > 0 ? max($budget - $used, 0) : null;
         $cooldownRemaining = $this->cooldownRemainingSeconds($providerConfig, $state, $providerName, $now);
@@ -114,8 +116,8 @@ final readonly class ProviderCapacityInspector
             ];
         }
 
-        $workingDirectory = is_string($providerConfig['working_directory'] ?? null) ? $providerConfig['working_directory'] : dirname(__DIR__, 2);
-        $timeoutSeconds = $this->positiveInt($providerConfig['timeout_seconds'] ?? 60);
+        $workingDirectory = $this->configuredWorkingDirectory($providerConfig);
+        $timeoutSeconds = $this->configuredTimeoutSeconds($providerConfig);
         $process = $this->processExecutor->execute($command, $workingDirectory, $timeoutSeconds);
 
         if (!$process->successful()) {
@@ -136,16 +138,11 @@ final readonly class ProviderCapacityInspector
         }
 
         $remainingRatios = array_map(static fn (array $metric): float => $metric['remaining_ratio'], $metrics);
-        $resetAt = null;
-        foreach ($metrics as $metric) {
-            $metricResetAt = $metric['reset_at'];
-            if ($metricResetAt === null) {
-                continue;
-            }
-            if ($resetAt === null || $metricResetAt > $resetAt) {
-                $resetAt = $metricResetAt;
-            }
-        }
+        $resetValues = array_values(array_filter(
+            array_map(static fn (array $metric): ?int => $metric['reset_at'], $metrics),
+            static fn (?int $metricResetAt): bool => $metricResetAt !== null,
+        ));
+        $resetAt = $resetValues === [] ? null : max($resetValues);
 
         return [
             'status' => 'ok',
@@ -173,7 +170,7 @@ final readonly class ProviderCapacityInspector
      */
     private function cooldownRemainingSeconds(array $providerConfig, array $state, string $providerName, int $now): int
     {
-        $cooldown = $this->positiveInt($providerConfig['cooldown_seconds'] ?? 0);
+        $cooldown = $this->configuredCooldownSeconds($providerConfig);
         $lastUsedAt = $this->stateValue($state, 'providers.' . $providerName . '.last_used_at');
         if ($cooldown < 1 || !is_int($lastUsedAt)) {
             return 0;
@@ -191,28 +188,33 @@ final readonly class ProviderCapacityInspector
         if ($output !== '') {
             $decoded = json_decode($output, true);
             if (is_array($decoded)) {
-                $metrics = $this->metricsFromJson($decoded, '', $now);
+                $metrics = $this->metricsFromJson($decoded, [], $now);
                 if ($metrics !== []) {
                     return $metrics;
                 }
             }
         }
 
-        $combinedOutput = trim($stdout . PHP_EOL . $stderr);
-        if ($combinedOutput === '') {
-            return [];
+        $metrics = [];
+        foreach ([trim($stdout), trim($stderr)] as $textOutput) {
+            if ($textOutput === '') {
+                continue;
+            }
+            foreach ($this->metricsFromText($providerName, $textOutput, $now) as $metric) {
+                $metrics[] = $metric;
+            }
         }
 
-        return $this->metricsFromText($providerName, $combinedOutput, $now);
+        return $this->uniqueMetrics($metrics);
     }
 
     /**
      * @param array<mixed> $payload
+     * @param list<string> $path
      * @return list<array{label: string, remaining_ratio: float, reset_at: int|null}>
      */
-    private function metricsFromJson(array $payload, string $path = '', ?int $now = null): array
+    private function metricsFromJson(array $payload, array $path, int $now): array
     {
-        $now ??= time();
         $metrics = [];
         $metric = $this->metricFromArray($payload, $path, $now);
         if ($metric !== null) {
@@ -223,7 +225,7 @@ final readonly class ProviderCapacityInspector
             if (!is_string($key) || !is_array($value)) {
                 continue;
             }
-            foreach ($this->metricsFromJson($value, $path === '' ? $key : $path . '.' . $key, $now) as $childMetric) {
+            foreach ($this->metricsFromJson($value, [...$path, $key], $now) as $childMetric) {
                 $metrics[] = $childMetric;
             }
         }
@@ -233,9 +235,10 @@ final readonly class ProviderCapacityInspector
 
     /**
      * @param array<mixed> $payload
+     * @param list<string> $path
      * @return array{label: string, remaining_ratio: float, reset_at: int|null}|null
      */
-    private function metricFromArray(array $payload, string $path, int $now): ?array
+    private function metricFromArray(array $payload, array $path, int $now): ?array
     {
         $remainingRatio = $this->extractRemainingRatio($payload);
         if ($remainingRatio === null) {
@@ -283,7 +286,10 @@ final readonly class ProviderCapacityInspector
     {
         $unique = [];
         foreach ($metrics as $metric) {
-            $key = $metric['label'] . '|' . $metric['remaining_ratio'] . '|' . ($metric['reset_at'] ?? 'null');
+            $key = json_encode([$metric['label'], $metric['remaining_ratio'], $metric['reset_at']]);
+            if ($key === false) {
+                continue;
+            }
             $unique[$key] = $metric;
         }
 
@@ -349,8 +355,9 @@ final readonly class ProviderCapacityInspector
 
     /**
      * @param array<mixed> $payload
+     * @param list<string> $path
      */
-    private function metricLabel(array $payload, string $path): string
+    private function metricLabel(array $payload, array $path): string
     {
         foreach (['label', 'name', 'metric', 'window', 'period', 'plan'] as $key) {
             $value = $payload[$key] ?? null;
@@ -359,13 +366,43 @@ final readonly class ProviderCapacityInspector
             }
         }
 
-        if ($path !== '') {
-            $segments = explode('.', $path);
-
-            return (string) end($segments);
+        if ($path !== []) {
+            return $path[array_key_last($path)];
         }
 
         return 'limit';
+    }
+
+    /**
+     * @param array<string, mixed> $providerConfig
+     */
+    private function configuredDailyBudget(array $providerConfig): int
+    {
+        return $this->positiveInt($providerConfig['daily_budget'] ?? null);
+    }
+
+    /**
+     * @param array<string, mixed> $providerConfig
+     */
+    private function configuredCooldownSeconds(array $providerConfig): int
+    {
+        return $this->positiveInt($providerConfig['cooldown_seconds'] ?? null);
+    }
+
+    /**
+     * @param array<string, mixed> $providerConfig
+     */
+    private function configuredWorkingDirectory(array $providerConfig): string
+    {
+        return is_string($providerConfig['working_directory'] ?? null) ? $providerConfig['working_directory'] : dirname(__DIR__, 2);
+    }
+
+    /**
+     * @param array<string, mixed> $providerConfig
+     */
+    private function configuredTimeoutSeconds(array $providerConfig): int
+    {
+        return $this->positiveInt($providerConfig['timeout_seconds'] ?? self::DEFAULT_TIMEOUT_SECONDS);
     }
 
     /**

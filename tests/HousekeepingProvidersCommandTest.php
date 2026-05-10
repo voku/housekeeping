@@ -6,7 +6,9 @@ namespace HousekeepingAgentCron\Tests;
 
 use HousekeepingAgentCron\Command\HousekeepingProvidersCommand;
 use HousekeepingAgentCron\Runtime\ExitCode;
+use HousekeepingAgentCron\Runtime\ProviderCapacityReport;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -27,6 +29,24 @@ final class HousekeepingProvidersCommandTest extends TestCase
                 $resetInSeconds,
             ),
         ];
+    }
+
+    private function report(?float $externalRemainingRatio = null, ?int $externalResetAt = null): ProviderCapacityReport
+    {
+        return new ProviderCapacityReport(
+            'gemini',
+            true,
+            'ready',
+            20,
+            3,
+            17,
+            0,
+            $externalRemainingRatio,
+            $externalResetAt,
+            null,
+            null,
+            [],
+        );
     }
 
     public function testProvidersCommandPrintsRecommendedProviderAndJson(): void
@@ -108,5 +128,23 @@ final class HousekeepingProvidersCommandTest extends TestCase
         } finally {
             (new Filesystem())->remove($dir);
         }
+    }
+
+    public function testFormattingHelpersHandleNullAndNonNullValues(): void
+    {
+        $command = new HousekeepingProvidersCommand(__FILE__);
+        $formatCooldown = new ReflectionMethod($command, 'formatCooldown');
+        $formatExternalCapacity = new ReflectionMethod($command, 'formatExternalCapacity');
+        $formatResetAt = new ReflectionMethod($command, 'formatResetAt');
+
+        self::assertSame('-', $formatCooldown->invoke($command, 0));
+        self::assertSame('00:00:01', $formatCooldown->invoke($command, 1));
+        self::assertSame('01:01:01', $formatCooldown->invoke($command, 3661));
+
+        self::assertSame('-', $formatExternalCapacity->invoke($command, $this->report()));
+        self::assertSame('50.0% free', $formatExternalCapacity->invoke($command, $this->report(0.5)));
+
+        self::assertSame('-', $formatResetAt->invoke($command, null));
+        self::assertSame('2026-05-10 15:00:00 UTC', $formatResetAt->invoke($command, gmmktime(15, 0, 0, 5, 10, 2026)));
     }
 }
