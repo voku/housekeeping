@@ -6,7 +6,7 @@
         </include>
     </source>
     <testsuites>
-        <testsuite name="agent-cron">
+        <testsuite name="housekeeping">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

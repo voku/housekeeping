@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 $packageRoot = dirname(__DIR__);
-$repositoryRoot = dirname($packageRoot);
 
 return [
     'max_run_seconds' => 900,
@@ -18,13 +17,13 @@ return [
             'enabled' => true,
             'interval_seconds' => 86400,
             'provider' => 'local-null-provider',
-            'input_files' => [$repositoryRoot . '/TODO.md'],
+            'input_files' => [$packageRoot . '/TODO.md'],
         ],
         'todo:refine' => [
             'enabled' => true,
             'interval_seconds' => 21600,
             'provider' => 'local-null-provider',
-            'input_files' => [$repositoryRoot . '/TODO.md'],
+            'input_files' => [$packageRoot . '/TODO.md'],
         ],
         'deps:audit' => [
             'enabled' => true,

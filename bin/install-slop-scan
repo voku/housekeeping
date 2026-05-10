@@ -18,7 +18,7 @@ if (!is_dir($targetDir) && !mkdir($targetDir, 0775, true) && !is_dir($targetDir)
 $context = stream_context_create([
     'http' => [
         'timeout' => 60,
-        'user_agent' => 'housekeeping-agent-cron/1.0',
+        'user_agent' => 'voku-housekeeping/1.0',
     ],
 ]);
 

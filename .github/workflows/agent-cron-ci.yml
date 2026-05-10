@@ -1,4 +1,4 @@
-name: agent-cron-ci
+name: CI
 
 on:
   push:
@@ -10,9 +10,6 @@ permissions:
 jobs:
   qa:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: agent-cron
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -25,9 +22,6 @@ jobs:
 
   ai-slop:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: agent-cron
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
