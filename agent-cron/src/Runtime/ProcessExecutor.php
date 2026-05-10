@@ -38,11 +38,13 @@ final class ProcessExecutor
                 $workingDirectory,
             );
         } catch (Throwable $throwable) {
+            $stderr = $this->stderr($process);
+
             return new ProcessResult(
                 $command,
                 $process->getExitCode() ?? 1,
                 $this->stdout($process),
-                trim($this->stderr($process) . PHP_EOL . $throwable->getMessage()),
+                $stderr !== '' ? $stderr . PHP_EOL . $throwable->getMessage() : $throwable->getMessage(),
                 false,
                 $workingDirectory,
                 $throwable->getMessage(),

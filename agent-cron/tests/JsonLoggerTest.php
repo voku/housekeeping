@@ -17,7 +17,7 @@ final class JsonLoggerTest extends TestCase
         file_put_contents($blockingFile, 'block');
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/^' . preg_quote('Unable to create log directory: ' . $blockingFile . ' for ' . $blockingFile . '/housekeeping.log', '/') . '/');
+        $this->expectExceptionMessage('Unable to create log directory: ' . $blockingFile . ' for ' . $blockingFile . '/housekeeping.log');
 
         try {
             new JsonLogger($blockingFile . '/housekeeping.log');
