@@ -59,7 +59,7 @@ final class HousekeepingRunCommand extends Command
                     $stateStore->load(),
                     $stateStore,
                     $logger,
-                    $this->factory->providers(),
+                    $this->factory->providers($config),
                 );
                 $logger->log('info', 'run_started', [
                     'dry_run' => $context->dryRun,

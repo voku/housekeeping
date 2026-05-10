@@ -7,7 +7,7 @@ namespace HousekeepingAgentCron\Task;
 use HousekeepingAgentCron\Runtime\RunContext;
 use HousekeepingAgentCron\Runtime\TaskResult;
 
-final readonly class DocumentationRefreshTask extends AbstractProviderTask
+final readonly class TodoRefinementTask extends AbstractProviderTask
 {
     /**
      * @param list<string> $inputFiles
@@ -22,28 +22,28 @@ final readonly class DocumentationRefreshTask extends AbstractProviderTask
 
     public function name(): string
     {
-        return 'docs:refresh';
+        return 'todo:refine';
     }
 
     public function run(RunContext $context): TaskResult
     {
-        $documents = $this->collectFiles();
-        if ($documents === []) {
-            return TaskResult::skipped('No documentation inputs were found for refresh.');
+        $todos = $this->collectTodos();
+        if ($todos === []) {
+            return TaskResult::skipped('No TODO inputs were found to refine.');
         }
 
         return $this->executeProvider(
             $context,
-            'Review the provided documentation inputs and return a concise maintenance report with safe patch suggestions only.',
-            ['documents' => $documents],
-            'Documentation refresh completed.',
+            'Convert the provided TODO notes into concise actionable maintenance items. Do not suggest unsafe automation or unreviewed changes.',
+            ['todo_documents' => $todos],
+            'TODO refinement completed.',
         );
     }
 
     /**
      * @return array<string, string>
      */
-    private function collectFiles(): array
+    private function collectTodos(): array
     {
         $documents = [];
         foreach ($this->inputFiles as $path) {

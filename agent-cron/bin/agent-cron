@@ -11,7 +11,7 @@ use Symfony\Component\Console\Application;
 require __DIR__ . '/../vendor/autoload.php';
 
 $configFile = __DIR__ . '/../config/tasks.php';
-$app = new Application('housekeeping agent cron', '0.1.0');
+$app = new Application('housekeeping agent cron', '1.0.0');
 $app->add(new HousekeepingRunCommand($configFile));
 $app->add(new HousekeepingListCommand($configFile));
 $app->add(new HousekeepingStateCommand($configFile));

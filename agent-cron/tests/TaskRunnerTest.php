@@ -25,7 +25,7 @@ final class TaskRunnerTest extends TestCase
         $store = new InMemoryStateStore();
         $context = $this->context(true, $store, ['local-null-provider' => $provider]);
 
-        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider')]))->run($context);
+        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider', [__DIR__ . '/../config/tasks.php'])]))->run($context);
 
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertSame(0, $provider->calls);
@@ -38,7 +38,7 @@ final class TaskRunnerTest extends TestCase
         $store = new InMemoryStateStore();
         $context = $this->context(false, $store, ['local-null-provider' => $provider]);
 
-        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider')]))->run($context);
+        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider', [__DIR__ . '/../config/tasks.php'])]))->run($context);
 
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertSame(1, $provider->calls);
@@ -78,9 +78,31 @@ final class TaskRunnerTest extends TestCase
         $store = new InMemoryStateStore();
         $context = $this->context(false, $store, [], ['max_run_seconds' => 1], time() - 2);
 
-        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider')]))->run($context);
+        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider', [__DIR__ . '/../config/tasks.php'])]))->run($context);
 
         self::assertSame(ExitCode::RUNTIME_BUDGET_EXCEEDED, $exitCode);
+    }
+
+
+    public function testTaskIsSkippedWhenNotDue(): void
+    {
+        $provider = new NullProvider();
+        $store = new InMemoryStateStore([
+            'tasks' => [
+                'docs:refresh' => [
+                    'last_finished_at' => time(),
+                ],
+            ],
+            'providers' => [],
+            'runs' => [],
+        ]);
+        $context = $this->context(false, $store, ['local-null-provider' => $provider]);
+
+        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider', [__DIR__ . '/../config/tasks.php'])]))->run($context);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame(0, $provider->calls);
+        self::assertSame('Task is not due.', $this->stateAt($store->state, 'runs.0.results.0.message'));
     }
 
     public function testProviderQuotaIsCheckedBeforeExecution(): void
@@ -105,7 +127,7 @@ final class TaskRunnerTest extends TestCase
             ],
         ]);
 
-        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider')]))->run($context);
+        $exitCode = (new TaskRunner([new DocumentationRefreshTask(3600, 'local-null-provider', [__DIR__ . '/../config/tasks.php'])]))->run($context);
 
         self::assertSame(ExitCode::PROVIDER_UNAVAILABLE, $exitCode);
         self::assertSame(0, $provider->calls);
