@@ -27,36 +27,20 @@ final readonly class TodoRefinementTask extends AbstractProviderTask
 
     public function run(RunContext $context): TaskResult
     {
-        $todos = $this->collectTodos();
+        $todos = $this->collectRepositoryFiles($context, $this->inputFiles, 'project.todo_files');
         if ($todos === []) {
             return TaskResult::skipped('No TODO inputs were found to refine.');
         }
 
         return $this->executeProvider(
             $context,
-            'Convert the provided TODO notes into concise actionable maintenance items. Do not suggest unsafe automation or unreviewed changes.',
-            ['todo_documents' => $todos],
+            'Convert the project TODO notes into concise actionable maintenance items that respect the learned repository patterns. Do not suggest unsafe automation or unreviewed changes.',
+            [
+                'todo_documents' => $todos,
+                'project_metadata' => $context->metadataValue('project'),
+                'learning_metadata' => $context->metadataValue('learning'),
+            ],
             'TODO refinement completed.',
         );
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function collectTodos(): array
-    {
-        $documents = [];
-        foreach ($this->inputFiles as $path) {
-            if (!is_file($path)) {
-                continue;
-            }
-            $contents = file_get_contents($path);
-            if ($contents === false) {
-                continue;
-            }
-            $documents[$path] = $contents;
-        }
-
-        return $documents;
     }
 }

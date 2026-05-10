@@ -1,6 +1,6 @@
 # Housekeeping
 
-Housekeeping is a standalone PHP CLI application for running safe, scheduled maintenance tasks in open-source projects.
+Housekeeping is a standalone PHP CLI application for running safe, scheduled maintenance tasks and autonomous coding-agent housekeeping jobs in open-source projects.
 
 It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, JSON state files for cooldown and quota tracking, and provider adapters so AI-assisted tasks can stay bounded and opt-in.
 
@@ -8,9 +8,12 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 
 - Run housekeeping tasks from cron or systemd timers.
 - Prevent concurrent runs with a filesystem lock.
-- Track task state, provider usage, cooldowns, and runtime budgets.
+- Track task state, learned repository metadata, provider usage, cooldowns, and runtime budgets.
+- Learn from recent commits before later provider-backed tasks run.
+- Discover repository docs and TODO files automatically so later runs can sync docs with code.
 - Execute safe default tasks with a local null provider.
 - Keep provider-backed Codex, Gemini, and Copilot integrations disabled unless explicitly configured.
+- Enforce `--yolo` for external coding-agent adapters.
 - Validate the project with PHPStan and PHPUnit.
 
 ## Requirements
@@ -66,9 +69,11 @@ An example crontab entry is available in [`crontab.example`](crontab.example):
 
 ## Configuration
 
-Tasks, provider budgets, cooldowns, command timeouts, and runtime paths are configured in [`config/tasks.php`](config/tasks.php).
+Tasks, provider budgets, cooldowns, command timeouts, task priority, learned metadata paths, and runtime paths are configured in [`config/tasks.php`](config/tasks.php).
 
 The default configuration uses `local-null-provider`, so fresh installs can run safely without external AI tools or credentials. External providers are disabled by default and must be enabled intentionally.
+
+Default runs now start with `project:discover` and `commits:learn`, then continue with documentation, TODO, audit, and analysis tasks using the discovered metadata.
 
 ## Development
 

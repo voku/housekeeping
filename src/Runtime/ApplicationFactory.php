@@ -11,9 +11,11 @@ use HousekeepingAgentCron\Provider\CopilotProvider;
 use HousekeepingAgentCron\Provider\GeminiProvider;
 use HousekeepingAgentCron\Provider\NullProvider;
 use HousekeepingAgentCron\State\JsonStateStore;
+use HousekeepingAgentCron\Task\CommitLearningTask;
 use HousekeepingAgentCron\Task\DependencyAuditTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
+use HousekeepingAgentCron\Task\ProjectDiscoveryTask;
 use HousekeepingAgentCron\Task\SlopScanTask;
 use HousekeepingAgentCron\Task\TodoRefinementTask;
 use RuntimeException;
@@ -121,6 +123,16 @@ final class ApplicationFactory
             $typedTasks[$name] = $typedTaskConfig;
         }
 
+        uksort($typedTasks, function (string $leftName, string $rightName) use ($typedTasks): int {
+            $leftPriority = $this->intValue($typedTasks[$leftName]['priority'] ?? 0, 0);
+            $rightPriority = $this->intValue($typedTasks[$rightName]['priority'] ?? 0, 0);
+            if ($leftPriority === $rightPriority) {
+                return strcmp($leftName, $rightName);
+            }
+
+            return $rightPriority <=> $leftPriority;
+        });
+
         return $typedTasks;
     }
 
@@ -155,12 +167,16 @@ final class ApplicationFactory
         $intervalSeconds = $this->positiveInt($taskConfig['interval_seconds'] ?? 3600, 3600);
         $providerName = is_string($taskConfig['provider'] ?? null) ? $taskConfig['provider'] : 'local-null-provider';
         $inputFiles = $this->stringList($taskConfig['input_files'] ?? []);
+        $contextFiles = $this->stringList($taskConfig['context_files'] ?? []);
         $workingDirectory = is_string($taskConfig['working_directory'] ?? null) ? $taskConfig['working_directory'] : dirname(__DIR__, 2);
         $command = $this->stringList($taskConfig['command'] ?? []);
         $timeoutSeconds = $this->positiveInt($taskConfig['timeout_seconds'] ?? 120, 120);
+        $maxCommits = $this->positiveInt($taskConfig['max_commits'] ?? 10, 10);
 
         return match ($name) {
-            'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles),
+            'project:discover' => new ProjectDiscoveryTask($intervalSeconds),
+            'commits:learn' => new CommitLearningTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $maxCommits),
+            'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles, $contextFiles),
             'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles),
             'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
             'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
@@ -222,5 +238,10 @@ final class ApplicationFactory
     private function positiveInt(mixed $value, int $default): int
     {
         return is_int($value) && $value > 0 ? $value : $default;
+    }
+
+    private function intValue(mixed $value, int $default): int
+    {
+        return is_int($value) ? $value : $default;
     }
 }
