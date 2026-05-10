@@ -333,7 +333,7 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame($now + 7200, $metrics[0]['reset_at']);
     }
 
-    public function testMetricsFromOutputUsesTrimmedWhitespaceAwareStreams(): void
+    public function testMetricsFromOutputTrimsWhitespaceFromStdoutAndStderr(): void
     {
         $inspector = new ProviderCapacityInspector();
         $now = time();
@@ -348,6 +348,7 @@ final class ProviderCapacityInspectorTest extends TestCase
         ));
 
         self::assertCount(1, $metrics);
+        self::assertSame(['fallback'], array_column($metrics, 'label'));
         self::assertSame('fallback', $metrics[0]['label']);
         self::assertEqualsWithDelta(0.25, $metrics[0]['remaining_ratio'], 0.0001);
         self::assertSame($now + 7200, $metrics[0]['reset_at']);
