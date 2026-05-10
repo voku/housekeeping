@@ -4,6 +4,7 @@
 declare(strict_types=1);
 
 use HousekeepingAgentCron\Command\HousekeepingListCommand;
+use HousekeepingAgentCron\Command\HousekeepingProvidersCommand;
 use HousekeepingAgentCron\Command\HousekeepingRunCommand;
 use HousekeepingAgentCron\Command\HousekeepingStateCommand;
 use Symfony\Component\Console\Application;
@@ -14,5 +15,6 @@ $configFile = __DIR__ . '/../config/tasks.php';
 $app = new Application('housekeeping agent cron', '1.0.0');
 $app->add(new HousekeepingRunCommand($configFile));
 $app->add(new HousekeepingListCommand($configFile));
+$app->add(new HousekeepingProvidersCommand($configFile));
 $app->add(new HousekeepingStateCommand($configFile));
 $app->run();

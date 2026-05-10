@@ -90,6 +90,7 @@ return [
             'timeout_seconds' => 600,
             'working_directory' => $packageRoot,
             'command' => ['codex', 'exec'],
+            'resource_command' => ['codex-cli-usage', 'json'],
         ],
         'gemini' => [
             'enabled' => false,
@@ -98,6 +99,7 @@ return [
             'timeout_seconds' => 600,
             'working_directory' => $packageRoot,
             'command' => ['gemini'],
+            'resource_command' => ['gemini-cli-usage', 'json'],
         ],
         'copilot' => [
             'enabled' => false,
@@ -106,6 +108,7 @@ return [
             'timeout_seconds' => 600,
             'working_directory' => $packageRoot,
             'command' => ['copilot'],
+            'resource_command' => ['copilot-api', 'check-usage', '--json'],
         ],
     ],
 ];
