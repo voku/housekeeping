@@ -22,8 +22,10 @@ final class ApplicationFactory
         if (!is_array($config)) {
             throw new RuntimeException('Config file must return an array.');
         }
+        /** @var array<string, mixed> $typedConfig */
+        $typedConfig = $config;
 
-        return $config;
+        return $typedConfig;
     }
 
     /**

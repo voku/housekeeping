@@ -5,3 +5,5 @@
 !var/logs/.gitkeep
 !var/state/.gitkeep
 !var/lock/.gitkeep
+
+/.phpunit.result.cache

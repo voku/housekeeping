@@ -36,8 +36,10 @@ final readonly class JsonStateStore implements StateStore
         if (!is_array($state)) {
             throw new RuntimeException('State file is not valid JSON: ' . $this->path);
         }
+        /** @var array<string, mixed> $typedState */
+        $typedState = $state;
 
-        return $state;
+        return $typedState;
     }
 
     public function save(array $state): void

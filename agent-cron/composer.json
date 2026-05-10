@@ -14,12 +14,12 @@
     },
     "autoload": {
         "psr-4": {
-            "HousekeepingAgentCron\\\\": "src/"
+            "HousekeepingAgentCron\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "HousekeepingAgentCron\\\\Tests\\\\": "tests/"
+            "HousekeepingAgentCron\\Tests\\": "tests/"
         }
     },
     "scripts": {

@@ -124,6 +124,9 @@ final readonly class TaskRunner
             'context' => $result->context,
             'finished_at' => time(),
         ];
+        if (!isset($run['results']) || !is_array($run['results'])) {
+            $run['results'] = [];
+        }
         $run['results'][] = $record;
         $context->logger()->log($result->successful ? 'info' : 'error', 'task_result', $record);
 
@@ -145,7 +148,13 @@ final readonly class TaskRunner
         }
         $config = $providers[$providerName] ?? null;
 
-        return is_array($config) ? $config : null;
+        if (!is_array($config)) {
+            return null;
+        }
+        /** @var array<string, mixed> $typedConfig */
+        $typedConfig = $config;
+
+        return $typedConfig;
     }
 
     private function positiveInt(mixed $value): int

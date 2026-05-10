@@ -17,6 +17,8 @@ use RuntimeException;
 
 final class TaskRunnerTest extends TestCase
 {
+    use StateAssertions;
+
     public function testDryRunDoesNotCallProviderOrPersistState(): void
     {
         $provider = new NullProvider();
@@ -40,8 +42,8 @@ final class TaskRunnerTest extends TestCase
 
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertSame(1, $provider->calls);
-        self::assertTrue($store->state['tasks']['docs:refresh']['last_successful']);
-        self::assertSame(1, $store->state['providers']['local-null-provider']['usage'][gmdate('Y-m-d')]);
+        self::assertTrue($this->stateAt($store->state, 'tasks.docs:refresh.last_successful'));
+        self::assertSame(1, $this->stateAt($store->state, 'providers.local-null-provider.usage.' . gmdate('Y-m-d')));
     }
 
     public function testFailedTaskRecordsErrorContext(): void
@@ -67,8 +69,8 @@ final class TaskRunnerTest extends TestCase
         $exitCode = (new TaskRunner([$task]))->run($this->context(false, $store));
 
         self::assertSame(ExitCode::TASK_FAILED, $exitCode);
-        self::assertSame('boom', $store->state['tasks']['fail:test']['last_message']);
-        self::assertSame(RuntimeException::class, $store->state['runs'][0]['results'][0]['context']['exception']);
+        self::assertSame('boom', $this->stateAt($store->state, 'tasks.fail:test.last_message'));
+        self::assertSame(RuntimeException::class, $this->stateAt($store->state, 'runs.0.results.0.context.exception'));
     }
 
     public function testRuntimeBudgetIsEnforced(): void
@@ -107,7 +109,7 @@ final class TaskRunnerTest extends TestCase
 
         self::assertSame(ExitCode::PROVIDER_UNAVAILABLE, $exitCode);
         self::assertSame(0, $provider->calls);
-        self::assertSame('Provider daily budget is exhausted.', $store->state['runs'][0]['results'][0]['message']);
+        self::assertSame('Provider daily budget is exhausted.', $this->stateAt($store->state, 'runs.0.results.0.message'));
     }
 
     /**
@@ -116,6 +118,7 @@ final class TaskRunnerTest extends TestCase
      */
     private function context(bool $dryRun, InMemoryStateStore $store, array $providers = [], array $configOverrides = [], ?int $startedAt = null): RunContext
     {
+        /** @var array<string, mixed> $config */
         $config = array_replace_recursive([
             'max_run_seconds' => 900,
             'max_tasks_per_run' => 3,
