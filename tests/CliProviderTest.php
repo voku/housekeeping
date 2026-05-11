@@ -27,7 +27,10 @@ Goal: Sync docs with code.
 Payload:
 {
     "documents": {
-        "README.md": "# Docs"
+        "README.md": "# Über Docs"
+    },
+    "paths": {
+        "guide": "docs/über-guide.md"
     }
 }
 PROMPT;
@@ -40,7 +43,10 @@ PROMPT;
             30,
         );
 
-        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', [
+            'documents' => ['README.md' => '# Über Docs'],
+            'paths' => ['guide' => 'docs/über-guide.md'],
+        ]));
 
         self::assertTrue($result->successful);
         $command = $result->context['command'] ?? null;
@@ -59,6 +65,24 @@ PROMPT;
         self::assertSame($expectedPrompt, $result->context['prompt'] ?? null);
         self::assertStringStartsWith('You are an autonomous housekeeping coding agent running from cron.', $stdin);
         self::assertSame($stdin, trim($stdin));
+    }
+
+    public function testCliProvidersReturnProviderNameAndTrimOutputStreams(): void
+    {
+        $provider = new CodexProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'fwrite(STDOUT, "  finished\\n"); fwrite(STDERR, "  warning\\n");'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        self::assertSame('codex', $result->context['provider'] ?? null);
+        self::assertSame('finished', $result->context['stdout'] ?? null);
+        self::assertSame('warning', $result->context['stderr'] ?? null);
     }
 
     public function testCliProvidersAllowConfigurableArgumentsAndOptionalYolo(): void
