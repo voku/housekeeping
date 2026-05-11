@@ -1,0 +1,33 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - bin/provider-cli-smoke
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - bin/provider-cli-smoke
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install coding-agent CLIs
+        run: |
+          npm install -g --no-audit --no-fund --no-progress \
+            @google/gemini-cli@0.41.2 \
+            @openai/codex@0.130.0 \
+            @anthropic-ai/claude-code@2.1.138 \
+            @github/copilot@1.0.44
+      - name: Smoke test provider CLIs
+        run: bin/provider-cli-smoke

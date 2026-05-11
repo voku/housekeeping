@@ -35,7 +35,8 @@
         "install-infection": "php bin/install-infection",
         "install-slop-scan": "php bin/install-slop-scan",
         "analyse": "phpstan analyse --level=max src tests",
-        "test": "phpunit"
+        "test": "phpunit",
+        "provider-smoke": "bin/provider-cli-smoke"
     },
     "authors": [
         {

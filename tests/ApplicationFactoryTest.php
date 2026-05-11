@@ -33,6 +33,7 @@ final class ApplicationFactoryTest extends TestCase
         self::assertArrayNotHasKey('codex', $providers);
         self::assertArrayNotHasKey('gemini', $providers);
         self::assertArrayNotHasKey('copilot', $providers);
+        self::assertArrayNotHasKey('claude', $providers);
     }
 
     public function testFactoryIncludesEveryExplicitlyEnabledExternalProvider(): void
@@ -58,13 +59,19 @@ final class ApplicationFactoryTest extends TestCase
                     'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
                     'working_directory' => __DIR__,
                 ],
+                'claude' => [
+                    'enabled' => true,
+                    'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
+                    'working_directory' => __DIR__,
+                ],
             ],
         ]);
 
-        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot'], array_keys($providers));
+        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot', 'claude'], array_keys($providers));
         self::assertTrue($providers['codex']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['gemini']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['copilot']->isAvailable($this->runContext($providers)));
+        self::assertTrue($providers['claude']->isAvailable($this->runContext($providers)));
     }
 
     public function testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag(): void
@@ -129,7 +136,12 @@ final class ApplicationFactoryTest extends TestCase
         $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
 
         self::assertTrue($result->successful);
-        self::assertSame('["--sandbox","project-only"]', $result->context['stdout'] ?? null);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(['exec', '--sandbox', 'project-only'], array_slice($decoded, 0, 3));
+        self::assertSame($result->context['prompt'] ?? null, $decoded[3] ?? null);
     }
 
     public function testFactoryUsesPackageRootForProviderWorkingDirectoryWhenRepositoryRootIsNotConfigured(): void
@@ -151,12 +163,12 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame(dirname(__DIR__), $result->context['stdout'] ?? null);
     }
 
-    public function testFactoryAppendsYoloToProviderCommandsByDefault(): void
+    public function testFactoryDoesNotAppendDangerousProviderFlagsByDefault(): void
     {
         $factory = new ApplicationFactory();
         $providers = $factory->providers([
             'providers' => [
-                'gemini' => [
+                'codex' => [
                     'enabled' => true,
                     'command' => ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
                     'working_directory' => __DIR__,
@@ -164,10 +176,15 @@ final class ApplicationFactoryTest extends TestCase
             ],
         ]);
 
-        $result = $providers['gemini']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
+        $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
 
         self::assertTrue($result->successful);
-        self::assertSame('["--yolo"]', $result->context['stdout'] ?? null);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertNotContains('--dangerously-bypass-approvals-and-sandbox', $decoded);
+        self::assertSame('exec', $decoded[0] ?? null);
     }
 
     /**

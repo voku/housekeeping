@@ -95,7 +95,7 @@ return [
             'daily_budget' => 10,
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
-            'command' => ['codex', 'exec'],
+            'command' => ['codex'],
             'resource_command' => ['codex-cli-usage', 'json'],
         ],
         'gemini' => [
@@ -113,6 +113,14 @@ return [
             'timeout_seconds' => 600,
             'command' => ['copilot'],
             'resource_command' => ['copilot-api', 'check-usage', '--json'],
+        ],
+        'claude' => [
+            'enabled' => false,
+            'daily_budget' => 5,
+            'cooldown_seconds' => 3600,
+            'timeout_seconds' => 600,
+            'command' => ['claude'],
+            'resource_command' => ['claude', '--version'],
         ],
     ],
 ];

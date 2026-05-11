@@ -7,6 +7,7 @@ namespace HousekeepingAgentCron\Runtime;
 use HousekeepingAgentCron\Contract\HousekeepingTask;
 use HousekeepingAgentCron\Contract\ProviderAdapter;
 use HousekeepingAgentCron\Provider\CodexProvider;
+use HousekeepingAgentCron\Provider\ClaudeProvider;
 use HousekeepingAgentCron\Provider\CopilotProvider;
 use HousekeepingAgentCron\Provider\GeminiProvider;
 use HousekeepingAgentCron\Provider\NullProvider;
@@ -199,12 +200,13 @@ final class ApplicationFactory
             ? $providerConfig['working_directory']
             : $this->path($config, 'repository_root', dirname(__DIR__, 2));
         $timeoutSeconds = $this->positiveInt($providerConfig['timeout_seconds'] ?? 600, 600);
-        $appendYolo = ($providerConfig['append_yolo'] ?? true) !== false;
+        $appendYolo = ($providerConfig['append_yolo'] ?? false) === true;
 
         return match ($name) {
             'codex' => new CodexProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             'gemini' => new GeminiProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             'copilot' => new CopilotProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
+            'claude' => new ClaudeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             default => throw new RuntimeException('Unknown provider configuration: ' . $name),
         };
     }

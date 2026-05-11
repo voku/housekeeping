@@ -12,7 +12,7 @@ final readonly class CodexProvider extends CliProvider
      * @param list<string> $command
      * @param list<string> $arguments
      */
-    public function __construct(ProcessExecutor $processExecutor, array $command, array $arguments, string $workingDirectory, int $timeoutSeconds, bool $appendYolo = true)
+    public function __construct(ProcessExecutor $processExecutor, array $command, array $arguments, string $workingDirectory, int $timeoutSeconds, bool $appendYolo = false)
     {
         parent::__construct($processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo);
     }
@@ -20,5 +20,20 @@ final readonly class CodexProvider extends CliProvider
     public function name(): string
     {
         return 'codex';
+    }
+
+    protected function commandForPrompt(string $prompt): array
+    {
+        $command = $this->configuredCommand();
+        if (!$this->hasToken($command, 'exec')) {
+            $command[] = 'exec';
+        }
+
+        $command = [...$command, ...$this->configuredArguments()];
+        $command = $this->appendTokenIfYoloConfigured($command, '--dangerously-bypass-approvals-and-sandbox');
+        $command[] = $prompt;
+
+        /** @var list<string> $command */
+        return $command;
     }
 }
