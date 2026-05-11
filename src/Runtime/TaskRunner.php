@@ -50,11 +50,26 @@ final readonly class TaskRunner
             }
 
             $providerName = null;
+            $routingContext = [];
             if ($task instanceof ProviderBackedTask) {
-                $providerName = $task->providerName();
+                [$providerName, $routingContext] = $this->resolveProviderName($context, $task);
+                if ($providerName === null) {
+                    $result = TaskResult::failure('No ready provider matched the task routing rules.', $routingContext);
+                    $this->record($context, $run, $task->name(), $result);
+                    $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
+                    continue;
+                }
+                $context->setRuntimeValue('task_provider_routes.' . $task->name(), [
+                    'configured_provider' => $task->providerName(),
+                    'preferred_providers' => $task->preferredProviderNames(),
+                    'resolved_provider' => $providerName,
+                ]);
                 $providerConfig = $this->providerConfig($context, $providerName);
                 if ($providerConfig === null) {
-                    $result = TaskResult::failure('Provider config is missing.', ['provider' => $providerName]);
+                    $result = TaskResult::failure('Provider config is missing.', [
+                        'provider' => $providerName,
+                        ...$routingContext,
+                    ]);
                     $this->record($context, $run, $task->name(), $result);
                     $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
                     continue;
@@ -62,6 +77,7 @@ final readonly class TaskRunner
 
                 $budgetResult = $this->quotaBudget->canRun($context, $providerName, $providerConfig);
                 if (!$budgetResult->successful || $budgetResult->skipped) {
+                    $budgetResult = $budgetResult->withContext($routingContext);
                     $this->record($context, $run, $task->name(), $budgetResult);
                     if (!$budgetResult->successful) {
                         $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
@@ -71,7 +87,10 @@ final readonly class TaskRunner
 
                 $provider = $context->provider($providerName);
                 if ($provider === null || !$provider->isAvailable($context)) {
-                    $result = TaskResult::failure('Provider is unavailable.', ['provider' => $providerName]);
+                    $result = TaskResult::failure('Provider is unavailable.', [
+                        'provider' => $providerName,
+                        ...$routingContext,
+                    ]);
                     $this->record($context, $run, $task->name(), $result);
                     $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
                     continue;
@@ -87,6 +106,9 @@ final readonly class TaskRunner
                     'file' => $throwable->getFile(),
                     'line' => $throwable->getLine(),
                 ]);
+            }
+            if ($providerName !== null) {
+                $result = $result->withContext(['provider' => $providerName, ...$routingContext]);
             }
 
             if ($providerName !== null && !$context->dryRun && $result->successful && !$result->skipped) {
@@ -164,5 +186,52 @@ final readonly class TaskRunner
         }
 
         return 1;
+    }
+
+    /**
+     * @return array{0: string|null, 1: array<string, mixed>}
+     */
+    private function resolveProviderName(RunContext $context, ProviderBackedTask $task): array
+    {
+        $configuredProvider = $task->providerName();
+        $preferredProviders = $task->preferredProviderNames();
+        $routingContext = [
+            'configured_provider' => $configuredProvider,
+            'preferred_providers' => $preferredProviders,
+        ];
+
+        if ($configuredProvider !== 'auto') {
+            $routingContext['routing_reason'] = 'configured_provider';
+
+            return [$configuredProvider, $routingContext];
+        }
+
+        $providerReports = (new ProviderCapacityInspector())->inspect($context->config, $context->state());
+        $readyProviders = [];
+        foreach ($providerReports as $report) {
+            if ($report->status === 'ready' || $report->status === 'ready-no-probe') {
+                $readyProviders[] = $report->provider;
+            }
+        }
+        $routingContext['ready_providers'] = $readyProviders;
+
+        foreach ($preferredProviders as $preferredProvider) {
+            if (in_array($preferredProvider, $readyProviders, true)) {
+                $routingContext['routing_reason'] = 'preferred_provider';
+
+                return [$preferredProvider, $routingContext];
+            }
+        }
+
+        $recommendedProvider = $readyProviders[0] ?? null;
+        if ($recommendedProvider !== null) {
+            $routingContext['routing_reason'] = 'global_readiness_ranking';
+
+            return [$recommendedProvider, $routingContext];
+        }
+
+        $routingContext['routing_reason'] = 'no_ready_provider';
+
+        return [null, $routingContext];
     }
 }

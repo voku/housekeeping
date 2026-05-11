@@ -7,4 +7,9 @@ namespace HousekeepingAgentCron\Contract;
 interface ProviderBackedTask extends HousekeepingTask
 {
     public function providerName(): string;
+
+    /**
+     * @return list<string>
+     */
+    public function preferredProviderNames(): array;
 }

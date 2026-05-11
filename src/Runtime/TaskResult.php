@@ -40,4 +40,12 @@ final readonly class TaskResult
     {
         return new self(true, true, $message, $context);
     }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public function withContext(array $context): self
+    {
+        return new self($this->successful, $this->skipped, $this->message, [...$this->context, ...$context]);
+    }
 }

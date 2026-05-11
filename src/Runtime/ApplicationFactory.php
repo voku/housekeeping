@@ -174,16 +174,17 @@ final class ApplicationFactory
         $command = $this->stringList($taskConfig['command'] ?? []);
         $timeoutSeconds = $this->positiveInt($taskConfig['timeout_seconds'] ?? 120, 120);
         $maxCommits = $this->positiveInt($taskConfig['max_commits'] ?? 10, 10);
+        $preferredProviders = $this->stringList($taskConfig['preferred_providers'] ?? []);
 
         return match ($name) {
             'project:discover' => new ProjectDiscoveryTask($intervalSeconds),
-            'commits:learn' => new CommitLearningTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $maxCommits),
-            'blindspots:analyze' => new BlindSpotAnalysisTask($intervalSeconds, $providerName, $contextFiles),
-            'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles, $contextFiles),
-            'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles),
-            'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
-            'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
-            'slop:scan' => new SlopScanTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
+            'commits:learn' => new CommitLearningTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $maxCommits, $preferredProviders),
+            'blindspots:analyze' => new BlindSpotAnalysisTask($intervalSeconds, $providerName, $contextFiles, $preferredProviders),
+            'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles, $contextFiles, $preferredProviders),
+            'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles, $preferredProviders),
+            'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
+            'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
+            'slop:scan' => new SlopScanTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
             default => throw new RuntimeException('Unknown task configuration: ' . $name),
         };
     }

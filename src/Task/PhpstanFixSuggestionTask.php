@@ -12,6 +12,7 @@ final readonly class PhpstanFixSuggestionTask extends AbstractProviderTask
 {
     /**
      * @param list<string> $command
+     * @param list<string> $preferredProviderNames
      */
     public function __construct(
         int $intervalSeconds,
@@ -20,8 +21,9 @@ final readonly class PhpstanFixSuggestionTask extends AbstractProviderTask
         private string $workingDirectory,
         private array $command,
         private int $timeoutSeconds,
+        array $preferredProviderNames = [],
     ) {
-        parent::__construct($intervalSeconds, $providerName);
+        parent::__construct($intervalSeconds, $providerName, $preferredProviderNames);
     }
 
     public function name(): string

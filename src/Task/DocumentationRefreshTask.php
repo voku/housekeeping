@@ -18,14 +18,16 @@ final readonly class DocumentationRefreshTask extends AbstractProviderTask
     /**
      * @param list<string> $inputFiles
      * @param list<string> $contextFiles
+     * @param list<string> $preferredProviderNames
      */
     public function __construct(
         int $intervalSeconds,
         string $providerName,
         array $inputFiles,
         array $contextFiles = [],
+        array $preferredProviderNames = [],
     ) {
-        parent::__construct($intervalSeconds, $providerName);
+        parent::__construct($intervalSeconds, $providerName, $preferredProviderNames);
         $this->inputFiles = $inputFiles;
         $this->contextFiles = $contextFiles;
     }

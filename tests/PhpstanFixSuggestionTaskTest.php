@@ -69,6 +69,7 @@ final class PhpstanFixSuggestionTaskTest extends TestCase
                     ],
                 ],
                 ['tasks' => [], 'providers' => [], 'runs' => []],
+                [],
                 new InMemoryStateStore(),
                 new JsonLogger($workingDirectory . '/logs/housekeeping.log'),
                 ['local-null-provider' => $provider],

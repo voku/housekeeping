@@ -14,13 +14,15 @@ final readonly class TodoRefinementTask extends AbstractProviderTask
 
     /**
      * @param list<string> $inputFiles
+     * @param list<string> $preferredProviderNames
      */
     public function __construct(
         int $intervalSeconds,
         string $providerName,
         array $inputFiles,
+        array $preferredProviderNames = [],
     ) {
-        parent::__construct($intervalSeconds, $providerName);
+        parent::__construct($intervalSeconds, $providerName, $preferredProviderNames);
         $this->inputFiles = $inputFiles;
     }
 

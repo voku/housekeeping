@@ -12,6 +12,7 @@ final class RunContext
     /**
      * @param array<string, mixed> $config
      * @param array<string, mixed> $state
+     * @param array<string, mixed> $runtime
      * @param array<string, ProviderAdapter> $providers
      */
     public function __construct(
@@ -20,6 +21,7 @@ final class RunContext
         public readonly int $startedAt,
         public readonly array $config,
         private array $state,
+        private array $runtime,
         private readonly StateStore $stateStore,
         private readonly JsonLogger $logger,
         private readonly array $providers,
@@ -63,6 +65,32 @@ final class RunContext
     public function saveState(): void
     {
         $this->stateStore->save($this->state);
+    }
+
+    public function runtimeValue(string $path): mixed
+    {
+        $value = $this->runtime;
+        foreach (explode('.', $path) as $segment) {
+            if (!is_array($value) || !array_key_exists($segment, $value)) {
+                return null;
+            }
+            $value = $value[$segment];
+        }
+
+        return $value;
+    }
+
+    public function setRuntimeValue(string $path, mixed $newValue): void
+    {
+        $segments = explode('.', $path);
+        $runtime = &$this->runtime;
+        foreach ($segments as $segment) {
+            if (!isset($runtime[$segment]) || !is_array($runtime[$segment])) {
+                $runtime[$segment] = [];
+            }
+            $runtime = &$runtime[$segment];
+        }
+        $runtime = $newValue;
     }
 
     public function logger(): JsonLogger

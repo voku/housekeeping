@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace HousekeepingAgentCron\Tests;
 
 use HousekeepingAgentCron\Contract\HousekeepingTask;
+use HousekeepingAgentCron\Contract\ProviderAdapter;
 use HousekeepingAgentCron\Provider\NullProvider;
 use HousekeepingAgentCron\Runtime\ExitCode;
 use HousekeepingAgentCron\Runtime\JsonLogger;
+use HousekeepingAgentCron\Runtime\ProviderRequest;
+use HousekeepingAgentCron\Runtime\ProviderResult;
 use HousekeepingAgentCron\Runtime\RunContext;
 use HousekeepingAgentCron\Runtime\TaskResult;
 use HousekeepingAgentCron\Runtime\TaskRunner;
+use HousekeepingAgentCron\Task\AbstractProviderTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -284,6 +288,104 @@ final class TaskRunnerTest extends TestCase
         self::assertSame('Provider daily budget is exhausted.', $this->stateAt($store->state, 'runs.0.results.0.message'));
     }
 
+    public function testAutoProviderRoutingPrefersTaskSpecificProviderOverGlobalRanking(): void
+    {
+        /** @var ProviderAdapter&object{calls: int} $codex */
+        $codex = $this->recordingProvider('codex');
+        /** @var ProviderAdapter&object{calls: int} $gemini */
+        $gemini = $this->recordingProvider('gemini');
+        $store = new InMemoryStateStore();
+        $context = $this->context(false, $store, ['codex' => $codex, 'gemini' => $gemini], [
+            'providers' => [
+                'codex' => [
+                    'enabled' => true,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 0,
+                    'resource_command' => $this->providerProbeCommand(20),
+                ],
+                'gemini' => [
+                    'enabled' => true,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 0,
+                    'resource_command' => $this->providerProbeCommand(90),
+                ],
+            ],
+        ]);
+        $task = new readonly class extends AbstractProviderTask {
+            public function __construct()
+            {
+                parent::__construct(3600, 'auto', ['codex']);
+            }
+
+            public function name(): string
+            {
+                return 'auto:provider';
+            }
+
+            public function run(RunContext $context): TaskResult
+            {
+                return $this->executeProvider($context, 'Pick the best provider.', [], 'Auto provider completed.');
+            }
+        };
+
+        $exitCode = (new TaskRunner([$task]))->run($context);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame(1, $codex->calls);
+        self::assertSame(0, $gemini->calls);
+        self::assertSame('codex', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
+        self::assertSame('preferred_provider', $this->stateAt($store->state, 'runs.0.results.0.context.routing_reason'));
+    }
+
+    public function testAutoProviderRoutingFallsBackToGlobalRankingWhenPreferredProviderIsNotReady(): void
+    {
+        /** @var ProviderAdapter&object{calls: int} $codex */
+        $codex = $this->recordingProvider('codex');
+        /** @var ProviderAdapter&object{calls: int} $gemini */
+        $gemini = $this->recordingProvider('gemini');
+        $store = new InMemoryStateStore();
+        $context = $this->context(false, $store, ['codex' => $codex, 'gemini' => $gemini], [
+            'providers' => [
+                'codex' => [
+                    'enabled' => false,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 0,
+                    'resource_command' => $this->providerProbeCommand(80),
+                ],
+                'gemini' => [
+                    'enabled' => true,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 0,
+                    'resource_command' => $this->providerProbeCommand(90),
+                ],
+            ],
+        ]);
+        $task = new readonly class extends AbstractProviderTask {
+            public function __construct()
+            {
+                parent::__construct(3600, 'auto', ['codex']);
+            }
+
+            public function name(): string
+            {
+                return 'auto:fallback';
+            }
+
+            public function run(RunContext $context): TaskResult
+            {
+                return $this->executeProvider($context, 'Pick the best provider.', [], 'Auto provider completed.');
+            }
+        };
+
+        $exitCode = (new TaskRunner([$task]))->run($context);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame(0, $codex->calls);
+        self::assertSame(1, $gemini->calls);
+        self::assertSame('gemini', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
+        self::assertSame('global_readiness_ranking', $this->stateAt($store->state, 'runs.0.results.0.context.routing_reason'));
+    }
+
     /**
      * @param array<string, \HousekeepingAgentCron\Contract\ProviderAdapter> $providers
      * @param array<string, mixed> $configOverrides
@@ -317,10 +419,54 @@ final class TaskRunnerTest extends TestCase
             $startedAt ?? time(),
             $config,
             $store->load(),
+            [],
             $store,
             new JsonLogger($logFile ?? sys_get_temp_dir() . '/agent-cron-test-' . bin2hex(random_bytes(4)) . '.log'),
             $providers,
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function providerProbeCommand(int $remainingPercent): array
+    {
+        return [
+            PHP_BINARY,
+            '-r',
+            sprintf('echo json_encode(["remaining_percent" => %d], JSON_UNESCAPED_SLASHES);', $remainingPercent),
+        ];
+    }
+
+    /**
+     * @return ProviderAdapter&object{calls: int}
+     */
+    private function recordingProvider(string $name): ProviderAdapter
+    {
+        return new class ($name) implements ProviderAdapter {
+            public int $calls = 0;
+
+            public function __construct(private string $name)
+            {
+            }
+
+            public function name(): string
+            {
+                return $this->name;
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                ++$this->calls;
+
+                return ProviderResult::success('Accepted.', ['provider' => $this->name]);
+            }
+        };
     }
 
     private function plainTask(string $name): HousekeepingTask

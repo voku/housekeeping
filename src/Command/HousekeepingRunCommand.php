@@ -59,6 +59,7 @@ final class HousekeepingRunCommand extends Command
                     time(),
                     $config,
                     $stateStore->load(),
+                    [],
                     $stateStore,
                     $logger,
                     $this->factory->providers($config),

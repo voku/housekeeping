@@ -82,6 +82,7 @@ Then update the existing config values to follow this pattern:
 
 Keep one Housekeeping workspace per maintained project if you want isolated state, logs, budgets, and prompts.
 Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`).
+If you want Housekeeping to auto-pick a provider for one task but still bias that task toward a specific agent, set `'provider' => 'auto'` and add `preferred_providers` in priority order.
 
 ## 3. Start with dry runs
 
