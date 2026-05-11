@@ -226,6 +226,13 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
 
             $summary = $this->trimmedString($patch['summary'] ?? null);
             $paths = $this->stringList($patch['paths'] ?? []);
+            foreach (['path', 'file', 'file_path', 'target'] as $key) {
+                $path = $this->trimmedString($patch[$key] ?? null);
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+            $paths = array_values(array_unique($paths));
             $diffPresent = ($patch['diff_present'] ?? false) === true;
             if ($summary === null && $paths === [] && !$diffPresent) {
                 continue;

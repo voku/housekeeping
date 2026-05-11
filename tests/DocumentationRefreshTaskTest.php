@@ -131,7 +131,7 @@ final class DocumentationRefreshTaskTest extends TestCase
                     'patches' => [
                         [
                             'summary' => 'Update the quick-start snippet.',
-                            'paths' => ['docs/guide.md', 'docs/reference.md'],
+                            'paths' => ['docs/guide.md', 'README.md'],
                             'path' => 'README.md',
                         ],
                     ],
@@ -170,7 +170,7 @@ final class DocumentationRefreshTaskTest extends TestCase
             self::assertSame('Refresh the README examples.', $this->stateAt($context->state(), 'metadata.task_provider_results.docs:refresh.last_summary'));
             self::assertSame('Update the quick-start snippet.', $this->stateAt($context->state(), 'metadata.task_provider_results.docs:refresh.last_patches.0.summary'));
             self::assertSame(
-                ['docs/guide.md', 'docs/reference.md', 'README.md'],
+                ['docs/guide.md', 'README.md'],
                 $this->stateAt($context->state(), 'metadata.task_provider_results.docs:refresh.last_patches.0.paths'),
             );
         } finally {
