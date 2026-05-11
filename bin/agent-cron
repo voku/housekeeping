@@ -7,11 +7,19 @@ use HousekeepingAgentCron\Command\HousekeepingListCommand;
 use HousekeepingAgentCron\Command\HousekeepingProvidersCommand;
 use HousekeepingAgentCron\Command\HousekeepingRunCommand;
 use HousekeepingAgentCron\Command\HousekeepingStateCommand;
+use HousekeepingAgentCron\Runtime\ConfigFileResolver;
 use Symfony\Component\Console\Application;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$configFile = __DIR__ . '/../config/tasks.php';
+$resolvedConfig = (new ConfigFileResolver())->resolve(
+    $_SERVER['argv'] ?? [$argv[0] ?? __FILE__],
+    __DIR__ . '/../config/tasks.php',
+    getenv('HOUSEKEEPING_CONFIG') ?: null,
+);
+$configFile = $resolvedConfig['config_file'];
+$_SERVER['argv'] = $resolvedConfig['argv'];
+$_SERVER['argc'] = count($resolvedConfig['argv']);
 $app = new Application('housekeeping agent cron', '1.0.0');
 $app->add(new HousekeepingRunCommand($configFile));
 $app->add(new HousekeepingListCommand($configFile));

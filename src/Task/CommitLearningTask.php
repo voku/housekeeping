@@ -52,10 +52,10 @@ final readonly class CommitLearningTask extends AbstractProviderTask
 
         $result = $this->executeProvider(
             $context,
-            'Study the recent commit history to learn repository patterns, decisions, and likely blind spots for future housekeeping runs. Produce concise operational guidance only.',
+            'Study the recent commit history to learn repository patterns, decisions, and likely blind spots for future housekeeping runs. Incorporate existing blind-spot guidance when present, and produce concise operational guidance only.',
             [
                 'repository_root' => $this->workingDirectory,
-                'project_metadata' => $context->metadataValue('project'),
+                ...$this->sharedMetadata($context),
                 'commits' => $commits,
             ],
             'Commit learning completed.',

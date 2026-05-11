@@ -46,12 +46,11 @@ final readonly class DocumentationRefreshTask extends AbstractProviderTask
 
         return $this->executeProvider(
             $context,
-            'Compare the project documentation against the current code and learned repository patterns. Return concise housekeeping guidance and safe doc-sync patch suggestions only.',
+            'Compare the project documentation against the current code, learned repository patterns, and recent blind-spot guidance. Return concise housekeeping guidance and safe doc-sync patch suggestions only.',
             [
                 'documents' => $documents,
                 'code_context' => $codeContext,
-                'project_metadata' => $context->metadataValue('project'),
-                'learning_metadata' => $context->metadataValue('learning'),
+                ...$this->sharedMetadata($context),
             ],
             'Documentation refresh completed.',
         );

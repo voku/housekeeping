@@ -105,12 +105,13 @@ final readonly class SlopScanTask extends AbstractProviderTask
 
         return $this->executeProvider(
             $context,
-            'Review the slop-scan report and produce safe cleanup suggestions only. Do not apply changes automatically or suppress findings without justification.',
+            'Review the slop-scan report and produce safe cleanup suggestions only. Use the learned repository patterns and recent blind-spot guidance to prioritize follow-up. Do not apply changes automatically or suppress findings without justification.',
             [
                 'working_directory' => $this->workingDirectory,
                 'command' => $process->command,
                 'exit_code' => $process->exitCode,
                 'report' => $report,
+                ...$this->sharedMetadata($context),
             ],
             'slop-scan suggestions prepared.',
         );

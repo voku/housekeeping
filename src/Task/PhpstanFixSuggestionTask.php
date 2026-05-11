@@ -73,12 +73,13 @@ final readonly class PhpstanFixSuggestionTask extends AbstractProviderTask
 
         return $this->executeProvider(
             $context,
-            'Review the PHPStan analysis output and produce safe fix suggestions only. Do not apply changes or invent missing diagnostics.',
+            'Review the PHPStan analysis output and produce safe fix suggestions only. Use the learned repository patterns and recent blind-spot guidance to prioritize follow-up. Do not apply changes or invent missing diagnostics.',
             [
                 'working_directory' => $this->workingDirectory,
                 'command' => $process->command,
                 'exit_code' => $process->exitCode,
                 'analysis_output' => $analysisOutput,
+                ...$this->sharedMetadata($context),
             ],
             'PHPStan suggestions prepared.',
         );

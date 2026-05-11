@@ -13,6 +13,7 @@ use HousekeepingAgentCron\Provider\NullProvider;
 use HousekeepingAgentCron\State\JsonStateStore;
 use HousekeepingAgentCron\Task\CommitLearningTask;
 use HousekeepingAgentCron\Task\DependencyAuditTask;
+use HousekeepingAgentCron\Task\BlindSpotAnalysisTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
 use HousekeepingAgentCron\Task\ProjectDiscoveryTask;
@@ -73,7 +74,7 @@ final class ApplicationFactory
             if ($name === 'local-null-provider' || ($providerConfig['enabled'] ?? false) !== true) {
                 continue;
             }
-            $providers[$name] = $this->createProvider($name, $providerConfig);
+            $providers[$name] = $this->createProvider($name, $providerConfig, $config);
         }
 
         return $providers;
@@ -176,6 +177,7 @@ final class ApplicationFactory
         return match ($name) {
             'project:discover' => new ProjectDiscoveryTask($intervalSeconds),
             'commits:learn' => new CommitLearningTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $maxCommits),
+            'blindspots:analyze' => new BlindSpotAnalysisTask($intervalSeconds, $providerName, $contextFiles),
             'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles, $contextFiles),
             'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles),
             'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
@@ -187,17 +189,22 @@ final class ApplicationFactory
 
     /**
      * @param array<string, mixed> $providerConfig
+     * @param array<string, mixed> $config
      */
-    private function createProvider(string $name, array $providerConfig): ProviderAdapter
+    private function createProvider(string $name, array $providerConfig, array $config): ProviderAdapter
     {
         $command = $this->stringList($providerConfig['command'] ?? []);
-        $workingDirectory = is_string($providerConfig['working_directory'] ?? null) ? $providerConfig['working_directory'] : dirname(__DIR__, 2);
+        $arguments = $this->stringList($providerConfig['arguments'] ?? []);
+        $workingDirectory = is_string($providerConfig['working_directory'] ?? null)
+            ? $providerConfig['working_directory']
+            : $this->path($config, 'repository_root', dirname(__DIR__, 2));
         $timeoutSeconds = $this->positiveInt($providerConfig['timeout_seconds'] ?? 600, 600);
+        $appendYolo = ($providerConfig['append_yolo'] ?? true) !== false;
 
         return match ($name) {
-            'codex' => new CodexProvider($this->processExecutor, $command, $workingDirectory, $timeoutSeconds),
-            'gemini' => new GeminiProvider($this->processExecutor, $command, $workingDirectory, $timeoutSeconds),
-            'copilot' => new CopilotProvider($this->processExecutor, $command, $workingDirectory, $timeoutSeconds),
+            'codex' => new CodexProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
+            'gemini' => new GeminiProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
+            'copilot' => new CopilotProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             default => throw new RuntimeException('Unknown provider configuration: ' . $name),
         };
     }

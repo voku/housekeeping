@@ -6,7 +6,7 @@ $packageRoot = dirname(__DIR__);
 
 return [
     'max_run_seconds' => 900,
-    'max_tasks_per_run' => 3,
+    'max_tasks_per_run' => 4,
     'paths' => [
         'logs' => $packageRoot . '/var/logs',
         'state' => $packageRoot . '/var/state/state.json',
@@ -27,13 +27,20 @@ return [
             'working_directory' => $packageRoot,
             'max_commits' => 10,
         ],
+        'blindspots:analyze' => [
+            'enabled' => true,
+            'interval_seconds' => 3600,
+            'priority' => 150,
+            'provider' => 'local-null-provider',
+            'context_files' => [$packageRoot . '/README.md', $packageRoot . '/QUICKSTART.md', $packageRoot . '/config/tasks.php', $packageRoot . '/crontab.example'],
+        ],
         'docs:refresh' => [
             'enabled' => true,
             'interval_seconds' => 86400,
             'priority' => 100,
             'provider' => 'local-null-provider',
-            'input_files' => [$packageRoot . '/README.md', $packageRoot . '/TODO.md'],
-            'context_files' => [$packageRoot . '/composer.json', $packageRoot . '/config/tasks.php', $packageRoot . '/bin/agent-cron'],
+            'input_files' => [$packageRoot . '/README.md', $packageRoot . '/QUICKSTART.md'],
+            'context_files' => [$packageRoot . '/composer.json', $packageRoot . '/config/tasks.php', $packageRoot . '/bin/agent-cron', $packageRoot . '/crontab.example'],
         ],
         'todo:refine' => [
             'enabled' => true,
@@ -88,7 +95,6 @@ return [
             'daily_budget' => 10,
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
-            'working_directory' => $packageRoot,
             'command' => ['codex', 'exec'],
             'resource_command' => ['codex-cli-usage', 'json'],
         ],
@@ -97,7 +103,6 @@ return [
             'daily_budget' => 20,
             'cooldown_seconds' => 900,
             'timeout_seconds' => 600,
-            'working_directory' => $packageRoot,
             'command' => ['gemini'],
             'resource_command' => ['gemini-cli-usage', 'json'],
         ],
@@ -106,7 +111,6 @@ return [
             'daily_budget' => 5,
             'cooldown_seconds' => 3600,
             'timeout_seconds' => 600,
-            'working_directory' => $packageRoot,
             'command' => ['copilot'],
             'resource_command' => ['copilot-api', 'check-usage', '--json'],
         ],
