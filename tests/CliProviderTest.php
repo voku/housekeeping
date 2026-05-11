@@ -71,7 +71,7 @@ PROMPT;
     {
         $provider = new CodexProvider(
             new ProcessExecutor(),
-            ['php', '-r', 'fwrite(STDOUT, "  finished\\n"); fwrite(STDERR, "  warning\\n");'],
+            ['php', '-r', 'fwrite(STDOUT, "  finished\\n"); fwrite(STDERR, "  warning\\n");', '--'],
             [],
             __DIR__,
             30,
