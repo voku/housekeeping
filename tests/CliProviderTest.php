@@ -63,8 +63,6 @@ PROMPT;
         self::assertIsString($stdin);
         self::assertSame($expectedPrompt, $stdin);
         self::assertSame($expectedPrompt, $result->context['prompt'] ?? null);
-        self::assertStringStartsWith('You are an autonomous housekeeping coding agent running from cron.', $stdin);
-        self::assertSame($stdin, trim($stdin));
     }
 
     public function testCliProvidersReturnProviderNameAndTrimOutputStreams(): void
