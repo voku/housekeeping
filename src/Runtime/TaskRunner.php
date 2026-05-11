@@ -208,6 +208,7 @@ final readonly class TaskRunner
 
         $providerReports = (new ProviderCapacityInspector())->inspect($context->config, $context->state());
         $readyProviders = [];
+        // ProviderCapacityInspector::inspect() already returns reports in readiness order.
         foreach ($providerReports as $report) {
             if ($report->status === 'ready' || $report->status === 'ready-no-probe') {
                 $readyProviders[] = $report->provider;
