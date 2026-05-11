@@ -73,12 +73,13 @@ abstract readonly class CliProvider implements ProviderAdapter
             return '';
         }
 
-        return trim(implode(PHP_EOL . PHP_EOL, [
+        return implode(PHP_EOL . PHP_EOL, [
             'You are an autonomous housekeeping coding agent running from cron.',
+            'Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.',
             'Task: ' . $request->taskName,
             'Goal: ' . $request->prompt,
             'Payload:' . PHP_EOL . $payload,
-        ]));
+        ]);
     }
 
     /**

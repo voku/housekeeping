@@ -15,6 +15,26 @@ final class CliProviderTest extends TestCase
 {
     public function testCliProvidersAlwaysAppendYoloAndFormattedPrompt(): void
     {
+        $expectedPrompt = <<<'PROMPT'
+You are an autonomous housekeeping coding agent running from cron.
+
+Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.
+
+Task: docs:refresh
+
+Goal: Sync docs with code.
+
+Payload:
+{
+    "documents": {
+        "README.md": "# Snowman ☃ Docs"
+    },
+    "paths": {
+        "guide": "docs/☃-guide.md"
+    }
+}
+PROMPT;
+
         $provider = new CodexProvider(
             new ProcessExecutor(),
             ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
@@ -23,7 +43,10 @@ final class CliProviderTest extends TestCase
             30,
         );
 
-        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', [
+            'documents' => ['README.md' => '# Snowman ☃ Docs'],
+            'paths' => ['guide' => 'docs/☃-guide.md'],
+        ]));
 
         self::assertTrue($result->successful);
         $command = $result->context['command'] ?? null;
@@ -38,8 +61,26 @@ final class CliProviderTest extends TestCase
         self::assertIsArray($argv);
         $stdin = $decoded['stdin'] ?? null;
         self::assertIsString($stdin);
-        self::assertStringContainsString('Task: docs:refresh', $stdin);
-        self::assertStringContainsString('"documents"', $stdin);
+        self::assertSame($expectedPrompt, $stdin);
+        self::assertSame($expectedPrompt, $result->context['prompt'] ?? null);
+    }
+
+    public function testCliProvidersReturnProviderMetadataAndTrimOutputStreams(): void
+    {
+        $provider = new CodexProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'fwrite(STDOUT, "  finished\\n"); fwrite(STDERR, "  warning\\n");', '--'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        self::assertSame('codex', $result->context['provider'] ?? null);
+        self::assertSame('finished', $result->context['stdout'] ?? null);
+        self::assertSame('warning', $result->context['stderr'] ?? null);
     }
 
     public function testCliProvidersAllowConfigurableArgumentsAndOptionalYolo(): void

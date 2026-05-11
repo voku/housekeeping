@@ -38,6 +38,7 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 3. Update [`config/tasks.php`](config/tasks.php) so `paths.repository_root` and task `working_directory` values point at that target repository, while `logs`, `state`, and `lock` stay inside the Housekeeping directory.
 4. Run `php bin/agent-cron housekeeping:run --dry-run` first.
 5. Only enable external providers after you are happy with the dry-run behavior and prompts.
+6. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
@@ -128,7 +129,7 @@ Default runs now start with `project:discover` and `commits:learn`, then use `bl
 
 `blindspots:analyze` is the self-optimization loop: it reviews the last completed housekeeping run, stores blind-spot guidance under `metadata.blind_spots`, and later provider-backed tasks receive that metadata alongside the normal repository-learning metadata.
 
-When you enable a real provider, keep the task scope conservative: review dependency updates, suggest or add missing tests, fix PHPDocs without runtime changes, refresh `AGENTS.md` or skills files from recent repository learnings, and sync docs with the current code, database, or infrastructure reality. Treat Housekeeping as a no-breaking-changes assistant, not an autonomous refactoring bot.
+When you enable a real provider, keep the task scope conservative: review dependency updates, suggest or add missing tests, fix PHPDocs without runtime changes, refresh `AGENTS.md` or skills files from recent repository learnings, and sync docs with the current code, database, or infrastructure reality. Treat Housekeeping as a no-breaking-changes assistant, not an autonomous refactoring bot. Cron-driven agents should stop at patch suggestions or uncommitted file edits and must never run `git commit` or create commits by themselves.
 
 ## Development
 
