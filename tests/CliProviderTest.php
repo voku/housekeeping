@@ -27,10 +27,10 @@ Goal: Sync docs with code.
 Payload:
 {
     "documents": {
-        "README.md": "# Über Docs"
+        "README.md": "# Snowman ☃ Docs"
     },
     "paths": {
-        "guide": "docs/über-guide.md"
+        "guide": "docs/☃-guide.md"
     }
 }
 PROMPT;
@@ -44,8 +44,8 @@ PROMPT;
         );
 
         $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', [
-            'documents' => ['README.md' => '# Über Docs'],
-            'paths' => ['guide' => 'docs/über-guide.md'],
+            'documents' => ['README.md' => '# Snowman ☃ Docs'],
+            'paths' => ['guide' => 'docs/☃-guide.md'],
         ]));
 
         self::assertTrue($result->successful);
