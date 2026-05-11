@@ -65,7 +65,7 @@ PROMPT;
         self::assertSame($expectedPrompt, $result->context['prompt'] ?? null);
     }
 
-    public function testCliProvidersReturnProviderNameAndTrimOutputStreams(): void
+    public function testCliProvidersReturnProviderMetadataAndTrimOutputStreams(): void
     {
         $provider = new CodexProvider(
             new ProcessExecutor(),
