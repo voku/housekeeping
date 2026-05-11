@@ -95,7 +95,7 @@ return [
             'daily_budget' => 10,
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
-            'command' => ['codex', 'exec'],
+            'command' => ['codex'],
             'resource_command' => ['codex-cli-usage', 'json'],
         ],
         'gemini' => [

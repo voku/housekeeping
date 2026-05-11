@@ -21,4 +21,19 @@ final readonly class CodexProvider extends CliProvider
     {
         return 'codex';
     }
+
+    protected function commandForPrompt(string $prompt): array
+    {
+        $command = $this->configuredCommand();
+        if (!$this->hasToken($command, 'exec')) {
+            $command[] = 'exec';
+        }
+
+        $command = [...$command, ...$this->configuredArguments()];
+        $command = $this->appendYoloIfConfigured($command);
+        $command[] = $prompt;
+
+        /** @var list<string> $command */
+        return $command;
+    }
 }

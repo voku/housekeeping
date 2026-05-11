@@ -21,4 +21,21 @@ final readonly class GeminiProvider extends CliProvider
     {
         return 'gemini';
     }
+
+    protected function commandForPrompt(string $prompt): array
+    {
+        $command = $this->configuredCommand();
+        if (!$this->hasToken($command, 'generate')) {
+            $command[] = 'generate';
+        }
+
+        $command = [...$command, ...$this->configuredArguments()];
+        if (!$this->hasToken($command, '--prompt', '-p', '--prompt-file')) {
+            $command[] = '--prompt';
+            $command[] = $prompt;
+        }
+
+        /** @var list<string> $command */
+        return $command;
+    }
 }

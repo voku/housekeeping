@@ -117,11 +117,13 @@ External providers can be tuned from config instead of code changes:
 ```php
 'codex' => [
     'enabled' => true,
-    'command' => ['codex', 'exec'],
+    'command' => ['codex'],
     'arguments' => ['--yolo', '--sandbox', 'project-only'],
     'append_yolo' => false,
 ],
 ```
+
+The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `generate --prompt`, and Copilot uses `suggest --prompt`. Keep `command` focused on the executable (or wrapper script), and put extra provider flags into `arguments`.
 
 When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, or Copilot against a copied config will run them inside the maintained repository unless you override it.
 

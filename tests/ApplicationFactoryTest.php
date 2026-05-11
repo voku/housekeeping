@@ -129,7 +129,12 @@ final class ApplicationFactoryTest extends TestCase
         $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
 
         self::assertTrue($result->successful);
-        self::assertSame('["--sandbox","project-only"]', $result->context['stdout'] ?? null);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(['exec', '--sandbox', 'project-only'], array_slice($decoded, 0, 3));
+        self::assertSame($result->context['prompt'] ?? null, $decoded[3] ?? null);
     }
 
     public function testFactoryUsesPackageRootForProviderWorkingDirectoryWhenRepositoryRootIsNotConfigured(): void
@@ -151,12 +156,12 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame(dirname(__DIR__), $result->context['stdout'] ?? null);
     }
 
-    public function testFactoryAppendsYoloToProviderCommandsByDefault(): void
+    public function testFactoryAppendsYoloToCodexCommandsByDefault(): void
     {
         $factory = new ApplicationFactory();
         $providers = $factory->providers([
             'providers' => [
-                'gemini' => [
+                'codex' => [
                     'enabled' => true,
                     'command' => ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
                     'working_directory' => __DIR__,
@@ -164,10 +169,15 @@ final class ApplicationFactoryTest extends TestCase
             ],
         ]);
 
-        $result = $providers['gemini']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
+        $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
 
         self::assertTrue($result->successful);
-        self::assertSame('["--yolo"]', $result->context['stdout'] ?? null);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertContains('--yolo', $decoded);
+        self::assertSame('exec', $decoded[0] ?? null);
     }
 
     /**

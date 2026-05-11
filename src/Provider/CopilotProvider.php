@@ -21,4 +21,21 @@ final readonly class CopilotProvider extends CliProvider
     {
         return 'copilot';
     }
+
+    protected function commandForPrompt(string $prompt): array
+    {
+        $command = $this->configuredCommand();
+        if (!$this->hasToken($command, 'suggest', 'explain')) {
+            $command[] = 'suggest';
+        }
+
+        $command = [...$command, ...$this->configuredArguments()];
+        if (!$this->hasToken($command, '--prompt', '-p')) {
+            $command[] = '--prompt';
+            $command[] = $prompt;
+        }
+
+        /** @var list<string> $command */
+        return $command;
+    }
 }

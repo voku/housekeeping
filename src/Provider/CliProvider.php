@@ -38,12 +38,12 @@ abstract readonly class CliProvider implements ProviderAdapter
         }
 
         $prompt = $this->formatPrompt($request);
-        $command = $this->commandWithArguments();
         if ($prompt === '') {
             return ProviderResult::failure('Unable to encode provider request payload.');
         }
+        $command = $this->commandForPrompt($prompt);
 
-        $process = $this->processExecutor->execute($command, $this->workingDirectory, $this->timeoutSeconds, $prompt);
+        $process = $this->processExecutor->execute($command, $this->workingDirectory, $this->timeoutSeconds, $this->inputForPrompt($prompt));
         if ($process->timedOut) {
             return ProviderResult::failure('Provider command timed out.', ['provider' => $this->name(), 'command' => $process->command]);
         }
@@ -66,6 +66,59 @@ abstract readonly class CliProvider implements ProviderAdapter
         ]);
     }
 
+    /**
+     * @return list<string>
+     */
+    abstract protected function commandForPrompt(string $prompt): array;
+
+    protected function inputForPrompt(string $prompt): ?string
+    {
+        return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    final protected function configuredCommand(): array
+    {
+        return $this->command;
+    }
+
+    /**
+     * @return list<string>
+     */
+    final protected function configuredArguments(): array
+    {
+        return $this->arguments;
+    }
+
+    /**
+     * @param list<string> $command
+     * @return list<string>
+     */
+    final protected function appendYoloIfConfigured(array $command): array
+    {
+        if ($this->appendYolo && !in_array('--yolo', $command, true)) {
+            $command[] = '--yolo';
+        }
+
+        return $command;
+    }
+
+    /**
+     * @param list<string> $command
+     */
+    final protected function hasToken(array $command, string ...$tokens): bool
+    {
+        foreach ($tokens as $token) {
+            if (in_array($token, $command, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function formatPrompt(ProviderRequest $request): string
     {
         $payload = json_encode($request->payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -80,18 +133,5 @@ abstract readonly class CliProvider implements ProviderAdapter
             'Goal: ' . $request->prompt,
             'Payload:' . PHP_EOL . $payload,
         ]);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function commandWithArguments(): array
-    {
-        $command = [...$this->command, ...$this->arguments];
-        if ($this->appendYolo && !in_array('--yolo', $command, true)) {
-            $command[] = '--yolo';
-        }
-
-        return $command;
     }
 }
