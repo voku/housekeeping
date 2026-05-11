@@ -14,7 +14,7 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 - Learn from recent commits before later provider-backed tasks run.
 - Discover repository docs and TODO files automatically so later runs can sync docs with code.
 - Execute safe default tasks with a local null provider.
-- Keep provider-backed Codex, Gemini, and Copilot integrations disabled unless explicitly configured.
+- Keep provider-backed Codex, Gemini, Copilot, and Claude Code integrations disabled unless explicitly configured.
 - Support per-project config files and configurable external coding-agent CLI flags.
 - Validate the project with PHPStan and PHPUnit.
 
@@ -110,7 +110,7 @@ For real use, treat `config/tasks.php` as the control plane for one target repos
 
 The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated. If you share one workspace across multiple cron jobs, give each job its own config file with separate state, log, and lock paths.
 
-The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), and Copilot (`copilot-api check-usage --json`), but you can replace those commands with any compatible local tool that prints JSON or percentage-based text.
+The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`), but you can replace those commands with any compatible local tool that prints JSON or percentage-based text.
 
 External providers can be tuned from config instead of code changes:
 
@@ -118,14 +118,13 @@ External providers can be tuned from config instead of code changes:
 'codex' => [
     'enabled' => true,
     'command' => ['codex'],
-    'arguments' => ['--yolo', '--sandbox', 'project-only'],
-    'append_yolo' => false,
+    'arguments' => ['--sandbox', 'workspace-write'],
 ],
 ```
 
-The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `generate --prompt`, and Copilot uses `suggest --prompt`. Keep `command` focused on the executable (or wrapper script), and put extra provider flags into `arguments`.
+The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `--prompt`, Copilot uses `--prompt`, and Claude Code uses `--print`. Keep `command` focused on the executable (or wrapper script), and put extra provider flags into `arguments`.
 
-When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, or Copilot against a copied config will run them inside the maintained repository unless you override it.
+When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, Copilot, or Claude Code against a copied config will run them inside the maintained repository unless you override it.
 
 Default runs now start with `project:discover` and `commits:learn`, then use `blindspots:analyze` to review the previous run before later provider-backed tasks continue with documentation, TODO, audit, and analysis work.
 
@@ -147,12 +146,15 @@ Run tests:
 composer test
 ```
 
-Optional AI-slop and mutation checks are installed through Composer scripts:
+Optional AI-slop, mutation, and provider CLI smoke checks are available through Composer scripts:
 
 ```bash
 composer install-slop-scan
 composer install-infection
+composer provider-smoke
 ```
+
+`composer provider-smoke` expects `codex`, `gemini`, `copilot`, and `claude` on `PATH`; CI and the Copilot setup steps install pinned npm CLI versions before running it.
 
 ## License
 

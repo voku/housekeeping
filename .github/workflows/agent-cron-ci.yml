@@ -20,6 +20,22 @@ jobs:
       - run: composer analyse
       - run: composer test
 
+  provider-cli-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install coding-agent CLIs
+        run: |
+          npm install -g --no-audit --no-fund --no-progress \
+            @google/gemini-cli@0.41.2 \
+            @openai/codex@0.130.0 \
+            @anthropic-ai/claude-code@2.1.138 \
+            @github/copilot@1.0.44
+      - run: bin/provider-cli-smoke
+
   ai-slop:
     runs-on: ubuntu-latest
     steps:

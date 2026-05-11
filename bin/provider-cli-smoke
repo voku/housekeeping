@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+check_cli() {
+  local binary="$1"
+  local version_pattern="$2"
+  local help_pattern="$3"
+  shift 3
+  local help_command=("$@")
+
+  if ! command -v "$binary" >/dev/null 2>&1; then
+    echo "Missing provider CLI: $binary" >&2
+    return 1
+  fi
+
+  local version_output
+  version_output="$($binary --version 2>&1)"
+  if ! grep -Eiq -- "$version_pattern" <<<"$version_output"; then
+    echo "Unexpected $binary --version output:" >&2
+    echo "$version_output" >&2
+    return 1
+  fi
+
+  local help_output
+  help_output="$("${help_command[@]}" 2>&1)"
+  if ! grep -Eiq -- "$help_pattern" <<<"$help_output"; then
+    echo "Unexpected ${help_command[*]} output; expected pattern: $help_pattern" >&2
+    echo "$help_output" >&2
+    return 1
+  fi
+
+  echo "[OK] $binary smoke check passed"
+}
+
+check_cli codex 'codex-cli|codex' 'Usage: codex exec|Run Codex non-interactively' codex exec --help
+check_cli gemini '^[0-9]+\.[0-9]+\.[0-9]+' '-p, --prompt|--prompt' gemini --help
+check_cli copilot 'GitHub Copilot CLI|copilot' '-p, --prompt|--prompt <text>' copilot --help
+check_cli claude 'Claude Code|^[0-9]+\.[0-9]+\.[0-9]+' '-p, --print|--print' claude --help

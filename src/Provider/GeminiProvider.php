@@ -24,12 +24,8 @@ final readonly class GeminiProvider extends CliProvider
 
     protected function commandForPrompt(string $prompt): array
     {
-        $command = $this->configuredCommand();
-        if (!$this->hasToken($command, 'generate')) {
-            $command[] = 'generate';
-        }
-
-        $command = [...$command, ...$this->configuredArguments()];
+        $command = [...$this->configuredCommand(), ...$this->configuredArguments()];
+        $command = $this->appendYoloArgumentPairIfConfigured($command, '--approval-mode', 'yolo');
         if (!$this->hasToken($command, '--prompt', '-p', '--prompt-file')) {
             $command[] = '--prompt';
             $command[] = $prompt;

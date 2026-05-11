@@ -33,6 +33,7 @@ final class ApplicationFactoryTest extends TestCase
         self::assertArrayNotHasKey('codex', $providers);
         self::assertArrayNotHasKey('gemini', $providers);
         self::assertArrayNotHasKey('copilot', $providers);
+        self::assertArrayNotHasKey('claude', $providers);
     }
 
     public function testFactoryIncludesEveryExplicitlyEnabledExternalProvider(): void
@@ -58,13 +59,19 @@ final class ApplicationFactoryTest extends TestCase
                     'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
                     'working_directory' => __DIR__,
                 ],
+                'claude' => [
+                    'enabled' => true,
+                    'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
+                    'working_directory' => __DIR__,
+                ],
             ],
         ]);
 
-        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot'], array_keys($providers));
+        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot', 'claude'], array_keys($providers));
         self::assertTrue($providers['codex']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['gemini']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['copilot']->isAvailable($this->runContext($providers)));
+        self::assertTrue($providers['claude']->isAvailable($this->runContext($providers)));
     }
 
     public function testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag(): void
@@ -156,7 +163,7 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame(dirname(__DIR__), $result->context['stdout'] ?? null);
     }
 
-    public function testFactoryAppendsYoloToCodexCommandsByDefault(): void
+    public function testFactoryDoesNotAppendDangerousProviderFlagsByDefault(): void
     {
         $factory = new ApplicationFactory();
         $providers = $factory->providers([
@@ -176,7 +183,7 @@ final class ApplicationFactoryTest extends TestCase
         self::assertIsString($stdout);
         $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded);
-        self::assertContains('--yolo', $decoded);
+        self::assertNotContains('--dangerously-bypass-approvals-and-sandbox', $decoded);
         self::assertSame('exec', $decoded[0] ?? null);
     }
 

@@ -30,7 +30,7 @@ final readonly class CodexProvider extends CliProvider
         }
 
         $command = [...$command, ...$this->configuredArguments()];
-        $command = $this->appendYoloIfConfigured($command);
+        $command = $this->appendTokenIfYoloConfigured($command, '--dangerously-bypass-approvals-and-sandbox');
         $command[] = $prompt;
 
         /** @var list<string> $command */

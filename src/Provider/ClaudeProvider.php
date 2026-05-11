@@ -6,7 +6,7 @@ namespace HousekeepingAgentCron\Provider;
 
 use HousekeepingAgentCron\Runtime\ProcessExecutor;
 
-final readonly class CopilotProvider extends CliProvider
+final readonly class ClaudeProvider extends CliProvider
 {
     /**
      * @param list<string> $command
@@ -19,17 +19,17 @@ final readonly class CopilotProvider extends CliProvider
 
     public function name(): string
     {
-        return 'copilot';
+        return 'claude';
     }
 
     protected function commandForPrompt(string $prompt): array
     {
         $command = [...$this->configuredCommand(), ...$this->configuredArguments()];
-        $command = $this->appendTokenIfYoloConfigured($command, '--yolo');
-        if (!$this->hasToken($command, '--prompt', '-p', '--interactive', '-i')) {
-            $command[] = '--prompt';
-            $command[] = $prompt;
+        $command = $this->appendTokenIfYoloConfigured($command, '--dangerously-skip-permissions');
+        if (!$this->hasToken($command, '--print', '-p')) {
+            $command[] = '--print';
         }
+        $command[] = $prompt;
 
         /** @var list<string> $command */
         return $command;

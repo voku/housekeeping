@@ -96,10 +96,24 @@ abstract readonly class CliProvider implements ProviderAdapter
      * @param list<string> $command
      * @return list<string>
      */
-    final protected function appendYoloIfConfigured(array $command): array
+    final protected function appendTokenIfYoloConfigured(array $command, string $token): array
     {
-        if ($this->appendYolo && !in_array('--yolo', $command, true)) {
-            $command[] = '--yolo';
+        if ($this->appendYolo && !in_array($token, $command, true)) {
+            $command[] = $token;
+        }
+
+        return $command;
+    }
+
+    /**
+     * @param list<string> $command
+     * @return list<string>
+     */
+    final protected function appendYoloArgumentPairIfConfigured(array $command, string $option, string $value): array
+    {
+        if ($this->appendYolo && !$this->hasToken($command, $option)) {
+            $command[] = $option;
+            $command[] = $value;
         }
 
         return $command;
