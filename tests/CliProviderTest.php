@@ -152,6 +152,27 @@ PROMPT;
         self::assertSame(json_encode(['--prompt', $expectedPrompt], JSON_UNESCAPED_SLASHES), $result->context['stdout'] ?? null);
     }
 
+    public function testGeminiProviderDefaultsToSafeApprovalMode(): void
+    {
+        $provider = new GeminiProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertNotContains('--approval-mode', $decoded);
+        self::assertNotContains('yolo', $decoded);
+    }
+
     public function testCopilotProviderUsesPromptFlag(): void
     {
         $expectedPrompt = $this->expectedDocsPrompt();
@@ -171,6 +192,26 @@ PROMPT;
         self::assertSame(json_encode(['--prompt', $expectedPrompt], JSON_UNESCAPED_SLASHES), $result->context['stdout'] ?? null);
     }
 
+    public function testCopilotProviderDefaultsToPromptModeWithoutYolo(): void
+    {
+        $provider = new CopilotProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertNotContains('--yolo', $decoded);
+    }
+
     public function testClaudeProviderUsesPrintAndPromptArgument(): void
     {
         $expectedPrompt = $this->expectedDocsPrompt();
@@ -188,6 +229,46 @@ PROMPT;
 
         self::assertTrue($result->successful);
         self::assertSame(json_encode(['--print', $expectedPrompt], JSON_UNESCAPED_SLASHES), $result->context['stdout'] ?? null);
+    }
+
+    public function testClaudeProviderDefaultsToPrintModeWithoutPermissionBypass(): void
+    {
+        $provider = new ClaudeProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertNotContains('--dangerously-skip-permissions', $decoded);
+    }
+
+    public function testCodexProviderDefaultsToExecModeWithoutDangerousBypass(): void
+    {
+        $provider = new CodexProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertNotContains('--dangerously-bypass-approvals-and-sandbox', $decoded);
     }
 
     private function expectedDocsPrompt(): string
