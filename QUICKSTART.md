@@ -94,6 +94,7 @@ php bin/agent-cron housekeeping:run --dry-run
 ```
 
 This lets you confirm the task list, provider status, and file discovery before any provider-backed work runs.
+When you enable a real provider, keep it in patch mode: cron-triggered Housekeeping runs should never run `git commit` or create commits on their own.
 
 If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it.
 
@@ -108,6 +109,7 @@ Housekeeping works best when it behaves like a careful junior developer:
 - sync docs with the current code, database, and infrastructure reality
 
 Keep provider-backed tasks focused on no-breaking-changes maintenance work.
+They should return patches or uncommitted edits for review, never self-commit from cron.
 The default blind-spot loop works best when its context files point at the docs or agent instructions you expect Housekeeping to keep aligned over time.
 
 ## 5. Schedule it

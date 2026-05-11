@@ -38,6 +38,7 @@ final class CliProviderTest extends TestCase
         self::assertIsArray($argv);
         $stdin = $decoded['stdin'] ?? null;
         self::assertIsString($stdin);
+        self::assertStringContainsString('Never run `git commit`, create commits, or otherwise mutate git history yourself;', $stdin);
         self::assertStringContainsString('Task: docs:refresh', $stdin);
         self::assertStringContainsString('"documents"', $stdin);
     }
