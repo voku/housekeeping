@@ -12,7 +12,7 @@ final readonly class GeminiProvider extends CliProvider
      * @param list<string> $command
      * @param list<string> $arguments
      */
-    public function __construct(ProcessExecutor $processExecutor, array $command, array $arguments, string $workingDirectory, int $timeoutSeconds, bool $appendYolo = true)
+    public function __construct(ProcessExecutor $processExecutor, array $command, array $arguments, string $workingDirectory, int $timeoutSeconds, bool $appendYolo = false)
     {
         parent::__construct($processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo);
     }
