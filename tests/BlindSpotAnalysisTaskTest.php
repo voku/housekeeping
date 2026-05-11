@@ -41,7 +41,12 @@ final class BlindSpotAnalysisTaskTest extends TestCase
             {
                 $this->payload = $request->payload;
 
-                return ProviderResult::success('Accepted.', ['stdout' => 'Prefer adding QUICKSTART.md to blind-spot context.']);
+                return ProviderResult::success('Accepted.', [
+                    'provider_output' => [
+                        'summary' => 'Structured blind-spot summary.',
+                    ],
+                    'stdout' => 'Prefer adding QUICKSTART.md to blind-spot context.',
+                ]);
             }
         };
 
@@ -113,6 +118,7 @@ final class BlindSpotAnalysisTaskTest extends TestCase
                 ],
             ],
             $store->load(),
+            [],
             $store,
             new JsonLogger($repositoryRoot . '/var/logs/housekeeping.log'),
             ['local-null-provider' => $provider],
@@ -136,7 +142,8 @@ final class BlindSpotAnalysisTaskTest extends TestCase
             self::assertIsArray($recentRuns);
             self::assertCount(3, $recentRuns);
             self::assertSame([1700000000, 1700000020, 1700000040], array_column($recentRuns, 'started_at'));
-            self::assertSame('Prefer adding QUICKSTART.md to blind-spot context.', $this->stateAt($context->state(), 'metadata.blind_spots.last_provider_output'));
+            self::assertSame('Structured blind-spot summary.', $this->stateAt($context->state(), 'metadata.blind_spots.last_provider_output'));
+            self::assertSame('Structured blind-spot summary.', $this->stateAt($context->state(), 'metadata.blind_spots.last_summary'));
             self::assertIsInt($this->stateAt($context->state(), 'metadata.blind_spots.last_analyzed_at'));
             self::assertSame(1700000040, $this->stateAt($context->state(), 'metadata.blind_spots.last_analyzed_run_started_at'));
             self::assertSame(0, $this->stateAt($context->state(), 'metadata.blind_spots.last_run_exit_code'));
@@ -182,6 +189,7 @@ final class BlindSpotAnalysisTaskTest extends TestCase
                     ],
                 ],
             ],
+            [],
             new InMemoryStateStore(),
             new JsonLogger($repositoryRoot . '/var/logs/housekeeping.log'),
             [],
@@ -247,6 +255,7 @@ final class BlindSpotAnalysisTaskTest extends TestCase
                     ],
                 ],
             ],
+            [],
             new InMemoryStateStore(),
             new JsonLogger($repositoryRoot . '/var/logs/housekeeping.log'),
             ['local-null-provider' => $provider],

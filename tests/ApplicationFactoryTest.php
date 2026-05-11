@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace HousekeepingAgentCron\Tests;
 
+use HousekeepingAgentCron\Contract\ProviderBackedTask;
 use HousekeepingAgentCron\Runtime\ApplicationFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -187,6 +188,27 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame('exec', $decoded[0] ?? null);
     }
 
+    public function testFactoryBuildsPreferredProviderRoutingForAutoTasks(): void
+    {
+        $factory = new ApplicationFactory();
+        $tasks = $factory->tasks([
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'interval_seconds' => 3600,
+                    'provider' => 'auto',
+                    'preferred_providers' => ['claude', 123, 'codex'],
+                    'input_files' => [__FILE__],
+                ],
+            ],
+        ]);
+
+        self::assertCount(1, $tasks);
+        self::assertInstanceOf(ProviderBackedTask::class, $tasks[0]);
+        self::assertSame('auto', $tasks[0]->providerName());
+        self::assertSame(['claude', 'codex'], $tasks[0]->preferredProviderNames());
+    }
+
     /**
      * @param array<string, \HousekeepingAgentCron\Contract\ProviderAdapter> $providers
      */
@@ -198,6 +220,7 @@ final class ApplicationFactoryTest extends TestCase
             time(),
             ['providers' => []],
             ['tasks' => [], 'providers' => [], 'runs' => []],
+            [],
             new InMemoryStateStore(),
             new \HousekeepingAgentCron\Runtime\JsonLogger(sys_get_temp_dir() . '/agent-cron-factory-' . bin2hex(random_bytes(4)) . '.log'),
             $providers,

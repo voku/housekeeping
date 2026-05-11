@@ -16,6 +16,8 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 - Execute safe default tasks with a local null provider.
 - Keep provider-backed Codex, Gemini, Copilot, and Claude Code integrations disabled unless explicitly configured.
 - Support per-project config files and configurable external coding-agent CLI flags.
+- Normalize provider responses into structured summaries and patch metadata for task state persistence.
+- Support task-level preferred-provider routing when a task should override the global provider readiness ranking.
 - Validate the project with PHPStan and PHPUnit.
 
 ## Requirements
@@ -97,7 +99,7 @@ An example crontab entry is available in [`crontab.example`](crontab.example):
 
 ## Configuration
 
-Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, provider CLI arguments, and runtime paths are configured in [`config/tasks.php`](config/tasks.php) or in additional project-specific config files selected with `--config=/absolute/path/to/tasks.php` or `HOUSEKEEPING_CONFIG=/absolute/path/to/tasks.php`.
+Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, preferred provider routing, provider CLI arguments, and runtime paths are configured in [`config/tasks.php`](config/tasks.php) or in additional project-specific config files selected with `--config=/absolute/path/to/tasks.php` or `HOUSEKEEPING_CONFIG=/absolute/path/to/tasks.php`.
 
 The default configuration uses `local-null-provider`, so fresh installs can run safely without external AI tools or credentials. External providers are disabled by default and must be enabled intentionally.
 
@@ -112,6 +114,8 @@ The safest operating model is one Housekeeping workspace per maintained project 
 
 The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`), but you can replace those commands with any compatible local tool that prints JSON or percentage-based text.
 
+If a task uses `'provider' => 'auto'`, Housekeeping picks the first ready provider from that global readiness ranking unless the task also declares `preferred_providers`, in which case the first ready preferred provider wins.
+
 External providers can be tuned from config instead of code changes:
 
 ```php
@@ -119,6 +123,10 @@ External providers can be tuned from config instead of code changes:
     'enabled' => true,
     'command' => ['codex'],
     'arguments' => ['--sandbox', 'workspace-write'],
+],
+'docs:refresh' => [
+    'provider' => 'auto',
+    'preferred_providers' => ['claude', 'codex'],
 ],
 ```
 
@@ -129,6 +137,8 @@ When `working_directory` is omitted for a provider, Housekeeping defaults that p
 Default runs now start with `project:discover` and `commits:learn`, then use `blindspots:analyze` to review the previous run before later provider-backed tasks continue with documentation, TODO, audit, and analysis work.
 
 `blindspots:analyze` is the self-optimization loop: it reviews the last completed housekeeping run, stores blind-spot guidance under `metadata.blind_spots`, and later provider-backed tasks receive that metadata alongside the normal repository-learning metadata.
+
+Provider-backed tasks now also persist normalized provider output under task metadata so follow-up automation can reuse structured summaries, patch targets, and related provider metadata without reparsing raw stdout/stderr every time.
 
 When you enable a real provider, keep the task scope conservative: review dependency updates, suggest or add missing tests, fix PHPDocs without runtime changes, refresh `AGENTS.md` or skills files from recent repository learnings, and sync docs with the current code, database, or infrastructure reality. Treat Housekeeping as a no-breaking-changes assistant, not an autonomous refactoring bot. Cron-driven agents should stop at patch suggestions or uncommitted file edits and must never run `git commit` or create commits by themselves.
 

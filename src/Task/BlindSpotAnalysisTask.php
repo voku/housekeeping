@@ -14,13 +14,15 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
 
     /**
      * @param list<string> $contextFiles
+     * @param list<string> $preferredProviderNames
      */
     public function __construct(
         int $intervalSeconds,
         string $providerName,
         array $contextFiles = [],
+        array $preferredProviderNames = [],
     ) {
-        parent::__construct($intervalSeconds, $providerName);
+        parent::__construct($intervalSeconds, $providerName, $preferredProviderNames);
         $this->contextFiles = $contextFiles;
     }
 
@@ -77,7 +79,12 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
                 $context->setMetadataValue('blind_spots.last_run_tasks', $this->extractTaskNames($latestRun['results']));
             }
 
-            $providerOutput = $result->context['stdout'] ?? null;
+            $this->persistProviderMetadata($context, 'blind_spots', $result);
+            $providerOutputContext = $result->context['provider_output'] ?? null;
+            $providerOutput = is_array($providerOutputContext) ? ($providerOutputContext['summary'] ?? null) : null;
+            if (!is_string($providerOutput) || $providerOutput === '') {
+                $providerOutput = $result->context['stdout'] ?? null;
+            }
             if (is_string($providerOutput) && $providerOutput !== '') {
                 $context->setMetadataValue('blind_spots.last_provider_output', $providerOutput);
             }

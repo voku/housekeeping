@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HousekeepingAgentCron\Task;
 
 use HousekeepingAgentCron\Contract\ProviderBackedTask;
+use HousekeepingAgentCron\Runtime\ProviderOutputNormalizer;
 use HousekeepingAgentCron\Runtime\ProviderRequest;
 use HousekeepingAgentCron\Runtime\RepositoryInspector;
 use HousekeepingAgentCron\Runtime\RunContext;
@@ -12,10 +13,15 @@ use HousekeepingAgentCron\Runtime\TaskResult;
 
 abstract readonly class AbstractProviderTask extends AbstractIntervalTask implements ProviderBackedTask
 {
+    /**
+     * @param list<string> $preferredProviderNames
+     */
     public function __construct(
         int $intervalSeconds,
         private string $providerName,
+        private array $preferredProviderNames = [],
         private RepositoryInspector $repositoryInspector = new RepositoryInspector(),
+        private ProviderOutputNormalizer $providerOutputNormalizer = new ProviderOutputNormalizer(),
     ) {
         parent::__construct($intervalSeconds);
     }
@@ -23,6 +29,14 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
     public function providerName(): string
     {
         return $this->providerName;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function preferredProviderNames(): array
+    {
+        return $this->preferredProviderNames;
     }
 
     /**
@@ -34,17 +48,22 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
             return TaskResult::skipped(sprintf('Dry-run: %s was not sent to a provider.', $this->name()));
         }
 
-        $provider = $context->provider($this->providerName);
+        $providerName = $this->resolvedProviderName($context);
+        $provider = $context->provider($providerName);
         if ($provider === null) {
-            return TaskResult::failure('Configured provider is not registered.', ['provider' => $this->providerName]);
+            return TaskResult::failure('Configured provider is not registered.', ['provider' => $providerName]);
         }
 
         $result = $provider->execute(new ProviderRequest($this->name(), $prompt, $payload));
+        $normalizedContext = $this->providerOutputNormalizer->normalize([...$result->context, 'provider' => $providerName]);
         if (!$result->successful) {
-            return TaskResult::failure($result->message, $result->context);
+            return TaskResult::failure($result->message, $normalizedContext);
         }
 
-        return TaskResult::success($successMessage, $result->context);
+        $taskResult = TaskResult::success($successMessage, $normalizedContext);
+        $this->persistProviderMetadata($context, 'task_provider_results.' . $this->name(), $taskResult, $providerName);
+
+        return $taskResult;
     }
 
     /**
@@ -140,5 +159,125 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
         }
 
         return $path;
+    }
+
+    final protected function persistProviderMetadata(RunContext $context, string $metadataPath, TaskResult $result, ?string $providerName = null): void
+    {
+        if ($context->dryRun || !$result->successful || $result->skipped) {
+            return;
+        }
+
+        $providerOutput = $result->context['provider_output'] ?? null;
+        $providerOutput = is_array($providerOutput) ? $providerOutput : [];
+
+        $context->setMetadataValue($metadataPath . '.last_provider', $providerName ?? $this->resolvedProviderName($context));
+        $context->setMetadataValue($metadataPath . '.last_recorded_at', time());
+        $context->setMetadataValue($metadataPath . '.last_stdout', $this->trimmedString($result->context['stdout'] ?? null));
+        $context->setMetadataValue($metadataPath . '.last_stderr', $this->trimmedString($result->context['stderr'] ?? null));
+        $context->setMetadataValue($metadataPath . '.last_summary', $this->trimmedString($providerOutput['summary'] ?? null));
+        $context->setMetadataValue($metadataPath . '.last_summaries', $this->stringList($providerOutput['summaries'] ?? []));
+        $context->setMetadataValue($metadataPath . '.last_patches', $this->patchList($providerOutput['patches'] ?? []));
+        $context->setMetadataValue($metadataPath . '.last_metadata', $this->associativeArray($providerOutput['metadata'] ?? []));
+    }
+
+    private function resolvedProviderName(RunContext $context): string
+    {
+        $providerName = $context->runtimeValue('task_provider_routes.' . $this->name() . '.resolved_provider');
+
+        return is_string($providerName) && $providerName !== '' ? $providerName : $this->providerName;
+    }
+
+    /**
+     * @param mixed $value
+     * @return list<string>
+     */
+    private function stringList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($value as $item) {
+            $string = $this->trimmedString($item);
+            if ($string !== null) {
+                $items[] = $string;
+            }
+        }
+
+        return array_values(array_unique($items));
+    }
+
+    /**
+     * @param mixed $value
+     * @return list<array{summary: string|null, paths: list<string>, diff_present: bool}>
+     */
+    private function patchList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $patches = [];
+        foreach ($value as $patch) {
+            if (!is_array($patch)) {
+                continue;
+            }
+
+            $summary = $this->trimmedString($patch['summary'] ?? null);
+            $paths = $this->stringList($patch['paths'] ?? []);
+            foreach (['path', 'file', 'file_path', 'target'] as $key) {
+                $path = $this->trimmedString($patch[$key] ?? null);
+                if ($path !== null) {
+                    $paths[] = $path;
+                }
+            }
+            $paths = array_values(array_unique($paths));
+            $diffPresent = ($patch['diff_present'] ?? false) === true;
+            if ($summary === null && $paths === [] && !$diffPresent) {
+                continue;
+            }
+
+            $patches[] = [
+                'summary' => $summary,
+                'paths' => $paths,
+                'diff_present' => $diffPresent,
+            ];
+        }
+
+        return $patches;
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<string, mixed>
+     */
+    private function associativeArray(mixed $value): array
+    {
+        if (!is_array($value) || array_is_list($value)) {
+            return [];
+        }
+
+        $typed = [];
+        foreach ($value as $key => $item) {
+            if (!is_string($key)) {
+                continue;
+            }
+
+            $typed[$key] = $item;
+        }
+
+        return $typed;
+    }
+
+    private function trimmedString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 }

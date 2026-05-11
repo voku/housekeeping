@@ -38,6 +38,7 @@ final class ProjectDiscoveryTaskTest extends TestCase
                 'providers' => [],
             ],
             $store->load(),
+            [],
             $store,
             new JsonLogger($repositoryRoot . '/var/logs/housekeeping.log'),
             [],

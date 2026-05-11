@@ -11,14 +11,18 @@ use HousekeepingAgentCron\Runtime\TaskResult;
 
 final readonly class CommitLearningTask extends AbstractProviderTask
 {
+    /**
+     * @param list<string> $preferredProviderNames
+     */
     public function __construct(
         int $intervalSeconds,
         string $providerName,
         private ProcessExecutor $processExecutor,
         private string $workingDirectory,
         private int $maxCommits,
+        array $preferredProviderNames = [],
     ) {
-        parent::__construct($intervalSeconds, $providerName);
+        parent::__construct($intervalSeconds, $providerName, $preferredProviderNames);
     }
 
     public function name(): string
@@ -70,7 +74,12 @@ final readonly class CommitLearningTask extends AbstractProviderTask
                 $commits,
             ));
 
-            $providerOutput = $result->context['stdout'] ?? null;
+            $this->persistProviderMetadata($context, 'learning', $result);
+            $providerOutputContext = $result->context['provider_output'] ?? null;
+            $providerOutput = is_array($providerOutputContext) ? ($providerOutputContext['summary'] ?? null) : null;
+            if (!is_string($providerOutput) || $providerOutput === '') {
+                $providerOutput = $result->context['stdout'] ?? null;
+            }
             if (is_string($providerOutput) && $providerOutput !== '') {
                 $context->setMetadataValue('learning.last_provider_output', $providerOutput);
             }
