@@ -334,6 +334,9 @@ final class TaskRunnerTest extends TestCase
         self::assertSame(1, $codex->calls);
         self::assertSame(0, $gemini->calls);
         self::assertSame('codex', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
+        self::assertSame('auto', $context->runtimeValue('task_provider_routes.auto:provider.configured_provider'));
+        self::assertSame(['codex'], $context->runtimeValue('task_provider_routes.auto:provider.preferred_providers'));
+        self::assertSame('codex', $context->runtimeValue('task_provider_routes.auto:provider.resolved_provider'));
         self::assertSame('preferred_provider', $this->stateAt($store->state, 'runs.0.results.0.context.routing_reason'));
     }
 
@@ -384,6 +387,53 @@ final class TaskRunnerTest extends TestCase
         self::assertSame(1, $gemini->calls);
         self::assertSame('gemini', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
         self::assertSame('global_readiness_ranking', $this->stateAt($store->state, 'runs.0.results.0.context.routing_reason'));
+    }
+
+    public function testProviderBackedTaskResultReceivesProviderRoutingContext(): void
+    {
+        $provider = $this->recordingProvider('codex');
+        $store = new InMemoryStateStore();
+        $context = $this->context(false, $store, ['codex' => $provider], [
+            'providers' => [
+                'codex' => [
+                    'enabled' => true,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 0,
+                ],
+            ],
+        ]);
+        $task = new readonly class implements \HousekeepingAgentCron\Contract\ProviderBackedTask {
+            public function name(): string
+            {
+                return 'provider:context';
+            }
+
+            public function providerName(): string
+            {
+                return 'codex';
+            }
+
+            public function preferredProviderNames(): array
+            {
+                return [];
+            }
+
+            public function isDue(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function run(RunContext $context): TaskResult
+            {
+                return TaskResult::success('Done.');
+            }
+        };
+
+        $exitCode = (new TaskRunner([$task]))->run($context);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame('codex', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
+        self::assertSame('codex', $this->stateAt($store->state, 'runs.0.results.0.context.configured_provider'));
     }
 
     /**

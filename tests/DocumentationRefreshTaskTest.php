@@ -9,6 +9,8 @@ use HousekeepingAgentCron\Runtime\JsonLogger;
 use HousekeepingAgentCron\Runtime\ProviderRequest;
 use HousekeepingAgentCron\Runtime\ProviderResult;
 use HousekeepingAgentCron\Runtime\RunContext;
+use HousekeepingAgentCron\Runtime\TaskResult;
+use HousekeepingAgentCron\Task\AbstractProviderTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
@@ -171,6 +173,75 @@ final class DocumentationRefreshTaskTest extends TestCase
             self::assertSame('Update the quick-start snippet.', $this->stateAt($context->state(), 'metadata.task_provider_results.docs:refresh.last_patches.0.summary'));
             self::assertSame(
                 ['docs/guide.md', 'README.md'],
+                $this->stateAt($context->state(), 'metadata.task_provider_results.docs:refresh.last_patches.0.paths'),
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testPersistProviderMetadataKeepsSingularPathField(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-docs-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($dir);
+        $store = new InMemoryStateStore();
+        $task = new readonly class extends AbstractProviderTask {
+            public function __construct()
+            {
+                parent::__construct(3600, 'local-null-provider');
+            }
+
+            public function name(): string
+            {
+                return 'docs:refresh';
+            }
+
+            public function run(RunContext $context): TaskResult
+            {
+                return TaskResult::skipped('not used');
+            }
+
+            public function persist(RunContext $context, TaskResult $result): void
+            {
+                $this->persistProviderMetadata($context, 'task_provider_results.docs:refresh', $result, 'local-null-provider');
+            }
+        };
+
+        try {
+            $context = new RunContext(
+                false,
+                null,
+                time(),
+                [
+                    'providers' => [
+                        'local-null-provider' => [
+                            'enabled' => true,
+                            'daily_budget' => 1,
+                            'cooldown_seconds' => 0,
+                        ],
+                    ],
+                ],
+                $store->load(),
+                [],
+                $store,
+                new JsonLogger($dir . '/logs/housekeeping.log'),
+                [],
+            );
+
+            $task->persist($context, TaskResult::success('Stored.', [
+                'provider_output' => [
+                    'patches' => [
+                        [
+                            'summary' => 'Sync README section.',
+                            'path' => 'README.md',
+                            'diff_present' => true,
+                        ],
+                    ],
+                ],
+            ]));
+
+            self::assertSame(
+                ['README.md'],
                 $this->stateAt($context->state(), 'metadata.task_provider_results.docs:refresh.last_patches.0.paths'),
             );
         } finally {

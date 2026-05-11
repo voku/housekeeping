@@ -40,7 +40,12 @@ final class CommitLearningTaskTest extends TestCase
             {
                 $this->payload = $request->payload;
 
-                return ProviderResult::success('Accepted.', ['stdout' => 'Follow the existing commit patterns.']);
+                return ProviderResult::success('Accepted.', [
+                    'provider_output' => [
+                        'summary' => 'Structured learning summary.',
+                    ],
+                    'stdout' => 'Follow the existing commit patterns.',
+                ]);
             }
         };
         $store = new InMemoryStateStore([
@@ -88,7 +93,8 @@ final class CommitLearningTaskTest extends TestCase
             self::assertIsArray($commits[0] ?? null);
             self::assertSame('Add worker', $commits[0]['subject'] ?? null);
             self::assertSame(['src/Worker.php'], $commits[0]['files'] ?? null);
-            self::assertSame('Follow the existing commit patterns.', $this->stateAt($context->state(), 'metadata.learning.last_provider_output'));
+            self::assertSame('Structured learning summary.', $this->stateAt($context->state(), 'metadata.learning.last_provider_output'));
+            self::assertSame('Structured learning summary.', $this->stateAt($context->state(), 'metadata.learning.last_summary'));
             self::assertSame(2, $this->stateAt($context->state(), 'metadata.learning.last_commit_count'));
             self::assertIsString($this->stateAt($context->state(), 'metadata.learning.last_learned_head'));
         } finally {
