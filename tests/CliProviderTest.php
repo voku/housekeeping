@@ -15,6 +15,23 @@ final class CliProviderTest extends TestCase
 {
     public function testCliProvidersAlwaysAppendYoloAndFormattedPrompt(): void
     {
+        $expectedPrompt = <<<'PROMPT'
+You are an autonomous housekeeping coding agent running from cron.
+
+Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.
+
+Task: docs:refresh
+
+Goal: Sync docs with code.
+
+Payload:
+{
+    "documents": {
+        "README.md": "# Docs"
+    }
+}
+PROMPT;
+
         $provider = new CodexProvider(
             new ProcessExecutor(),
             ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
@@ -38,9 +55,10 @@ final class CliProviderTest extends TestCase
         self::assertIsArray($argv);
         $stdin = $decoded['stdin'] ?? null;
         self::assertIsString($stdin);
-        self::assertStringContainsString('Never run `git commit`, create commits, or otherwise mutate git history yourself;', $stdin);
-        self::assertStringContainsString('Task: docs:refresh', $stdin);
-        self::assertStringContainsString('"documents"', $stdin);
+        self::assertSame($expectedPrompt, $stdin);
+        self::assertSame($expectedPrompt, $result->context['prompt'] ?? null);
+        self::assertStringStartsWith('You are an autonomous housekeeping coding agent running from cron.', $stdin);
+        self::assertSame($stdin, trim($stdin));
     }
 
     public function testCliProvidersAllowConfigurableArgumentsAndOptionalYolo(): void

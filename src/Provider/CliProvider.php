@@ -78,7 +78,7 @@ abstract readonly class CliProvider implements ProviderAdapter
             'Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.',
             'Task: ' . $request->taskName,
             'Goal: ' . $request->prompt,
-            'Payload:' . PHP_EOL . $payload,
+            'Payload:' . PHP_EOL . $payload . PHP_EOL,
         ]));
     }
 
