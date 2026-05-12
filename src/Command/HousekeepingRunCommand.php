@@ -10,6 +10,7 @@ use HousekeepingAgentCron\Runtime\ExitCode;
 use HousekeepingAgentCron\Runtime\RepositoryOwnerRerunner;
 use HousekeepingAgentCron\Runtime\RunContext;
 use HousekeepingAgentCron\Runtime\TaskRunner;
+use HousekeepingAgentCron\Runtime\TimestampedConsoleOutput;
 use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -59,7 +60,7 @@ final class HousekeepingRunCommand extends Command
             (new Filesystem())->mkdir($lockDir);
             $lock = (new LockFactory(new FlockStore($lockDir)))->createLock('housekeeping-run', 1.0, false);
             if (!$lock->acquire()) {
-                $output->writeln('<comment>Another housekeeping run is already active.</comment>');
+                TimestampedConsoleOutput::write($output, '<comment>Another housekeeping run is already active.</comment>');
 
                 return ExitCode::LOCK_HELD;
             }
@@ -83,7 +84,7 @@ final class HousekeepingRunCommand extends Command
                     'task_filter' => $context->taskFilter,
                 ]);
                 if ($output->isVerbose()) {
-                    $output->writeln(sprintf(
+                    TimestampedConsoleOutput::write($output, sprintf(
                         '<comment>[run]</comment> config=%s repository_root=%s dry_run=%s%s',
                         $this->configFile,
                         $context->repositoryRoot(),
@@ -93,14 +94,14 @@ final class HousekeepingRunCommand extends Command
                 }
                 $exitCode = (new TaskRunner($tasks))->run($context, $output);
                 $logger->log($exitCode === ExitCode::SUCCESS ? 'info' : 'error', 'run_finished', ['exit_code' => $exitCode]);
-                $output->writeln($exitCode === ExitCode::SUCCESS ? '<info>Housekeeping run completed.</info>' : '<error>Housekeeping run completed with errors.</error>');
+                TimestampedConsoleOutput::write($output, $exitCode === ExitCode::SUCCESS ? '<info>Housekeeping run completed.</info>' : '<error>Housekeeping run completed with errors.</error>');
 
                 return $exitCode;
             } finally {
                 $lock->release();
             }
         } catch (Throwable $throwable) {
-            $output->writeln('<error>' . $throwable->getMessage() . '</error>');
+            TimestampedConsoleOutput::write($output, '<error>' . $throwable->getMessage() . '</error>');
 
             return $throwable instanceof RuntimeException ? ExitCode::INVALID_CONFIG : ExitCode::TASK_FAILED;
         }

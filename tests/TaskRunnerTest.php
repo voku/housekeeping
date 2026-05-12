@@ -168,8 +168,8 @@ final class TaskRunnerTest extends TestCase
 
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         $display = $output->fetch();
-        self::assertStringContainsString('plain:verbose', $display);
-        self::assertStringContainsString('Plain task completed.', $display);
+        self::assertMatchesRegularExpression('/^\[[^\]]+\] \[run\] plain:verbose/m', $display);
+        self::assertMatchesRegularExpression('/^\[[^\]]+\] \[ok\] plain:verbose: Plain task completed\./m', $display);
     }
 
     public function testSkippedTaskDoesNotStopLaterDueTask(): void

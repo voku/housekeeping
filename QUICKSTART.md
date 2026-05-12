@@ -103,7 +103,7 @@ php bin/agent-cron housekeeping:run --dry-run
 ```
 
 This lets you confirm the task list, provider status, and file discovery before any provider-backed work runs.
-For real runs that you want to tail in a terminal or cron log, add `--verbose` to emit per-task `[run]`, `[ok]`, `[skip]`, and `[fail]` progress lines.
+For real runs that you want to tail in a terminal or cron log, add `--verbose` to emit timestamped per-task `[run]`, `[ok]`, `[skip]`, and `[fail]` progress lines.
 When you enable a real provider, keep it in patch mode: cron-triggered Housekeeping runs should never run `git commit` or create commits on their own.
 
 For a first real smoke test, prefer a single `commits:learn` run before scheduling the full queue. It only reads recent git history and updates Housekeeping state:

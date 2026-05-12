@@ -53,6 +53,7 @@ final class HousekeepingRunCommandTest extends TestCase
             $tester = new CommandTester(new HousekeepingRunCommand($configFile));
             $exitCode = $tester->execute([]);
             self::assertSame(ExitCode::LOCK_HELD, $exitCode);
+            self::assertMatchesRegularExpression('/^\[[^\]]+\] Another housekeeping run is already active\./m', $tester->getDisplay());
         } finally {
             $lock->release();
             (new Filesystem())->remove($dir);
@@ -199,9 +200,9 @@ final class HousekeepingRunCommandTest extends TestCase
             $exitCode = $tester->execute([], ['verbosity' => OutputInterface::VERBOSITY_VERBOSE]);
 
             self::assertSame(ExitCode::SUCCESS, $exitCode);
-            self::assertStringContainsString('[run] config=' . $configFile, $tester->getDisplay());
-            self::assertStringContainsString('[run] docs:refresh', $tester->getDisplay());
-            self::assertStringContainsString('[ok] docs:refresh: Documentation refresh completed.', $tester->getDisplay());
+            self::assertMatchesRegularExpression('/^\[[^\]]+\] \[run\] config=' . preg_quote($configFile, '/') . '/m', $tester->getDisplay());
+            self::assertMatchesRegularExpression('/^\[[^\]]+\] \[run\] docs:refresh/m', $tester->getDisplay());
+            self::assertMatchesRegularExpression('/^\[[^\]]+\] \[ok\] docs:refresh: Documentation refresh completed\./m', $tester->getDisplay());
         } finally {
             (new Filesystem())->remove($dir);
         }

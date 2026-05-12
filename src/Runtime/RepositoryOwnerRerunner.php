@@ -44,7 +44,7 @@ class RepositoryOwnerRerunner
             return null;
         }
 
-        $output->writeln(sprintf('<comment>Re-running housekeeping as repository owner "%s".</comment>', $ownerName));
+        TimestampedConsoleOutput::write($output, sprintf('<comment>Re-running housekeeping as repository owner "%s".</comment>', $ownerName));
 
         return $this->rerunAsUser(
             $ownerName,

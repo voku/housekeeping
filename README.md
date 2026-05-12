@@ -111,7 +111,7 @@ An example crontab entry is available in [`crontab.example`](crontab.example):
 37 * * * * cd /path/to/housekeeping && /usr/bin/php bin/agent-cron --config=/path/to/housekeeping/config/project-b.php housekeeping:run >> var/logs/project-b-cron.log 2>&1
 ```
 
-Add `--verbose` when you want task-level progress in the cron log, including which task is currently running and whether it finished, skipped, or failed.
+Add `--verbose` when you want task-level progress in the cron log, including which task is currently running and whether it finished, skipped, or failed. Console lines emitted by `housekeeping:run` are timestamped so raw cron logs stay readable.
 
 ### WSL2
 

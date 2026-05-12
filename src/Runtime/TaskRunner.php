@@ -166,7 +166,7 @@ final readonly class TaskRunner
         }
 
         $suffix = $details === [] ? '' : ' (' . implode(', ', $details) . ')';
-        $output->writeln(sprintf('<comment>[run]</comment> %s%s', $taskName, $suffix));
+        TimestampedConsoleOutput::write($output, sprintf('<comment>[run]</comment> %s%s', $taskName, $suffix));
     }
 
     private function reportTaskResult(?OutputInterface $output, string $taskName, TaskResult $result): void
@@ -184,7 +184,7 @@ final readonly class TaskRunner
         $details = $this->resultDetails($result);
         $suffix = $details === [] ? '' : ' (' . implode(', ', $details) . ')';
 
-        $output->writeln(sprintf(
+        TimestampedConsoleOutput::write($output, sprintf(
             '<%s>[%s]</%s> %s: %s%s',
             $style,
             $tag,
@@ -222,7 +222,7 @@ final readonly class TaskRunner
     private function writeVerbose(?OutputInterface $output, string $message): void
     {
         if ($output !== null && $output->isVerbose()) {
-            $output->writeln($message);
+            TimestampedConsoleOutput::write($output, $message);
         }
     }
 
