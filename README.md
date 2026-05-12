@@ -47,8 +47,6 @@ See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
 Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `blindspots:analyze`, and `todo:refine` first. `docs:refresh` becomes the next provider-backed doc task only when you either raise the task budget to `5` or let a later run pick it up after the earlier tasks are no longer due.
 
-Observed IT-Portal trial behavior: in a three-pass isolated run with `max_tasks_per_run=5`, pass 1 refreshed project metadata, learned the latest commits, refined `TODO.md`, and refreshed `README.md`; passes 2 and 3 reused the learned run history so `blindspots:analyze` completed, `commits:learn` correctly reported no new commits, and the queue kept making small in-place TODO/doc edits instead of only recording summaries.
-
 ## Usage
 
 List configured tasks:
@@ -180,23 +178,6 @@ When `working_directory` is omitted for a provider, Housekeeping defaults that p
 If the Housekeeping checkout lives inside the maintained repository instead of alongside it, configure `tasks['project:discover']['ignored_paths']` so repository discovery skips that nested workspace (for example `['housekeeping']`). Otherwise the learned documentation and TODO metadata will drift toward the Housekeeping tool's own files.
 
 Default runs now start with `project:discover` and `commits:learn`, then use `blindspots:analyze` to review the previous run before later provider-backed tasks continue with documentation, TODO, audit, and analysis work.
-
-On the IT-Portal dogfood config, `todo:refine` is now the first enforced repo-improvement task after the learning steps: the run only records it as completed when a tracked TODO document actually changed. `docs:refresh` can also make direct documentation edits in practice, but it is not currently enforced by code the same way, so include it in the hourly wave by raising `max_tasks_per_run` when you want both TODO and README-style updates in the same run.
-
-For IT-Portal specifically, `todo:refine` now follows the real board workflow instead of treating `TODO.md` as plain text. The task feeds the same board-helper data (`todo_board_cli.php summary`, `next-pull`, and a filtered `render`) into the provider prompt, and after any TODO edit it runs `verify_todo_board.php`. On WSL2/Linux cron this intentionally uses the local PHP runtime instead of `docker compose exec` because the board parsers are pure repo-local PHP scripts and the host path proved much more reliable for repeated unattended runs. If that verifier fails, the task restores the original `TODO.md` content and marks the run as failed instead of leaving a broken board edit behind.
-
-The current IT-Portal dogfood config also leaves more wall-clock budget for provider-backed TODO refinements than the original cron baseline, because real Gemini runs can occasionally spend extra time in transient server-capacity backoff before they succeed. The broader run timeout is there to absorb those short-lived retries, not to encourage broader edits.
-
-Recent IT-Portal maintenance history also makes four lower-frequency hygiene jobs worth scheduling:
-
-- `phpdocs:refresh` reads recent PHP files from git history and tightens PHPDoc / lightweight type annotations without changing behavior.
-- `magic-numbers:reduce` targets PHP files whose local TODOs already point at obvious constant extraction or hardcoded-value cleanup.
-- `todo-comments:cleanup` reduces code-level `TODO@` debt by removing resolved notes or tightening vague ones into actionable markers.
-- `small-refactors:polish` revisits recent PHP files for one tiny behavior-preserving refactor, such as local duplication cleanup or a very small helper extraction.
-
-These IT-Portal jobs use a generic selected-files maintenance task: a shell command picks a small candidate file set, Housekeeping reads those files plus configured context, and the run only counts as successful when one of the selected files actually changed.
-
-The IT-Portal dogfood config now also includes `self-improve:housekeeping`. After roughly 10 non-dry housekeeping runs since the last review window, it summarizes recent runs plus `housekeeping.log`, asks one provider for at most one small backward-compatible improvement inside `src`, `config`, `tests`, `README.md`, or `QUICKSTART.md`, then automatically runs `php -l` on changed PHP files plus the configured validation commands. If any validation or smoke command fails, Housekeeping restores the pre-run files and records the proposal as reverted instead of keeping the broken edit or treating cron itself as broken.
 
 `blindspots:analyze` is the self-optimization loop: it reviews the last completed housekeeping run, stores blind-spot guidance under `metadata.blind_spots`, and later provider-backed tasks receive that metadata alongside the normal repository-learning metadata.
 
