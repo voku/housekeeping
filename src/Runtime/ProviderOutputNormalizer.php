@@ -282,6 +282,8 @@ final readonly class ProviderOutputNormalizer
      */
     private function pathsFromDiff(string $diff): array
     {
+        $diff = str_replace(["\r\n", "\r"], "\n", $diff);
+
         preg_match_all('/^(?:\+\+\+|---)\s+(?:a\/|b\/)?(?P<path>\S+)$/m', $diff, $matches);
 
         $paths = [];

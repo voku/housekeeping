@@ -24,7 +24,10 @@ final readonly class ProjectDiscoveryTask extends AbstractIntervalTask
 
     public function run(RunContext $context): TaskResult
     {
-        $metadata = $this->repositoryInspector->discover($context->repositoryRoot());
+        $metadata = $this->repositoryInspector->discover(
+            $context->repositoryRoot(),
+            $this->ignoredPaths($context),
+        );
         $metadata['repository_root'] = $context->repositoryRoot();
 
         $context->setMetadataValue('project', $metadata);
@@ -34,5 +37,35 @@ final readonly class ProjectDiscoveryTask extends AbstractIntervalTask
             'todo_files' => count($metadata['todo_files']),
             'key_files' => count($metadata['key_files']),
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function ignoredPaths(RunContext $context): array
+    {
+        $tasks = $context->config['tasks'] ?? null;
+        if (!is_array($tasks)) {
+            return [];
+        }
+
+        $projectDiscoveryTask = $tasks[$this->name()] ?? null;
+        if (!is_array($projectDiscoveryTask)) {
+            return [];
+        }
+
+        $ignoredPaths = $projectDiscoveryTask['ignored_paths'] ?? null;
+        if (!is_array($ignoredPaths)) {
+            return [];
+        }
+
+        $paths = [];
+        foreach ($ignoredPaths as $ignoredPath) {
+            if (is_string($ignoredPath) && $ignoredPath !== '') {
+                $paths[] = $ignoredPath;
+            }
+        }
+
+        return $paths;
     }
 }

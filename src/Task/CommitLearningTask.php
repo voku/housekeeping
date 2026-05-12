@@ -11,6 +11,8 @@ use HousekeepingAgentCron\Runtime\TaskResult;
 
 final readonly class CommitLearningTask extends AbstractProviderTask
 {
+    private const int INITIAL_MAX_COMMITS = 3;
+
     /**
      * @param list<string> $preferredProviderNames
      */
@@ -94,13 +96,16 @@ final readonly class CommitLearningTask extends AbstractProviderTask
      */
     private function gitLogCommand(?string $lastLearnedHead): array
     {
+        $maxCommits = $lastLearnedHead === null
+            ? min($this->maxCommits, self::INITIAL_MAX_COMMITS)
+            : $this->maxCommits;
         $command = [
             'git',
             'log',
             '--no-decorate',
             '--name-only',
             '--pretty=format:%x1e%H%x1f%ct%x1f%s%x1f%b',
-            '--max-count=' . $this->maxCommits,
+            '--max-count=' . $maxCommits,
         ];
 
         if ($lastLearnedHead !== null) {

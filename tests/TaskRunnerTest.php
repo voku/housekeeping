@@ -9,6 +9,7 @@ use HousekeepingAgentCron\Contract\ProviderAdapter;
 use HousekeepingAgentCron\Provider\NullProvider;
 use HousekeepingAgentCron\Runtime\ExitCode;
 use HousekeepingAgentCron\Runtime\JsonLogger;
+use HousekeepingAgentCron\Runtime\ProcessExecutor;
 use HousekeepingAgentCron\Runtime\ProviderRequest;
 use HousekeepingAgentCron\Runtime\ProviderResult;
 use HousekeepingAgentCron\Runtime\RunContext;
@@ -16,8 +17,12 @@ use HousekeepingAgentCron\Runtime\TaskResult;
 use HousekeepingAgentCron\Runtime\TaskRunner;
 use HousekeepingAgentCron\Task\AbstractProviderTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
+use HousekeepingAgentCron\Task\SelfImprovementTask;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class TaskRunnerTest extends TestCase
 {
@@ -151,6 +156,20 @@ final class TaskRunnerTest extends TestCase
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertSame(0, $provider->calls);
         self::assertSame('Task is not due.', $this->stateAt($store->state, 'runs.0.results.0.message'));
+    }
+
+    public function testVerboseOutputReportsTaskLifecycle(): void
+    {
+        $store = new InMemoryStateStore();
+        $context = $this->context(false, $store);
+        $output = new BufferedOutput(OutputInterface::VERBOSITY_VERBOSE, false);
+
+        $exitCode = (new TaskRunner([$this->plainTask('plain:verbose')]))->run($context, $output);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        $display = $output->fetch();
+        self::assertStringContainsString('plain:verbose', $display);
+        self::assertStringContainsString('Plain task completed.', $display);
     }
 
     public function testSkippedTaskDoesNotStopLaterDueTask(): void
@@ -389,6 +408,55 @@ final class TaskRunnerTest extends TestCase
         self::assertSame('global_readiness_ranking', $this->stateAt($store->state, 'runs.0.results.0.context.routing_reason'));
     }
 
+    public function testAutoProviderRoutingReusesPreferredProviderWithinSameRunDespiteCooldown(): void
+    {
+        /** @var ProviderAdapter&object{calls: int} $gemini */
+        $gemini = $this->recordingProvider('gemini');
+        /** @var ProviderAdapter&object{calls: int} $copilot */
+        $copilot = $this->recordingProvider('copilot');
+        $store = new InMemoryStateStore();
+        $context = $this->context(false, $store, ['gemini' => $gemini, 'copilot' => $copilot], [
+            'max_tasks_per_run' => 2,
+            'providers' => [
+                'gemini' => [
+                    'enabled' => true,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 900,
+                ],
+                'copilot' => [
+                    'enabled' => true,
+                    'daily_budget' => 10,
+                    'cooldown_seconds' => 0,
+                ],
+            ],
+        ]);
+        $taskFactory = static fn (string $taskName): AbstractProviderTask => new readonly class ($taskName) extends AbstractProviderTask {
+            public function __construct(private string $taskName)
+            {
+                parent::__construct(3600, 'auto', ['gemini', 'copilot']);
+            }
+
+            public function name(): string
+            {
+                return $this->taskName;
+            }
+
+            public function run(RunContext $context): TaskResult
+            {
+                return $this->executeProvider($context, 'Reuse the same provider in one run.', [], 'Auto provider completed.');
+            }
+        };
+
+        $exitCode = (new TaskRunner([$taskFactory('auto:first'), $taskFactory('auto:second')]))->run($context);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        self::assertSame(2, $gemini->calls);
+        self::assertSame(0, $copilot->calls);
+        self::assertSame('gemini', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
+        self::assertSame('gemini', $this->stateAt($store->state, 'runs.0.results.1.context.provider'));
+        self::assertSame('preferred_provider', $this->stateAt($store->state, 'runs.0.results.1.context.routing_reason'));
+    }
+
     public function testProviderBackedTaskResultReceivesProviderRoutingContext(): void
     {
         $provider = $this->recordingProvider('codex');
@@ -434,6 +502,75 @@ final class TaskRunnerTest extends TestCase
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         self::assertSame('codex', $this->stateAt($store->state, 'runs.0.results.0.context.provider'));
         self::assertSame('codex', $this->stateAt($store->state, 'runs.0.results.0.context.configured_provider'));
+    }
+
+    public function testRevertedSelfImprovementDoesNotFailWholeRun(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-task-runner-self-improve-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($dir . '/logs');
+        file_put_contents($dir . '/README.md', "Before\n");
+
+        $provider = new class ($dir . '/README.md') implements ProviderAdapter {
+            public function __construct(private readonly string $readmeFile)
+            {
+            }
+
+            public function name(): string
+            {
+                return 'local-null-provider';
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                file_put_contents($this->readmeFile, "Broken\n");
+
+                return ProviderResult::success('Accepted.');
+            }
+        };
+
+        try {
+            $task = new SelfImprovementTask(
+                1,
+                'local-null-provider',
+                new ProcessExecutor(),
+                $dir,
+                ['README.md'],
+                [$dir . '/README.md'],
+                [['php', '-r', 'exit(1);']],
+                1,
+            );
+            $store = new InMemoryStateStore([
+                'tasks' => [],
+                'providers' => [],
+                'runs' => [
+                    ['started_at' => 100, 'dry_run' => false, 'exit_code' => 0, 'results' => [['task' => 'todo:refine', 'successful' => true, 'message' => 'TODO refinement completed.']]],
+                ],
+            ]);
+            $context = $this->context(false, $store, ['local-null-provider' => $provider], [
+                'paths' => [
+                    'repository_root' => $dir,
+                    'logs' => $dir . '/logs',
+                ],
+            ]);
+
+            $exitCode = (new TaskRunner([$task]))->run($context);
+
+            self::assertSame(ExitCode::SUCCESS, $exitCode);
+            self::assertSame("Before\n", file_get_contents($dir . '/README.md'));
+            self::assertSame(
+                'Self-improvement proposal failed validation and was reverted.',
+                $this->stateAt($store->state, 'runs.1.results.0.message'),
+            );
+            self::assertTrue($this->stateAt($store->state, 'runs.1.results.0.context.reverted'));
+            self::assertTrue($this->stateAt($store->state, 'tasks.self-improve:housekeeping.last_successful'));
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
     }
 
     /**

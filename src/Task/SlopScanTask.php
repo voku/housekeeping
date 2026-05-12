@@ -78,6 +78,15 @@ final readonly class SlopScanTask extends AbstractProviderTask
 
             return TaskResult::skipped('No slop-scan output was produced.');
         }
+        if ($this->looksLikePhpMemoryExhaustion($process->stdout, $process->stderr)) {
+            return TaskResult::failure('slop-scan exhausted PHP memory; raise the configured memory_limit.', [
+                'command' => $process->command,
+                'working_directory' => $process->workingDirectory,
+                'exit_code' => $process->exitCode,
+                'stderr' => $process->stderr,
+                'stdout' => $process->stdout,
+            ]);
+        }
 
         $report = json_decode($process->stdout, true);
         if (!is_array($report)) {
@@ -89,8 +98,10 @@ final readonly class SlopScanTask extends AbstractProviderTask
                 'stdout' => $process->stdout,
             ]);
         }
+        /** @var array<string, mixed> $typedReport */
+        $typedReport = $report;
 
-        $summary = $report['summary'] ?? null;
+        $summary = $typedReport['summary'] ?? null;
         $findingCount = is_array($summary) ? ($summary['findingCount'] ?? null) : null;
         if (!is_int($findingCount)) {
             return TaskResult::failure('slop-scan JSON report is missing summary.findingCount.', [
@@ -112,10 +123,35 @@ final readonly class SlopScanTask extends AbstractProviderTask
                 'working_directory' => $this->workingDirectory,
                 'command' => $process->command,
                 'exit_code' => $process->exitCode,
-                'report' => $report,
+                'report' => $this->providerReport($typedReport),
                 ...$this->sharedMetadata($context),
             ],
             'slop-scan suggestions prepared.',
         );
+    }
+
+    private function looksLikePhpMemoryExhaustion(string $stdout, string $stderr): bool
+    {
+        $combinedOutput = $stdout . "\n" . $stderr;
+
+        return str_contains($combinedOutput, 'Allowed memory size')
+            || str_contains($combinedOutput, 'Out of memory');
+    }
+
+    /**
+     * @param array<string, mixed> $report
+     * @return array<string, mixed>
+     */
+    private function providerReport(array $report): array
+    {
+        $summary = is_array($report['summary'] ?? null) ? $report['summary'] : [];
+        $findings = is_array($report['findings'] ?? null) ? array_slice($report['findings'], 0, 50) : [];
+
+        return [
+            'summary' => $summary,
+            'findings' => $findings,
+            'finding_count' => is_int($summary['findingCount'] ?? null) ? $summary['findingCount'] : count($findings),
+            'findings_truncated' => is_array($report['findings'] ?? null) && count($report['findings']) > count($findings),
+        ];
     }
 }

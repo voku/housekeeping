@@ -73,8 +73,8 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
     {
         return [
             'project_metadata' => $context->metadataValue('project'),
-            'learning_metadata' => $context->metadataValue('learning'),
-            'blind_spot_metadata' => $context->metadataValue('blind_spots'),
+            'learning_metadata' => $this->providerMetadataSummary($context->metadataValue('learning')),
+            'blind_spot_metadata' => $this->providerMetadataSummary($context->metadataValue('blind_spots')),
         ];
     }
 
@@ -84,12 +84,7 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
      */
     final protected function collectRepositoryFiles(RunContext $context, array $configuredPaths, string $metadataPath): array
     {
-        $paths = [];
-        foreach ($configuredPaths as $configuredPath) {
-            if ($configuredPath !== '') {
-                $paths[$this->displayPath($context->repositoryRoot(), $configuredPath)] = $configuredPath;
-            }
-        }
+        $paths = $this->configuredRepositoryPaths($context, $configuredPaths);
 
         $discoveredPaths = $context->metadataValue($metadataPath);
         if (is_array($discoveredPaths)) {
@@ -104,6 +99,15 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
         }
 
         return $this->readFiles($context, array_values($paths));
+    }
+
+    /**
+     * @param list<string> $configuredPaths
+     * @return array<string, string>
+     */
+    final protected function configuredRepositoryFiles(RunContext $context, array $configuredPaths): array
+    {
+        return $this->readFiles($context, array_values($this->configuredRepositoryPaths($context, $configuredPaths)));
     }
 
     /**
@@ -161,6 +165,24 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
         return $path;
     }
 
+    /**
+     * @param list<string> $configuredPaths
+     * @return array<string, string>
+     */
+    final protected function configuredRepositoryPaths(RunContext $context, array $configuredPaths): array
+    {
+        $paths = [];
+        foreach ($configuredPaths as $configuredPath) {
+            if ($configuredPath === '') {
+                continue;
+            }
+
+            $paths[$this->displayPath($context->repositoryRoot(), $configuredPath)] = $configuredPath;
+        }
+
+        return $paths;
+    }
+
     final protected function persistProviderMetadata(RunContext $context, string $metadataPath, TaskResult $result, ?string $providerName = null): void
     {
         if ($context->dryRun || !$result->successful || $result->skipped) {
@@ -185,6 +207,39 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
         $providerName = $context->runtimeValue('task_provider_routes.' . $this->name() . '.resolved_provider');
 
         return is_string($providerName) && $providerName !== '' ? $providerName : $this->providerName;
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<string, mixed>
+     */
+    private function providerMetadataSummary(mixed $value): array
+    {
+        $metadata = $this->associativeArray($value);
+        if ($metadata === []) {
+            return [];
+        }
+
+        unset($metadata['last_stdout'], $metadata['last_stderr']);
+
+        foreach (['last_provider_output', 'last_summary'] as $key) {
+            $string = $this->trimmedString($metadata[$key] ?? null);
+            if ($string === null) {
+                unset($metadata[$key]);
+                continue;
+            }
+            $metadata[$key] = $this->truncateString($string, 4000);
+        }
+
+        $summaries = $this->stringList($metadata['last_summaries'] ?? []);
+        if ($summaries !== []) {
+            $metadata['last_summaries'] = array_map(
+                fn (string $summary): string => $this->truncateString($summary, 2000),
+                array_slice($summaries, 0, 5),
+            );
+        }
+
+        return $metadata;
     }
 
     /**
@@ -279,5 +334,14 @@ abstract readonly class AbstractProviderTask extends AbstractIntervalTask implem
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function truncateString(string $value, int $maxLength): string
+    {
+        if (strlen($value) <= $maxLength) {
+            return $value;
+        }
+
+        return rtrim(substr($value, 0, $maxLength - 15)) . ' [truncated]';
     }
 }

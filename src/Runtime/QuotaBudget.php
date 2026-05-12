@@ -29,7 +29,7 @@ final class QuotaBudget
 
         $cooldown = $this->positiveInt($providerConfig['cooldown_seconds'] ?? 0);
         $lastUsed = $context->stateValue('providers.' . $providerName . '.last_used_at');
-        if ($cooldown > 0 && is_int($lastUsed) && time() - $lastUsed < $cooldown) {
+        if ($cooldown > 0 && is_int($lastUsed) && $lastUsed < $context->startedAt && time() - $lastUsed < $cooldown) {
             return TaskResult::skipped('Provider cooldown is active.', [
                 'provider' => $providerName,
                 'cooldown_seconds' => $cooldown,

@@ -18,6 +18,8 @@ use HousekeepingAgentCron\Task\BlindSpotAnalysisTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
 use HousekeepingAgentCron\Task\ProjectDiscoveryTask;
+use HousekeepingAgentCron\Task\SelectedFilesMaintenanceTask;
+use HousekeepingAgentCron\Task\SelfImprovementTask;
 use HousekeepingAgentCron\Task\SlopScanTask;
 use HousekeepingAgentCron\Task\TodoRefinementTask;
 use RuntimeException;
@@ -172,16 +174,68 @@ final class ApplicationFactory
         $contextFiles = $this->stringList($taskConfig['context_files'] ?? []);
         $workingDirectory = is_string($taskConfig['working_directory'] ?? null) ? $taskConfig['working_directory'] : dirname(__DIR__, 2);
         $command = $this->stringList($taskConfig['command'] ?? []);
+        $contextCommands = $this->commandLists($taskConfig['context_commands'] ?? []);
+        $validationCommand = $this->stringList($taskConfig['validation_command'] ?? []);
+        $validationCommands = $this->commandLists($taskConfig['validation_commands'] ?? []);
+        $selectionCommand = $this->stringList($taskConfig['selection_command'] ?? []);
+        $scopePaths = $this->stringList($taskConfig['scope_paths'] ?? []);
         $timeoutSeconds = $this->positiveInt($taskConfig['timeout_seconds'] ?? 120, 120);
         $maxCommits = $this->positiveInt($taskConfig['max_commits'] ?? 10, 10);
+        $maxFiles = $this->positiveInt($taskConfig['max_files'] ?? 12, 12);
+        $runThreshold = $this->positiveInt($taskConfig['run_threshold'] ?? 10, 10);
+        $recentRunLimit = $this->positiveInt($taskConfig['recent_run_limit'] ?? 10, 10);
+        $logEntryLimit = $this->positiveInt($taskConfig['log_entry_limit'] ?? 60, 60);
         $preferredProviders = $this->stringList($taskConfig['preferred_providers'] ?? []);
+        $prompt = is_string($taskConfig['prompt'] ?? null) ? $taskConfig['prompt'] : null;
+        $successMessage = is_string($taskConfig['success_message'] ?? null) ? $taskConfig['success_message'] : null;
+
+        if ($selectionCommand !== [] && $prompt !== null && $successMessage !== null) {
+            return new SelectedFilesMaintenanceTask(
+                $name,
+                $intervalSeconds,
+                $providerName,
+                $this->processExecutor,
+                $workingDirectory,
+                $selectionCommand,
+                $prompt,
+                $successMessage,
+                $timeoutSeconds,
+                $maxFiles,
+                $contextFiles,
+                $preferredProviders,
+            );
+        }
 
         return match ($name) {
             'project:discover' => new ProjectDiscoveryTask($intervalSeconds),
             'commits:learn' => new CommitLearningTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $maxCommits, $preferredProviders),
             'blindspots:analyze' => new BlindSpotAnalysisTask($intervalSeconds, $providerName, $contextFiles, $preferredProviders),
             'docs:refresh' => new DocumentationRefreshTask($intervalSeconds, $providerName, $inputFiles, $contextFiles, $preferredProviders),
-            'todo:refine' => new TodoRefinementTask($intervalSeconds, $providerName, $inputFiles, $preferredProviders),
+            'todo:refine' => new TodoRefinementTask(
+                $intervalSeconds,
+                $providerName,
+                $inputFiles,
+                $this->processExecutor,
+                $workingDirectory,
+                $contextCommands,
+                $validationCommand,
+                $timeoutSeconds,
+                $preferredProviders,
+            ),
+            'self-improve:housekeeping' => new SelfImprovementTask(
+                $intervalSeconds,
+                $providerName,
+                $this->processExecutor,
+                $workingDirectory,
+                $scopePaths,
+                $contextFiles,
+                $validationCommands,
+                $runThreshold,
+                $recentRunLimit,
+                $logEntryLimit,
+                $timeoutSeconds,
+                $preferredProviders,
+            ),
             'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
             'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
             'slop:scan' => new SlopScanTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
@@ -243,6 +297,27 @@ final class ApplicationFactory
         }
 
         return $items;
+    }
+
+    /**
+     * @param mixed $value
+     * @return list<list<string>>
+     */
+    private function commandLists(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $commands = [];
+        foreach ($value as $command) {
+            $typedCommand = $this->stringList($command);
+            if ($typedCommand !== []) {
+                $commands[] = $typedCommand;
+            }
+        }
+
+        return $commands;
     }
 
     private function positiveInt(mixed $value, int $default): int

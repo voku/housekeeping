@@ -28,10 +28,15 @@ final readonly class GeminiProvider extends CliProvider
         $command = $this->appendYoloArgumentPairIfConfigured($command, '--approval-mode', 'yolo');
         if (!$this->hasToken($command, '--prompt', '-p', '--prompt-file')) {
             $command[] = '--prompt';
-            $command[] = $prompt;
+            $command[] = '';
         }
 
         /** @var list<string> $command */
         return $command;
+    }
+
+    protected function inputForPrompt(string $prompt): string
+    {
+        return $prompt;
     }
 }

@@ -21,7 +21,7 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $state
      * @return list<ProviderCapacityReport>
      */
-    public function inspect(array $config, array $state): array
+    public function inspect(array $config, array $state, bool $runExternalProbes = true, ?int $currentRunStartedAt = null): array
     {
         $providers = $config['providers'] ?? null;
         if (!is_array($providers)) {
@@ -38,7 +38,7 @@ final readonly class ProviderCapacityInspector
             /** @var array<string, mixed> $typedProviderConfig */
             $typedProviderConfig = $providerConfig;
 
-            $reports[] = $this->inspectProvider($providerName, $typedProviderConfig, $state, $today, $now);
+            $reports[] = $this->inspectProvider($providerName, $typedProviderConfig, $state, $today, $now, $runExternalProbes, $currentRunStartedAt);
         }
 
         usort($reports, $this->compare(...));
@@ -50,19 +50,24 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $providerConfig
      * @param array<string, mixed> $state
      */
-    private function inspectProvider(string $providerName, array $providerConfig, array $state, string $today, int $now): ProviderCapacityReport
+    private function inspectProvider(string $providerName, array $providerConfig, array $state, string $today, int $now, bool $runExternalProbes, ?int $currentRunStartedAt = null): ProviderCapacityReport
     {
         $enabled = ($providerConfig['enabled'] ?? false) === true;
         $budget = $this->configuredDailyBudget($providerConfig);
         $used = $this->providerUsage($state, $providerName, $today);
         $budgetRemaining = $budget > 0 ? max($budget - $used, 0) : null;
-        $cooldownRemaining = $this->cooldownRemainingSeconds($providerConfig, $state, $providerName, $now);
-        $probe = $enabled
+        $cooldownRemaining = $this->cooldownRemainingSeconds($providerConfig, $state, $providerName, $now, $currentRunStartedAt);
+        $probe = !$runExternalProbes
+            ? [
+                'status' => 'not-configured',
+                'probe_message' => 'External probe skipped during automatic routing.',
+            ]
+            : ($enabled
             ? $this->probeProvider($providerName, $providerConfig, $now)
             : [
                 'status' => 'not-configured',
                 'probe_message' => 'Probe skipped because provider is disabled.',
-            ];
+            ]);
 
         $status = 'ready';
         if (!$enabled) {
@@ -121,6 +126,25 @@ final readonly class ProviderCapacityInspector
         $process = $this->processExecutor->execute($command, $workingDirectory, $timeoutSeconds);
 
         if (!$process->successful()) {
+            $details = $this->probeDetailsFromOutput($providerName, $process->stdout, $process->stderr, $now);
+            if ($details['external_metrics'] !== []) {
+                return [
+                    'status' => 'ok',
+                    'external_remaining_ratio' => min(array_map(static fn (array $metric): float => $metric['remaining_ratio'], $details['external_metrics'])),
+                    'external_reset_at' => $this->latestResetValue($details['external_metrics']),
+                    'probe_command' => $command,
+                    'probe_message' => $details['probe_message'] ?? sprintf('Parsed %d external limit(s).', count($details['external_metrics'])),
+                    'external_metrics' => $details['external_metrics'],
+                ];
+            }
+            if ($details['probe_message'] !== null) {
+                return [
+                    'status' => 'not-configured',
+                    'probe_command' => $command,
+                    'probe_message' => $details['probe_message'],
+                ];
+            }
+
             return [
                 'status' => 'failed',
                 'probe_command' => $command,
@@ -128,8 +152,16 @@ final readonly class ProviderCapacityInspector
             ];
         }
 
-        $metrics = $this->metricsFromOutput($providerName, $process->stdout, $process->stderr, $now);
-        if ($metrics === []) {
+        $details = $this->probeDetailsFromOutput($providerName, $process->stdout, $process->stderr, $now);
+        if ($details['external_metrics'] === []) {
+            if ($details['probe_message'] !== null) {
+                return [
+                    'status' => 'not-configured',
+                    'probe_command' => $command,
+                    'probe_message' => $details['probe_message'],
+                ];
+            }
+
             return [
                 'status' => 'failed',
                 'probe_command' => $command,
@@ -137,17 +169,43 @@ final readonly class ProviderCapacityInspector
             ];
         }
 
-        $remainingRatios = array_map(static fn (array $metric): float => $metric['remaining_ratio'], $metrics);
-        $resetValues = $this->collectResetValues($metrics);
-        $resetAt = $resetValues === [] ? null : max($resetValues);
-
         return [
             'status' => 'ok',
-            'external_remaining_ratio' => min($remainingRatios),
-            'external_reset_at' => $resetAt,
+            'external_remaining_ratio' => min(array_map(static fn (array $metric): float => $metric['remaining_ratio'], $details['external_metrics'])),
+            'external_reset_at' => $this->latestResetValue($details['external_metrics']),
             'probe_command' => $command,
-            'probe_message' => sprintf('Parsed %d external limit(s).', count($metrics)),
-            'external_metrics' => $metrics,
+            'probe_message' => $details['probe_message'] ?? sprintf('Parsed %d external limit(s).', count($details['external_metrics'])),
+            'external_metrics' => $details['external_metrics'],
+        ];
+    }
+
+    /**
+     * @return array{
+     *     probe_message: string|null,
+     *     external_metrics: list<array{label: string, remaining_ratio: float, reset_at: int|null}>
+     * }
+     */
+    private function probeDetailsFromOutput(string $providerName, string $stdout, string $stderr, int $now): array
+    {
+        $metrics = $this->metricsFromOutput($providerName, $stdout, $stderr, $now);
+        if ($metrics !== []) {
+            return [
+                'probe_message' => null,
+                'external_metrics' => $metrics,
+            ];
+        }
+
+        $usageLimitMetric = $this->usageLimitMetricFromOutput($providerName, $stdout, $stderr, $now);
+        if ($usageLimitMetric !== null) {
+            return [
+                'probe_message' => $this->providerUsageSummary($providerName, $stdout, $stderr),
+                'external_metrics' => [$usageLimitMetric],
+            ];
+        }
+
+        return [
+            'probe_message' => $this->providerUsageSummary($providerName, $stdout, $stderr),
+            'external_metrics' => [],
         ];
     }
 
@@ -165,11 +223,14 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $providerConfig
      * @param array<string, mixed> $state
      */
-    private function cooldownRemainingSeconds(array $providerConfig, array $state, string $providerName, int $now): int
+    private function cooldownRemainingSeconds(array $providerConfig, array $state, string $providerName, int $now, ?int $currentRunStartedAt = null): int
     {
         $cooldown = $this->configuredCooldownSeconds($providerConfig);
         $lastUsedAt = $this->stateValue($state, 'providers.' . $providerName . '.last_used_at');
         if ($cooldown < 1 || !is_int($lastUsedAt)) {
+            return 0;
+        }
+        if ($currentRunStartedAt !== null && $lastUsedAt >= $currentRunStartedAt) {
             return 0;
         }
 
@@ -202,6 +263,153 @@ final readonly class ProviderCapacityInspector
         }
 
         return $this->uniqueMetrics($metrics);
+    }
+
+    /**
+     * @return array{label: string, remaining_ratio: float, reset_at: int|null}|null
+     */
+    private function usageLimitMetricFromOutput(string $providerName, string $stdout, string $stderr, int $now): ?array
+    {
+        $combinedOutput = trim($stdout . "\n" . $stderr);
+        if ($combinedOutput === '') {
+            return null;
+        }
+
+        if ($providerName === 'codex' && preg_match('/hit your usage limit|usage limit/i', $combinedOutput) === 1) {
+            $resetAt = null;
+            if (preg_match('/try again at (?P<reset>.+?)(?:\\.|$)/i', $combinedOutput, $matches) === 1) {
+                $resetAt = $this->parseResetValue($matches['reset'], $now);
+            }
+
+            return [
+                'label' => 'codex',
+                'remaining_ratio' => 0.0,
+                'reset_at' => $resetAt,
+            ];
+        }
+
+        return null;
+    }
+
+    private function providerUsageSummary(string $providerName, string $stdout, string $stderr): ?string
+    {
+        return match ($providerName) {
+            'gemini' => $this->geminiUsageSummary($stdout),
+            'copilot' => $this->copilotUsageSummary($stdout),
+            'codex' => $this->codexUsageSummary($stdout, $stderr),
+            default => null,
+        };
+    }
+
+    private function geminiUsageSummary(string $stdout): ?string
+    {
+        $decoded = json_decode(trim($stdout), true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        $stats = $this->associativeArray($decoded['stats'] ?? null);
+        $models = $stats['models'] ?? null;
+        if (!is_array($models)) {
+            return null;
+        }
+
+        $parts = [];
+        foreach ($models as $modelName => $modelStats) {
+            if (!is_string($modelName) || !is_array($modelStats)) {
+                continue;
+            }
+            $requests = $this->numericField($this->associativeArray($modelStats['api'] ?? null) ?? [], ['totalRequests']);
+            $totalTokens = $this->numericField($this->associativeArray($modelStats['tokens'] ?? null) ?? [], ['total']);
+            $modelPart = $modelName;
+            if ($requests !== null) {
+                $modelPart .= ' requests=' . (int) $requests;
+            }
+            if ($totalTokens !== null) {
+                $modelPart .= ' tokens=' . (int) $totalTokens;
+            }
+            $parts[] = $modelPart;
+        }
+
+        if ($parts === []) {
+            return null;
+        }
+
+        return 'Session stats: ' . implode('; ', array_slice($parts, 0, 3));
+    }
+
+    private function copilotUsageSummary(string $stdout): ?string
+    {
+        foreach ($this->jsonLines($stdout) as $payload) {
+            $type = is_string($payload['type'] ?? null) ? $payload['type'] : null;
+            if ($type !== 'result') {
+                continue;
+            }
+
+            $usage = $this->associativeArray($payload['usage'] ?? null);
+            if ($usage === null) {
+                continue;
+            }
+
+            $premiumRequests = $this->numericField($usage, ['premiumRequests']);
+            $sessionDurationMs = $this->numericField($usage, ['sessionDurationMs']);
+            $totalApiDurationMs = $this->numericField($usage, ['totalApiDurationMs']);
+            $parts = [];
+            if ($premiumRequests !== null) {
+                $parts[] = sprintf('premium_requests=%d', (int) $premiumRequests);
+            }
+            if ($sessionDurationMs !== null) {
+                $parts[] = sprintf('session_ms=%d', (int) $sessionDurationMs);
+            }
+            if ($totalApiDurationMs !== null) {
+                $parts[] = sprintf('api_ms=%d', (int) $totalApiDurationMs);
+            }
+
+            return $parts === [] ? null : 'Session usage: ' . implode(', ', $parts);
+        }
+
+        return null;
+    }
+
+    private function codexUsageSummary(string $stdout, string $stderr): ?string
+    {
+        foreach ($this->jsonLines($stdout) as $payload) {
+            $type = is_string($payload['type'] ?? null) ? $payload['type'] : null;
+            if ($type !== 'error') {
+                continue;
+            }
+
+            $message = $payload['message'] ?? null;
+            if (is_string($message) && trim($message) !== '') {
+                return trim($message);
+            }
+        }
+
+        $combined = trim($stdout . "\n" . $stderr);
+
+        return $combined !== '' ? $combined : null;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+        */
+    private function jsonLines(string $text): array
+    {
+        $payloads = [];
+        foreach (preg_split("/\\r\\n|\\n|\\r/", $text) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $decoded = json_decode($line, true);
+            if (!is_array($decoded) || array_is_list($decoded)) {
+                continue;
+            }
+            /** @var array<string, mixed> $decoded */
+            $payloads[] = $decoded;
+        }
+
+        return $payloads;
     }
 
     /**
@@ -383,6 +591,16 @@ final readonly class ProviderCapacityInspector
         }
 
         return $resetValues;
+    }
+
+    /**
+     * @param list<array{label: string, remaining_ratio: float, reset_at: int|null}> $metrics
+     */
+    private function latestResetValue(array $metrics): ?int
+    {
+        $resetValues = $this->collectResetValues($metrics);
+
+        return $resetValues === [] ? null : max($resetValues);
     }
 
     private function trimmedOrNull(string $value): ?string
@@ -588,6 +806,27 @@ final readonly class ProviderCapacityInspector
         }
 
         return $value;
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<string, mixed>|null
+     */
+    private function associativeArray(mixed $value): ?array
+    {
+        if (!is_array($value) || array_is_list($value)) {
+            return null;
+        }
+
+        $typed = [];
+        foreach ($value as $key => $item) {
+            if (!is_string($key)) {
+                continue;
+            }
+            $typed[$key] = $item;
+        }
+
+        return $typed;
     }
 
     /**

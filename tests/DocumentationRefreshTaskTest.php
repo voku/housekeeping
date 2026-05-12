@@ -108,6 +108,78 @@ final class DocumentationRefreshTaskTest extends TestCase
         }
     }
 
+    public function testDocumentationRefreshIgnoresDiscoveredProjectDocsOutsideConfiguredInputs(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-docs-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($dir);
+        $firstFile = $dir . '/README.md';
+        $ignoredFile = $dir . '/CHANGELOG.md';
+        file_put_contents($firstFile, 'Readme contents');
+        file_put_contents($ignoredFile, 'Ignored changelog contents');
+
+        $provider = new class implements ProviderAdapter {
+            /** @var array<string, mixed>|null */
+            public ?array $payload = null;
+
+            public function name(): string
+            {
+                return 'local-null-provider';
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                $this->payload = $request->payload;
+
+                return ProviderResult::success('Accepted.');
+            }
+        };
+
+        try {
+            $result = (new DocumentationRefreshTask(3600, 'local-null-provider', [$firstFile]))->run(new RunContext(
+                false,
+                null,
+                time(),
+                [
+                    'paths' => [
+                        'repository_root' => $dir,
+                    ],
+                    'providers' => [
+                        'local-null-provider' => [
+                            'enabled' => true,
+                            'daily_budget' => 1,
+                            'cooldown_seconds' => 0,
+                        ],
+                    ],
+                ],
+                [
+                    'tasks' => [],
+                    'providers' => [],
+                    'runs' => [],
+                    'metadata' => [
+                        'project' => [
+                            'repository_root' => $dir,
+                            'documentation_files' => ['README.md', 'CHANGELOG.md'],
+                        ],
+                    ],
+                ],
+                [],
+                new InMemoryStateStore(),
+                new JsonLogger($dir . '/logs/housekeeping.log'),
+                ['local-null-provider' => $provider],
+            ));
+
+            self::assertTrue($result->successful);
+            self::assertSame(['README.md' => 'Readme contents'], $provider->payload['documents'] ?? null);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
     public function testDocumentationRefreshPersistsNormalizedProviderSummaryAndPatchMetadata(): void
     {
         $dir = sys_get_temp_dir() . '/agent-cron-docs-' . bin2hex(random_bytes(4));

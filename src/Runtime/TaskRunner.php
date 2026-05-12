@@ -6,6 +6,7 @@ namespace HousekeepingAgentCron\Runtime;
 
 use HousekeepingAgentCron\Contract\HousekeepingTask;
 use HousekeepingAgentCron\Contract\ProviderBackedTask;
+use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
 final readonly class TaskRunner
@@ -19,7 +20,7 @@ final readonly class TaskRunner
     ) {
     }
 
-    public function run(RunContext $context): int
+    public function run(RunContext $context, ?OutputInterface $output = null): int
     {
         $maxTasks = $this->positiveInt($context->config['max_tasks_per_run'] ?? 1);
         $maxSeconds = $this->positiveInt($context->config['max_run_seconds'] ?? 1);
@@ -37,15 +38,19 @@ final readonly class TaskRunner
                 continue;
             }
             if ($executed >= $maxTasks) {
+                $this->writeVerbose($output, sprintf('<comment>[stop]</comment> Reached max_tasks_per_run=%d.', $maxTasks));
                 break;
             }
             if ($context->elapsedSeconds() >= $maxSeconds) {
                 $exitCode = ExitCode::RUNTIME_BUDGET_EXCEEDED;
                 $context->logger()->log('error', 'runtime_budget_exceeded', ['max_run_seconds' => $maxSeconds]);
+                $this->writeVerbose($output, sprintf('<error>[stop]</error> Runtime budget exceeded (max_run_seconds=%d).', $maxSeconds));
                 break;
             }
             if (!$task->isDue($context)) {
-                $this->record($context, $run, $task->name(), TaskResult::skipped('Task is not due.'));
+                $result = TaskResult::skipped('Task is not due.');
+                $this->record($context, $run, $task->name(), $result);
+                $this->reportTaskResult($output, $task->name(), $result);
                 continue;
             }
 
@@ -56,6 +61,7 @@ final readonly class TaskRunner
                 if ($providerName === null) {
                     $result = TaskResult::failure('No ready provider matched the task routing rules.', $routingContext);
                     $this->record($context, $run, $task->name(), $result);
+                    $this->reportTaskResult($output, $task->name(), $result);
                     $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
                     continue;
                 }
@@ -71,6 +77,7 @@ final readonly class TaskRunner
                         ...$routingContext,
                     ]);
                     $this->record($context, $run, $task->name(), $result);
+                    $this->reportTaskResult($output, $task->name(), $result);
                     $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
                     continue;
                 }
@@ -79,6 +86,7 @@ final readonly class TaskRunner
                 if (!$budgetResult->successful || $budgetResult->skipped) {
                     $budgetResult = $budgetResult->withContext($routingContext);
                     $this->record($context, $run, $task->name(), $budgetResult);
+                    $this->reportTaskResult($output, $task->name(), $budgetResult);
                     if (!$budgetResult->successful) {
                         $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
                     }
@@ -92,11 +100,13 @@ final readonly class TaskRunner
                         ...$routingContext,
                     ]);
                     $this->record($context, $run, $task->name(), $result);
+                    $this->reportTaskResult($output, $task->name(), $result);
                     $exitCode = ExitCode::PROVIDER_UNAVAILABLE;
                     continue;
                 }
             }
 
+            $this->reportTaskStart($output, $task->name(), $providerName, $routingContext);
             ++$executed;
             try {
                 $result = $task->run($context);
@@ -118,6 +128,7 @@ final readonly class TaskRunner
                 $exitCode = ExitCode::TASK_FAILED;
             }
             $this->record($context, $run, $task->name(), $result);
+            $this->reportTaskResult($output, $task->name(), $result);
         }
 
         $run['finished_at'] = time();
@@ -131,6 +142,88 @@ final readonly class TaskRunner
         }
 
         return $exitCode;
+    }
+
+    /**
+     * @param array<string, mixed> $routingContext
+     */
+    private function reportTaskStart(?OutputInterface $output, string $taskName, ?string $providerName, array $routingContext): void
+    {
+        if ($output === null || !$output->isVerbose()) {
+            return;
+        }
+
+        $details = [];
+        if ($providerName !== null) {
+            $details[] = 'provider=' . $providerName;
+        }
+        if (is_string($routingContext['routing_reason'] ?? null)) {
+            $details[] = 'routing=' . $routingContext['routing_reason'];
+        }
+        $readyProviders = $routingContext['ready_providers'] ?? null;
+        if (is_array($readyProviders) && $readyProviders !== []) {
+            $details[] = 'ready=' . implode(',', array_filter($readyProviders, static fn (mixed $provider): bool => is_string($provider) && $provider !== ''));
+        }
+
+        $suffix = $details === [] ? '' : ' (' . implode(', ', $details) . ')';
+        $output->writeln(sprintf('<comment>[run]</comment> %s%s', $taskName, $suffix));
+    }
+
+    private function reportTaskResult(?OutputInterface $output, string $taskName, TaskResult $result): void
+    {
+        if ($output === null || !$output->isVerbose()) {
+            return;
+        }
+
+        $tag = $result->successful
+            ? ($result->skipped ? 'skip' : 'ok')
+            : 'fail';
+        $style = $result->successful
+            ? ($result->skipped ? 'comment' : 'info')
+            : 'error';
+        $details = $this->resultDetails($result);
+        $suffix = $details === [] ? '' : ' (' . implode(', ', $details) . ')';
+
+        $output->writeln(sprintf(
+            '<%s>[%s]</%s> %s: %s%s',
+            $style,
+            $tag,
+            $style,
+            $taskName,
+            $result->message,
+            $suffix,
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function resultDetails(TaskResult $result): array
+    {
+        $details = [];
+        $provider = $result->context['provider'] ?? null;
+        if (is_string($provider) && $provider !== '') {
+            $details[] = 'provider=' . $provider;
+        }
+        $routingReason = $result->context['routing_reason'] ?? null;
+        if (is_string($routingReason) && $routingReason !== '') {
+            $details[] = 'routing=' . $routingReason;
+        }
+        if (array_key_exists('exit_code', $result->context)) {
+            $details[] = 'exit=' . var_export($result->context['exit_code'], true);
+        }
+        if (($result->context['timed_out'] ?? false) === true) {
+            $details[] = 'timed_out=yes';
+        }
+
+        return $details;
+    }
+
+    private function writeVerbose(?OutputInterface $output, string $message): void
+    {
+        if ($output !== null && $output->isVerbose()) {
+            $output->writeln($message);
+        }
     }
 
     /**
@@ -206,7 +299,7 @@ final readonly class TaskRunner
             return [$configuredProvider, $routingContext];
         }
 
-        $providerReports = (new ProviderCapacityInspector())->inspect($context->config, $context->state());
+        $providerReports = (new ProviderCapacityInspector())->inspect($context->config, $context->state(), false, $context->startedAt);
         $readyProviders = [];
         // ProviderCapacityInspector::inspect() already returns reports in readiness order.
         foreach ($providerReports as $report) {

@@ -16,9 +16,10 @@ final readonly class RepositoryInspector
     }
 
     /**
+     * @param list<string> $ignoredPaths
      * @return array{documentation_files: list<string>, todo_files: list<string>, key_files: list<string>, generated_at: int}
      */
-    public function discover(string $repositoryRoot): array
+    public function discover(string $repositoryRoot, array $ignoredPaths = []): array
     {
         if (!is_dir($repositoryRoot)) {
             return [
@@ -39,7 +40,7 @@ final readonly class RepositoryInspector
             }
 
             $relativePath = $this->relativePath($repositoryRoot, $fileInfo->getPathname());
-            if ($this->isIgnored($relativePath)) {
+            if ($this->isIgnored($relativePath, $ignoredPaths)) {
                 continue;
             }
 
@@ -91,15 +92,35 @@ final readonly class RepositoryInspector
         return ltrim(substr($path, strlen(rtrim($repositoryRoot, '/'))), '/');
     }
 
-    private function isIgnored(string $relativePath): bool
+    /**
+     * @param list<string> $ignoredPaths
+     */
+    private function isIgnored(string $relativePath, array $ignoredPaths): bool
     {
-        foreach (['.git/', 'vendor/', 'var/'] as $ignoredPrefix) {
-            if (str_starts_with($relativePath, $ignoredPrefix)) {
+        foreach ($this->normalizedIgnoredPaths($ignoredPaths) as $ignoredPath) {
+            if ($relativePath === $ignoredPath || str_starts_with($relativePath, $ignoredPath . '/')) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * @param list<string> $ignoredPaths
+     * @return list<string>
+     */
+    private function normalizedIgnoredPaths(array $ignoredPaths): array
+    {
+        $normalized = ['.git', 'vendor', 'var'];
+        foreach ($ignoredPaths as $ignoredPath) {
+            $trimmedPath = trim($ignoredPath, '/');
+            if ($trimmedPath !== '') {
+                $normalized[] = $trimmedPath;
+            }
+        }
+
+        return array_values(array_unique($normalized));
     }
 
     private function isDocumentationFile(string $relativePath, SplFileInfo $fileInfo): bool

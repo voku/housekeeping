@@ -60,8 +60,8 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
             [
                 ...$this->sharedMetadata($context),
                 'task_state' => $context->stateValue('tasks'),
-                'latest_run' => $latestRun,
-                'recent_runs' => $recentRuns,
+                'latest_run' => $this->runSummary($latestRun),
+                'recent_runs' => array_map(fn (array $run): array => $this->runSummary($run), $recentRuns),
                 'context_files' => $contextDocuments,
             ],
             'Blind-spot analysis completed.',
@@ -130,5 +130,65 @@ final readonly class BlindSpotAnalysisTask extends AbstractProviderTask
         }
 
         return $recentRuns;
+    }
+
+    /**
+     * @param array<mixed, mixed> $run
+     * @return array<string, mixed>
+     */
+    private function runSummary(array $run): array
+    {
+        $summary = [];
+        foreach (['started_at', 'finished_at', 'exit_code', 'dry_run', 'task_filter'] as $key) {
+            if (array_key_exists($key, $run)) {
+                $summary[$key] = $run[$key];
+            }
+        }
+
+        $results = $run['results'] ?? null;
+        if (is_array($results)) {
+            $summary['results'] = $this->resultSummaries($results);
+        }
+
+        return $summary;
+    }
+
+    /**
+     * @param array<mixed> $results
+     * @return list<array<string, mixed>>
+     */
+    private function resultSummaries(array $results): array
+    {
+        $summaries = [];
+
+        foreach ($results as $result) {
+            if (!is_array($result)) {
+                continue;
+            }
+
+            $summary = [];
+            foreach (['task', 'successful', 'skipped', 'message', 'finished_at'] as $key) {
+                if (array_key_exists($key, $result)) {
+                    $summary[$key] = $result[$key];
+                }
+            }
+
+            $context = $result['context'] ?? null;
+            if (is_array($context)) {
+                $summaryContext = [];
+                foreach (['provider', 'configured_provider', 'preferred_providers', 'ready_providers', 'routing_reason', 'exit_code', 'timed_out'] as $key) {
+                    if (array_key_exists($key, $context)) {
+                        $summaryContext[$key] = $context[$key];
+                    }
+                }
+                if ($summaryContext !== []) {
+                    $summary['context'] = $summaryContext;
+                }
+            }
+
+            $summaries[] = $summary;
+        }
+
+        return $summaries;
     }
 }

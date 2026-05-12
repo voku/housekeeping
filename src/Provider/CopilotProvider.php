@@ -28,10 +28,15 @@ final readonly class CopilotProvider extends CliProvider
         $command = $this->appendTokenIfYoloConfigured($command, '--yolo');
         if (!$this->hasToken($command, '--prompt', '-p', '--interactive', '-i')) {
             $command[] = '--prompt';
-            $command[] = $prompt;
+            $command[] = '';
         }
 
         /** @var list<string> $command */
         return $command;
+    }
+
+    protected function inputForPrompt(string $prompt): string
+    {
+        return $prompt;
     }
 }

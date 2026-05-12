@@ -39,12 +39,12 @@ final readonly class DocumentationRefreshTask extends AbstractProviderTask
 
     public function run(RunContext $context): TaskResult
     {
-        $documents = $this->collectRepositoryFiles($context, $this->inputFiles, 'project.documentation_files');
+        $documents = $this->configuredRepositoryFiles($context, $this->inputFiles);
         if ($documents === []) {
             return TaskResult::skipped('No documentation inputs were found for refresh.');
         }
 
-        $codeContext = $this->collectRepositoryFiles($context, $this->contextFiles, 'project.key_files');
+        $codeContext = $this->configuredRepositoryFiles($context, $this->contextFiles);
 
         return $this->executeProvider(
             $context,

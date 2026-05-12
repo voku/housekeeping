@@ -18,7 +18,7 @@ final class ApplicationFactoryTest extends TestCase
         $tasks = $factory->tasks($config);
 
         self::assertSame(
-            ['project:discover', 'commits:learn', 'blindspots:analyze', 'docs:refresh', 'todo:refine', 'deps:audit', 'phpstan:suggest-fixes', 'slop:scan'],
+            ['project:discover', 'commits:learn', 'blindspots:analyze', 'docs:refresh', 'todo:refine', 'self-improve:housekeeping', 'deps:audit', 'phpstan:suggest-fixes', 'slop:scan'],
             array_map(static fn ($task) => $task->name(), $tasks),
         );
     }
@@ -207,6 +207,78 @@ final class ApplicationFactoryTest extends TestCase
         self::assertInstanceOf(ProviderBackedTask::class, $tasks[0]);
         self::assertSame('auto', $tasks[0]->providerName());
         self::assertSame(['claude', 'codex'], $tasks[0]->preferredProviderNames());
+    }
+
+    public function testFactoryBuildsGenericSelectedFilesMaintenanceTask(): void
+    {
+        $factory = new ApplicationFactory();
+        $tasks = $factory->tasks([
+            'tasks' => [
+                'phpdocs:refresh' => [
+                    'enabled' => true,
+                    'interval_seconds' => 3600,
+                    'provider' => 'auto',
+                    'preferred_providers' => ['gemini', 'copilot'],
+                    'working_directory' => __DIR__,
+                    'selection_command' => ['php', '-r', ''],
+                    'prompt' => 'Refresh phpdocs.',
+                    'success_message' => 'Done.',
+                    'context_files' => [__FILE__],
+                    'max_files' => 7,
+                ],
+            ],
+        ]);
+
+        self::assertCount(1, $tasks);
+        self::assertInstanceOf(ProviderBackedTask::class, $tasks[0]);
+        self::assertSame('phpdocs:refresh', $tasks[0]->name());
+        self::assertSame('auto', $tasks[0]->providerName());
+        self::assertSame(['gemini', 'copilot'], $tasks[0]->preferredProviderNames());
+    }
+
+    public function testFactoryBuildsSelfImprovementTask(): void
+    {
+        $factory = new ApplicationFactory();
+        $tasks = $factory->tasks([
+            'tasks' => [
+                'self-improve:housekeeping' => [
+                    'enabled' => true,
+                    'interval_seconds' => 3600,
+                    'provider' => 'auto',
+                    'preferred_providers' => ['gemini', 'copilot'],
+                    'working_directory' => __DIR__,
+                    'scope_paths' => ['src'],
+                    'validation_commands' => [
+                        ['php', '-r', ''],
+                    ],
+                    'run_threshold' => 7,
+                    'recent_run_limit' => 5,
+                    'log_entry_limit' => 20,
+                ],
+            ],
+        ]);
+
+        self::assertCount(1, $tasks);
+        self::assertInstanceOf(ProviderBackedTask::class, $tasks[0]);
+        self::assertSame('self-improve:housekeeping', $tasks[0]->name());
+        self::assertSame('auto', $tasks[0]->providerName());
+        self::assertSame(['gemini', 'copilot'], $tasks[0]->preferredProviderNames());
+    }
+
+    public function testDefaultSelfImprovementValidationCommandsStayLockSafeAndQuotaSafe(): void
+    {
+        /** @var array<string, mixed> $config */
+        $config = require __DIR__ . '/../config/tasks.php';
+        $commands = $config['tasks']['self-improve:housekeeping']['validation_commands'] ?? null;
+
+        self::assertIsArray($commands);
+        self::assertSame(
+            ['housekeeping:list', 'housekeeping:state'],
+            array_map(
+                static fn (array $command): string => (string) ($command[2] ?? ''),
+                array_slice($commands, 1),
+            ),
+        );
     }
 
     /**

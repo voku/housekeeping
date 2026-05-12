@@ -149,7 +149,94 @@ final class CommitLearningTaskTest extends TestCase
         }
     }
 
+    public function testInitialCommitLearningStartsWithOnlyThreeMostRecentCommits(): void
+    {
+        $repositoryRoot = $this->createGitRepositoryWithCommitMessages([
+            'Initial docs',
+            'Add worker',
+            'Adjust worker',
+            'Document worker',
+            'Finalize worker',
+        ]);
+
+        $provider = new class implements ProviderAdapter {
+            /** @var array<string, mixed>|null */
+            public ?array $payload = null;
+
+            public function name(): string
+            {
+                return 'local-null-provider';
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                $this->payload = $request->payload;
+
+                return ProviderResult::success('Accepted.');
+            }
+        };
+
+        try {
+            $result = (new CommitLearningTask(
+                3600,
+                'local-null-provider',
+                new ProcessExecutor(),
+                $repositoryRoot,
+                10,
+            ))->run(new RunContext(
+                false,
+                null,
+                time(),
+                [
+                    'paths' => [
+                        'repository_root' => $repositoryRoot,
+                    ],
+                    'providers' => [
+                        'local-null-provider' => [
+                            'enabled' => true,
+                            'daily_budget' => 10,
+                            'cooldown_seconds' => 0,
+                        ],
+                    ],
+                ],
+                ['tasks' => [], 'providers' => [], 'runs' => []],
+                [],
+                new InMemoryStateStore(),
+                new JsonLogger($repositoryRoot . '/var/logs/housekeeping.log'),
+                ['local-null-provider' => $provider],
+            ));
+
+            self::assertTrue($result->successful);
+            self::assertIsArray($provider->payload);
+            $commits = $provider->payload['commits'] ?? null;
+            self::assertIsArray($commits);
+            self::assertCount(3, $commits);
+            self::assertSame(
+                ['Finalize worker', 'Document worker', 'Adjust worker'],
+                array_column($commits, 'subject'),
+            );
+        } finally {
+            (new Filesystem())->remove($repositoryRoot);
+        }
+    }
+
     private function createGitRepository(): string
+    {
+        return $this->createGitRepositoryWithCommitMessages([
+            'Initial docs',
+            'Add worker',
+        ]);
+    }
+
+    /**
+     * @param list<string> $commitMessages
+     */
+    private function createGitRepositoryWithCommitMessages(array $commitMessages): string
     {
         $repositoryRoot = sys_get_temp_dir() . '/agent-cron-git-' . bin2hex(random_bytes(4));
         (new Filesystem())->mkdir([$repositoryRoot . '/src']);
@@ -157,14 +244,19 @@ final class CommitLearningTaskTest extends TestCase
         $this->runGit(['config', 'user.email', 'tests@example.com'], $repositoryRoot);
         $this->runGit(['config', 'user.name', 'Tests'], $repositoryRoot);
 
-        file_put_contents($repositoryRoot . '/README.md', '# Project');
-        file_put_contents($repositoryRoot . '/TODO.md', '- keep docs aligned');
-        $this->runGit(['add', 'README.md', 'TODO.md'], $repositoryRoot);
-        $this->runGit(['commit', '-m', 'Initial docs'], $repositoryRoot);
+        foreach ($commitMessages as $index => $message) {
+            if ($index === 0) {
+                file_put_contents($repositoryRoot . '/README.md', '# Project');
+                file_put_contents($repositoryRoot . '/TODO.md', '- keep docs aligned');
+                $this->runGit(['add', 'README.md', 'TODO.md'], $repositoryRoot);
+                $this->runGit(['commit', '-m', $message], $repositoryRoot);
+                continue;
+            }
 
-        file_put_contents($repositoryRoot . '/src/Worker.php', "<?php\n");
-        $this->runGit(['add', 'src/Worker.php'], $repositoryRoot);
-        $this->runGit(['commit', '-m', 'Add worker'], $repositoryRoot);
+            file_put_contents($repositoryRoot . '/src/Worker.php', "<?php\n// {$message}\n");
+            $this->runGit(['add', 'src/Worker.php'], $repositoryRoot);
+            $this->runGit(['commit', '-m', $message], $repositoryRoot);
+        }
 
         return $repositoryRoot;
     }

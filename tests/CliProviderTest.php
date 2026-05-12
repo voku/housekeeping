@@ -16,7 +16,7 @@ final class CliProviderTest extends TestCase
 {
     public function testCodexProviderUsesExecPromptArgument(): void
     {
-        $expectedPrompt = <<<'PROMPT'
+        $expectedPrompt = $this->normalizeExpectedPrompt(<<<'PROMPT'
 You are an autonomous housekeeping coding agent running from cron.
 
 Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.
@@ -34,7 +34,7 @@ Payload:
         "guide": "docs/☃-guide.md"
     }
 }
-PROMPT;
+PROMPT);
 
         $provider = new CodexProvider(
             new ProcessExecutor(),
@@ -89,7 +89,7 @@ PROMPT;
 
     public function testCodexProviderAllowsConfigurableArgumentsAndDangerousPermissionBypass(): void
     {
-        $expectedPrompt = <<<'PROMPT'
+        $expectedPrompt = $this->normalizeExpectedPrompt(<<<'PROMPT'
 You are an autonomous housekeeping coding agent running from cron.
 
 Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.
@@ -104,7 +104,7 @@ Payload:
         "README.md": "# Docs"
     }
 }
-PROMPT;
+PROMPT);
 
         $provider = new CodexProvider(
             new ProcessExecutor(),
@@ -139,7 +139,7 @@ PROMPT;
 
         $provider = new GeminiProvider(
             new ProcessExecutor(),
-            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
             [],
             __DIR__,
             30,
@@ -149,14 +149,19 @@ PROMPT;
         $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
 
         self::assertTrue($result->successful);
-        self::assertSame(json_encode(['--prompt', $expectedPrompt], JSON_UNESCAPED_SLASHES), $result->context['stdout'] ?? null);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(['--prompt', ''], $decoded['argv'] ?? null);
+        self::assertSame($expectedPrompt, $decoded['stdin'] ?? null);
     }
 
     public function testGeminiProviderDefaultsToSafeApprovalMode(): void
     {
         $provider = new GeminiProvider(
             new ProcessExecutor(),
-            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
             [],
             __DIR__,
             30,
@@ -169,8 +174,11 @@ PROMPT;
         self::assertIsString($stdout);
         $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded);
-        self::assertNotContains('--approval-mode', $decoded);
-        self::assertNotContains('yolo', $decoded);
+        $argv = $decoded['argv'] ?? null;
+        self::assertIsArray($argv);
+        self::assertNotContains('--approval-mode', $argv);
+        self::assertNotContains('yolo', $argv);
+        self::assertSame($this->expectedDocsPrompt(), $decoded['stdin'] ?? null);
     }
 
     public function testCopilotProviderUsesPromptFlag(): void
@@ -179,7 +187,7 @@ PROMPT;
 
         $provider = new CopilotProvider(
             new ProcessExecutor(),
-            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
             [],
             __DIR__,
             30,
@@ -189,14 +197,19 @@ PROMPT;
         $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
 
         self::assertTrue($result->successful);
-        self::assertSame(json_encode(['--prompt', $expectedPrompt], JSON_UNESCAPED_SLASHES), $result->context['stdout'] ?? null);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(['--prompt', ''], $decoded['argv'] ?? null);
+        self::assertSame($expectedPrompt, $decoded['stdin'] ?? null);
     }
 
     public function testCopilotProviderDefaultsToPromptModeWithoutYolo(): void
     {
         $provider = new CopilotProvider(
             new ProcessExecutor(),
-            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
             [],
             __DIR__,
             30,
@@ -209,7 +222,10 @@ PROMPT;
         self::assertIsString($stdout);
         $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded);
-        self::assertNotContains('--yolo', $decoded);
+        $argv = $decoded['argv'] ?? null;
+        self::assertIsArray($argv);
+        self::assertNotContains('--yolo', $argv);
+        self::assertSame($this->expectedDocsPrompt(), $decoded['stdin'] ?? null);
     }
 
     public function testClaudeProviderUsesPrintAndPromptArgument(): void
@@ -273,7 +289,7 @@ PROMPT;
 
     private function expectedDocsPrompt(): string
     {
-        return <<<'PROMPT'
+        return $this->normalizeExpectedPrompt(<<<'PROMPT'
 You are an autonomous housekeeping coding agent running from cron.
 
 Never run `git commit`, create commits, or otherwise mutate git history yourself; only return patch suggestions or uncommitted file changes for human review.
@@ -288,6 +304,11 @@ Payload:
         "README.md": "# Docs"
     }
 }
-PROMPT;
+PROMPT);
+    }
+
+    private function normalizeExpectedPrompt(string $prompt): string
+    {
+        return str_replace("\r\n", "\n", $prompt);
     }
 }

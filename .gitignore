@@ -1,10 +1,20 @@
 /vendor/
+/config/*.php
+!/config/tasks.php
 /var/logs/*.log
+/var/logs/*/
 /var/state/*.json
 /var/lock/*
 !var/logs/.gitkeep
 !var/state/.gitkeep
 !var/lock/.gitkeep
+
+/.idea/
+/.vscode/
+/.fleet/
+*.iml
+*.ipr
+*.iws
 
 /.phpunit.result.cache
 /build/

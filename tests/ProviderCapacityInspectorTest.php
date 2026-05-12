@@ -303,6 +303,99 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame(0, $indexed['budgeted']->internalBudgetRemaining);
     }
 
+    public function testAutomaticRoutingSkipsExternalProbes(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'gemini' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'resource_command' => ['php', '-r', 'fwrite(STDERR, "should-not-run"); exit(1);'],
+                ],
+            ],
+        ], [], false);
+
+        self::assertCount(1, $reports);
+        self::assertSame('ready-no-probe', $reports[0]->status);
+        self::assertSame('External probe skipped during automatic routing.', $reports[0]->probeMessage);
+        self::assertNull($reports[0]->externalRemainingRatio);
+    }
+
+    public function testInspectorSummarizesGeminiJsonStatsWithoutCapacityMetrics(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'gemini' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'resource_command' => [
+                        'php',
+                        '-r',
+                        'echo json_encode(["stats" => ["models" => ["gemini-2.5-pro" => ["api" => ["totalRequests" => 2], "tokens" => ["total" => 1234]]]]]);',
+                    ],
+                ],
+            ],
+        ], []);
+
+        self::assertCount(1, $reports);
+        self::assertSame('ready-no-probe', $reports[0]->status);
+        self::assertNull($reports[0]->externalRemainingRatio);
+        self::assertSame('Session stats: gemini-2.5-pro requests=2 tokens=1234', $reports[0]->probeMessage);
+    }
+
+    public function testInspectorSummarizesCopilotJsonUsageWithoutCapacityMetrics(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'copilot' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'resource_command' => [
+                        'php',
+                        '-r',
+                        'echo json_encode(["type" => "result", "usage" => ["premiumRequests" => 1, "sessionDurationMs" => 5678, "totalApiDurationMs" => 2139]]) . PHP_EOL;',
+                    ],
+                ],
+            ],
+        ], []);
+
+        self::assertCount(1, $reports);
+        self::assertSame('ready-no-probe', $reports[0]->status);
+        self::assertNull($reports[0]->externalRemainingRatio);
+        self::assertSame('Session usage: premium_requests=1, session_ms=5678, api_ms=2139', $reports[0]->probeMessage);
+    }
+
+    public function testInspectorTreatsCodexUsageLimitErrorsAsExternalExhaustion(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'codex' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'resource_command' => [
+                        'php',
+                        '-r',
+                        'echo json_encode(["type" => "error", "message" => "ERROR: You\'ve hit your usage limit. Try again at May 13th, 2026 10:42 AM."]) . PHP_EOL;',
+                    ],
+                ],
+            ],
+        ], []);
+
+        self::assertCount(1, $reports);
+        self::assertSame('external-exhausted', $reports[0]->status);
+        self::assertSame(0.0, $reports[0]->externalRemainingRatio);
+        self::assertSame(gmmktime(10, 42, 0, 5, 13, 2026), $reports[0]->externalResetAt);
+        self::assertSame('ERROR: You\'ve hit your usage limit. Try again at May 13th, 2026 10:42 AM.', $reports[0]->probeMessage);
+    }
+
     public function testCooldownRemainingSecondsUsesExpectedStatePathAndBoundaries(): void
     {
         $inspector = new ProviderCapacityInspector();
@@ -318,6 +411,21 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertSame(1, $this->invokePrivate($inspector, 'cooldownRemainingSeconds', ['cooldown_seconds' => 1], $state, 'alpha', $now));
         self::assertSame(10, $this->invokePrivate($inspector, 'cooldownRemainingSeconds', ['cooldown_seconds' => 10], $state, 'alpha', $now));
         self::assertSame(0, $this->invokePrivate($inspector, 'cooldownRemainingSeconds', [], $state, 'alpha', $now));
+    }
+
+    public function testCooldownRemainingSecondsIgnoresProviderUseFromCurrentRun(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = time();
+        $state = [
+            'providers' => [
+                'alpha' => [
+                    'last_used_at' => $now,
+                ],
+            ],
+        ];
+
+        self::assertSame(0, $this->invokePrivate($inspector, 'cooldownRemainingSeconds', ['cooldown_seconds' => 600], $state, 'alpha', $now, $now));
     }
 
     public function testMetricsFromOutputFallsBackToStderrText(): void

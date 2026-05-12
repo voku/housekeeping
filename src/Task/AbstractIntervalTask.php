@@ -13,7 +13,7 @@ abstract readonly class AbstractIntervalTask implements HousekeepingTask
     {
     }
 
-    final public function isDue(RunContext $context): bool
+    public function isDue(RunContext $context): bool
     {
         if ($context->taskFilter === $this->name()) {
             return true;

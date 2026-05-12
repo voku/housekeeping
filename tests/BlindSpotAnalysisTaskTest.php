@@ -85,7 +85,15 @@ final class BlindSpotAnalysisTaskTest extends TestCase
                     'finished_at' => 1700000050,
                     'exit_code' => 0,
                     'results' => [
-                        ['task' => 'blindspots:analyze', 'successful' => true],
+                        [
+                            'task' => 'blindspots:analyze',
+                            'successful' => true,
+                            'context' => [
+                                'provider' => 'local-null-provider',
+                                'stdout' => str_repeat('x', 5000),
+                                'command' => ['provider', '--prompt', str_repeat('y', 2000)],
+                            ],
+                        ],
                         ['task' => 'docs:refresh', 'successful' => true],
                     ],
                 ],
@@ -132,6 +140,13 @@ final class BlindSpotAnalysisTaskTest extends TestCase
             $latestRun = $provider->payload['latest_run'] ?? null;
             self::assertIsArray($latestRun);
             self::assertSame(1700000040, $latestRun['started_at'] ?? null);
+            $latestRunResults = $latestRun['results'] ?? null;
+            self::assertIsArray($latestRunResults);
+            self::assertIsArray($latestRunResults[0] ?? null);
+            $latestRunResultContext = $latestRunResults[0]['context'] ?? null;
+            self::assertIsArray($latestRunResultContext);
+            self::assertSame('local-null-provider', $latestRunResultContext['provider'] ?? null);
+            self::assertArrayNotHasKey('stdout', $latestRunResultContext);
             $projectMetadata = $provider->payload['project_metadata'] ?? null;
             self::assertIsArray($projectMetadata);
             self::assertSame($repositoryRoot, $projectMetadata['repository_root'] ?? null);

@@ -61,4 +61,48 @@ final class ProjectDiscoveryTaskTest extends TestCase
             (new Filesystem())->remove($repositoryRoot);
         }
     }
+
+    public function testProjectDiscoveryCanIgnoreConfiguredNestedWorkspacePaths(): void
+    {
+        $repositoryRoot = sys_get_temp_dir() . '/agent-cron-discovery-ignore-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir([$repositoryRoot . '/docs', $repositoryRoot . '/housekeeping/vendor']);
+        file_put_contents($repositoryRoot . '/README.md', '# Root Docs');
+        file_put_contents($repositoryRoot . '/docs/guide.md', '# Guide');
+        file_put_contents($repositoryRoot . '/housekeeping/README.md', '# Nested workspace');
+        file_put_contents($repositoryRoot . '/housekeeping/TODO.md', 'Do not index me');
+
+        $store = new InMemoryStateStore();
+        $context = new RunContext(
+            false,
+            null,
+            time(),
+            [
+                'paths' => [
+                    'repository_root' => $repositoryRoot,
+                ],
+                'tasks' => [
+                    'project:discover' => [
+                        'ignored_paths' => ['housekeeping'],
+                    ],
+                ],
+                'providers' => [],
+            ],
+            $store->load(),
+            [],
+            $store,
+            new JsonLogger($repositoryRoot . '/var/logs/housekeeping.log'),
+            [],
+        );
+
+        try {
+            $result = (new ProjectDiscoveryTask(3600))->run($context);
+            $context->saveState();
+
+            self::assertTrue($result->successful);
+            self::assertSame(['README.md', 'docs/guide.md'], $this->stateAt($store->state, 'metadata.project.documentation_files'));
+            self::assertSame([], $this->stateAt($store->state, 'metadata.project.todo_files'));
+        } finally {
+            (new Filesystem())->remove($repositoryRoot);
+        }
+    }
 }

@@ -7,6 +7,7 @@ namespace HousekeepingAgentCron\Command;
 use HousekeepingAgentCron\Contract\HousekeepingTask;
 use HousekeepingAgentCron\Runtime\ApplicationFactory;
 use HousekeepingAgentCron\Runtime\ExitCode;
+use HousekeepingAgentCron\Runtime\RepositoryOwnerRerunner;
 use HousekeepingAgentCron\Runtime\RunContext;
 use HousekeepingAgentCron\Runtime\TaskRunner;
 use RuntimeException;
@@ -26,6 +27,7 @@ final class HousekeepingRunCommand extends Command
     public function __construct(
         private readonly string $configFile,
         private readonly ApplicationFactory $factory = new ApplicationFactory(),
+        private readonly RepositoryOwnerRerunner $repositoryOwnerRerunner = new RepositoryOwnerRerunner(),
     ) {
         parent::__construct();
     }
@@ -41,6 +43,18 @@ final class HousekeepingRunCommand extends Command
         try {
             $config = $this->factory->loadConfig($this->configFile);
             $tasks = $this->factory->tasks($config);
+            $taskFilter = $this->taskOption($input, $tasks);
+            $rerunExitCode = $this->repositoryOwnerRerunner->maybeRerun(
+                $this->launcherPath(),
+                $this->configFile,
+                $config,
+                (bool) $input->getOption('dry-run'),
+                $taskFilter,
+                $output,
+            );
+            if ($rerunExitCode !== null) {
+                return $rerunExitCode;
+            }
             $lockDir = $this->factory->lockDir($config);
             (new Filesystem())->mkdir($lockDir);
             $lock = (new LockFactory(new FlockStore($lockDir)))->createLock('housekeeping-run', 1.0, false);
@@ -55,7 +69,7 @@ final class HousekeepingRunCommand extends Command
                 $logger = $this->factory->logger($config);
                 $context = new RunContext(
                     (bool) $input->getOption('dry-run'),
-                    $this->taskOption($input, $tasks),
+                    $taskFilter,
                     time(),
                     $config,
                     $stateStore->load(),
@@ -68,7 +82,16 @@ final class HousekeepingRunCommand extends Command
                     'dry_run' => $context->dryRun,
                     'task_filter' => $context->taskFilter,
                 ]);
-                $exitCode = (new TaskRunner($tasks))->run($context);
+                if ($output->isVerbose()) {
+                    $output->writeln(sprintf(
+                        '<comment>[run]</comment> config=%s repository_root=%s dry_run=%s%s',
+                        $this->configFile,
+                        $context->repositoryRoot(),
+                        $context->dryRun ? 'yes' : 'no',
+                        $context->taskFilter !== null ? ' task=' . $context->taskFilter : '',
+                    ));
+                }
+                $exitCode = (new TaskRunner($tasks))->run($context, $output);
                 $logger->log($exitCode === ExitCode::SUCCESS ? 'info' : 'error', 'run_finished', ['exit_code' => $exitCode]);
                 $output->writeln($exitCode === ExitCode::SUCCESS ? '<info>Housekeeping run completed.</info>' : '<error>Housekeeping run completed with errors.</error>');
 
@@ -81,6 +104,11 @@ final class HousekeepingRunCommand extends Command
 
             return $throwable instanceof RuntimeException ? ExitCode::INVALID_CONFIG : ExitCode::TASK_FAILED;
         }
+    }
+
+    private function launcherPath(): string
+    {
+        return dirname(__DIR__, 2) . '/bin/agent-cron';
     }
 
     /**

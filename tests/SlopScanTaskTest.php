@@ -179,4 +179,40 @@ final class SlopScanTaskTest extends TestCase
             (new Filesystem())->remove($workingDirectory);
         }
     }
+
+    public function testPhpMemoryExhaustionReturnsActionableFailure(): void
+    {
+        $workingDirectory = sys_get_temp_dir() . '/agent-cron-slop-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($workingDirectory);
+
+        $task = new SlopScanTask(
+            3600,
+            'local-null-provider',
+            new ProcessExecutor(),
+            $workingDirectory,
+            ['php', '-r', 'fwrite(STDOUT, \'Fatal error: Allowed memory size of 134217728 bytes exhausted\'); exit(255);'],
+            30,
+        );
+
+        try {
+            $result = $task->run(new RunContext(
+                false,
+                null,
+                time(),
+                ['providers' => []],
+                ['tasks' => [], 'providers' => [], 'runs' => []],
+                [],
+                new InMemoryStateStore(),
+                new JsonLogger($workingDirectory . '/logs/housekeeping.log'),
+                [],
+            ));
+
+            self::assertFalse($result->successful);
+            self::assertFalse($result->skipped);
+            self::assertSame('slop-scan exhausted PHP memory; raise the configured memory_limit.', $result->message);
+            self::assertSame(['php', '-r', 'fwrite(STDOUT, \'Fatal error: Allowed memory size of 134217728 bytes exhausted\'); exit(255);'], $result->context['command'] ?? null);
+        } finally {
+            (new Filesystem())->remove($workingDirectory);
+        }
+    }
 }
