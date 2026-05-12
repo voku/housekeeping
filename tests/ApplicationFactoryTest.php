@@ -283,7 +283,8 @@ final class ApplicationFactoryTest extends TestCase
             self::assertIsArray($command);
 
             $commandName = $command[2] ?? '';
-            $commandNames[] = is_scalar($commandName) ? (string) $commandName : '';
+            self::assertIsScalar($commandName);
+            $commandNames[] = (string) $commandName;
         }
 
         self::assertSame(

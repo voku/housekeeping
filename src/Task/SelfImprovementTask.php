@@ -221,7 +221,11 @@ final readonly class SelfImprovementTask extends AbstractProviderTask
             }
 
             $timestampValue = $decoded['ts'] ?? '';
-            $timestamp = strtotime(is_scalar($timestampValue) ? (string) $timestampValue : '');
+            if (!is_scalar($timestampValue)) {
+                continue;
+            }
+
+            $timestamp = strtotime((string) $timestampValue);
             if ($sinceTimestamp !== null && $timestamp !== false && $timestamp < $sinceTimestamp) {
                 continue;
             }
