@@ -71,17 +71,13 @@ final readonly class SelfImprovementTask extends AbstractProviderTask
         }
 
         $recentRuns = array_slice($reviewWindowRuns, -$this->recentRunLimit);
-        $latestRun = end($reviewWindowRuns);
-        if (!is_array($latestRun)) {
+        $latestRun = $reviewWindowRuns[array_key_last($reviewWindowRuns)] ?? null;
+        if ($latestRun === null) {
             return TaskResult::skipped('No completed housekeeping runs are available for self-improvement.');
         }
 
         $earliestReviewTimestamp = null;
         foreach ($reviewWindowRuns as $run) {
-            if (!is_array($run)) {
-                continue;
-            }
-
             $startedAt = $run['started_at'] ?? null;
             if (is_int($startedAt) && ($earliestReviewTimestamp === null || $startedAt < $earliestReviewTimestamp)) {
                 $earliestReviewTimestamp = $startedAt;
@@ -174,7 +170,7 @@ final readonly class SelfImprovementTask extends AbstractProviderTask
         $lastReviewedRunStartedAt = $context->metadataValue('self_improvement.last_reviewed_run_started_at');
         $reviewWindowRuns = [];
         foreach ($runs as $run) {
-            if (!is_array($run) || ($run['dry_run'] ?? false) === true) {
+            if (!$this->isStringMap($run) || ($run['dry_run'] ?? false) === true) {
                 continue;
             }
 
@@ -197,7 +193,12 @@ final readonly class SelfImprovementTask extends AbstractProviderTask
      */
     private function recentLogEntries(RunContext $context, ?int $sinceTimestamp): array
     {
-        $logDir = $context->config['paths']['logs'] ?? null;
+        $paths = $context->config['paths'] ?? null;
+        if (!$this->isStringMap($paths)) {
+            return [];
+        }
+
+        $logDir = $paths['logs'] ?? null;
         if (!is_string($logDir) || $logDir === '') {
             return [];
         }
@@ -215,11 +216,16 @@ final readonly class SelfImprovementTask extends AbstractProviderTask
         $entries = [];
         foreach ($lines as $line) {
             $decoded = json_decode($line, true);
-            if (!is_array($decoded)) {
+            if (!$this->isStringMap($decoded)) {
                 continue;
             }
 
-            $timestamp = strtotime((string) ($decoded['ts'] ?? ''));
+            $timestampValue = $decoded['ts'] ?? '';
+            if (!is_scalar($timestampValue)) {
+                continue;
+            }
+
+            $timestamp = strtotime((string) $timestampValue);
             if ($sinceTimestamp !== null && $timestamp !== false && $timestamp < $sinceTimestamp) {
                 continue;
             }
@@ -438,6 +444,24 @@ final readonly class SelfImprovementTask extends AbstractProviderTask
         }
 
         return $phpFiles;
+    }
+
+    /**
+     * @phpstan-assert-if-true array<string, mixed> $value
+     */
+    private function isStringMap(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return false;
+        }
+
+        foreach (array_keys($value) as $key) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function absoluteWorkingPath(string $path): string

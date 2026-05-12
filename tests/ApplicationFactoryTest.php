@@ -269,15 +269,27 @@ final class ApplicationFactoryTest extends TestCase
     {
         /** @var array<string, mixed> $config */
         $config = require __DIR__ . '/../config/tasks.php';
-        $commands = $config['tasks']['self-improve:housekeeping']['validation_commands'] ?? null;
+        $tasks = $config['tasks'] ?? null;
+        self::assertIsArray($tasks);
+
+        $taskConfig = $tasks['self-improve:housekeeping'] ?? null;
+        self::assertIsArray($taskConfig);
+
+        $commands = $taskConfig['validation_commands'] ?? null;
 
         self::assertIsArray($commands);
+        $commandNames = [];
+        foreach (array_slice($commands, 1) as $command) {
+            self::assertIsArray($command);
+
+            $commandName = $command[2] ?? '';
+            self::assertIsScalar($commandName);
+            $commandNames[] = (string) $commandName;
+        }
+
         self::assertSame(
             ['housekeeping:list', 'housekeeping:state'],
-            array_map(
-                static fn (array $command): string => (string) ($command[2] ?? ''),
-                array_slice($commands, 1),
-            ),
+            $commandNames,
         );
     }
 
