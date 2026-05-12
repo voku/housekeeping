@@ -16,6 +16,8 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
+      - name: Clear Composer auth
+        run: rm -f "$HOME/.composer/auth.json" "$HOME/.config/composer/auth.json"
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: composer analyse
       - run: composer test
@@ -46,6 +48,8 @@ jobs:
         with:
           php-version: '8.4'
           coverage: xdebug
+      - name: Clear Composer auth
+        run: rm -f "$HOME/.composer/auth.json" "$HOME/.config/composer/auth.json"
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: composer analyse
       - run: composer install-slop-scan
