@@ -162,11 +162,11 @@ final class HousekeepingDoctorCommandTest extends TestCase
                     'enabled' => true,
                     'command' => ['php', '-r', ''],
                 ],
-                'gemini' => [
-                    'enabled' => true,
+                'copilot' => [
                     'command' => ['php', '-r', ''],
                 ],
-                'copilot' => [
+                'gemini' => [
+                    'enabled' => true,
                     'command' => ['php', '-r', ''],
                 ],
             ],
@@ -228,6 +228,100 @@ final class HousekeepingDoctorCommandTest extends TestCase
 
             self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
             self::assertStringContainsString('State file is not valid JSON: ' . $statePath, $tester->getDisplay());
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandMarksReadOnlyLockDirectoryAsNotWritable(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-read-only-lock-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $lockPath = $dir . '/lock';
+        (new Filesystem())->mkdir([$dir, $lockPath]);
+        chmod($lockPath, 0555);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $lockPath,
+            ],
+            'tasks' => [],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertIsArray($checks[1] ?? null);
+            self::assertFalse($checks[1]['ok'] ?? true);
+            self::assertSame('Path is not writable: ' . $lockPath, $checks[1]['message'] ?? null);
+        } finally {
+            chmod($lockPath, 0775);
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandSurfacesPathCheckFilesystemExceptions(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-mkdir-failure-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $stateDirectory = $dir . '/state';
+        $statePath = $stateDirectory . '/state.json';
+        (new Filesystem())->mkdir($dir);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $statePath,
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+            ],
+            'tasks' => [],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+        $filesystem = $this->createMock(Filesystem::class);
+        $filesystem
+            ->method('mkdir')
+            ->willReturnCallback(static function (string|iterable $dirs) use ($stateDirectory): void {
+                $paths = is_iterable($dirs) ? iterator_to_array($dirs) : [$dirs];
+                foreach ($paths as $path) {
+                    if (!is_string($path)) {
+                        continue;
+                    }
+                    if ($path === $stateDirectory) {
+                        throw new \RuntimeException('state mkdir failed');
+                    }
+                    if (!is_dir($path)) {
+                        mkdir($path, 0775, true);
+                    }
+                }
+            });
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile, filesystem: $filesystem));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertIsArray($checks[0] ?? null);
+            self::assertFalse($checks[0]['ok'] ?? true);
+            self::assertSame('state mkdir failed', $checks[0]['message'] ?? null);
         } finally {
             (new Filesystem())->remove($dir);
         }

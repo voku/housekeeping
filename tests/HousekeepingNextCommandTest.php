@@ -228,4 +228,53 @@ final class HousekeepingNextCommandTest extends TestCase
         }
     }
 
+    public function testNextCommandJsonFallsBackToDefaultIntervalAndPriorityWhenConfigValuesAreMissing(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-next-defaults-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $stateFile = $dir . '/state/state.json';
+        (new Filesystem())->mkdir(dirname($stateFile));
+        file_put_contents($stateFile, json_encode([
+            'schema_version' => 1,
+            'tasks' => [],
+            'providers' => [],
+            'runs' => [],
+        ], JSON_PRETTY_PRINT) . PHP_EOL);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $stateFile,
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => dirname(__DIR__),
+            ],
+            'tasks' => [
+                'project:discover' => [
+                    'enabled' => true,
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingNextCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::SUCCESS, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $tasks = $decoded['tasks'] ?? null;
+            self::assertIsArray($tasks);
+            self::assertIsArray($tasks[0] ?? null);
+            self::assertSame('project:discover', $tasks[0]['name'] ?? null);
+            self::assertSame(3600, $tasks[0]['interval_seconds'] ?? null);
+            self::assertSame(0, $tasks[0]['priority'] ?? null);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
 }

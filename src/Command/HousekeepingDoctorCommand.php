@@ -81,7 +81,7 @@ final class HousekeepingDoctorCommand extends Command
 
             return $successful ? ExitCode::SUCCESS : ExitCode::INVALID_CONFIG;
         } catch (Throwable $throwable) {
-            $output->writeln('<error>' . $throwable->getMessage() . '</error>');
+            $output->writeln($throwable->getMessage());
 
             return ExitCode::INVALID_CONFIG;
         }

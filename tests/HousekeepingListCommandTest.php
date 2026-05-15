@@ -121,4 +121,41 @@ final class HousekeepingListCommandTest extends TestCase
             (new Filesystem())->remove($dir);
         }
     }
+
+    public function testListJsonIsPrettyPrintedAndKeepsSlashesUnescaped(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-list-json-format-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        (new Filesystem())->mkdir($dir);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'tasks' => [
+                'custom/slash-task' => [
+                    'enabled' => true,
+                    'provider' => 'provider/with-slash',
+                    'selection_command' => ['php', '-r', ''],
+                    'prompt' => 'Select files.',
+                    'success_message' => 'Done.',
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingListCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::SUCCESS, $exitCode);
+            $display = $tester->getDisplay();
+            self::assertStringStartsWith("{\n", $display);
+            self::assertStringContainsString('"name": "custom/slash-task"', $display);
+            self::assertStringContainsString('"provider": "provider/with-slash"', $display);
+            self::assertStringNotContainsString('\\/', $display);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
 }
