@@ -87,4 +87,45 @@ final class HousekeepingDoctorCommandTest extends TestCase
             (new Filesystem())->remove($dir);
         }
     }
+
+    public function testDoctorCommandFailsWhenEnabledProviderCommandContainsOnlyEmptyStrings(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-empty-command-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        (new Filesystem())->mkdir($dir);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+            ],
+            'tasks' => [],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+                'codex' => [
+                    'enabled' => true,
+                    'command' => [''],
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertIsArray($checks[3] ?? null);
+            self::assertSame('provider:codex', $checks[3]['name'] ?? null);
+            self::assertFalse($checks[3]['ok'] ?? true);
+            self::assertSame('Enabled provider command is missing.', $checks[3]['message'] ?? null);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
 }

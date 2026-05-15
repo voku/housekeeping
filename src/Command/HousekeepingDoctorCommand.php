@@ -110,12 +110,11 @@ final class HousekeepingDoctorCommand extends Command
 
             $configuredCommand = $providerConfig['command'] ?? [];
             $configuredCommand = is_array($configuredCommand) ? $configuredCommand : [];
-            $nonEmptyCommandItems = array_filter($configuredCommand, static fn (mixed $item): bool => is_string($item) && $item !== '');
-            $command = array_values($nonEmptyCommandItems);
+            $hasConfiguredCommand = $this->hasConfiguredCommand($configuredCommand);
             $checks[] = [
                 'name' => 'provider:' . $providerName,
-                'ok' => $command !== [],
-                'message' => $command !== []
+                'ok' => $hasConfiguredCommand,
+                'message' => $hasConfiguredCommand
                     ? 'Enabled provider command is configured.'
                     : 'Enabled provider command is missing.',
             ];
@@ -146,6 +145,20 @@ final class HousekeepingDoctorCommand extends Command
                 ? 'Path is writable: ' . $path
                 : 'Path is not writable: ' . $path,
         ];
+    }
+
+    /**
+     * @param array<int|string, mixed> $configuredCommand
+     */
+    private function hasConfiguredCommand(array $configuredCommand): bool
+    {
+        foreach ($configuredCommand as $item) {
+            if (is_string($item) && $item !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
