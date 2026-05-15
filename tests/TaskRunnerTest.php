@@ -54,6 +54,9 @@ final class TaskRunnerTest extends TestCase
         self::assertIsInt($this->stateAt($store->state, 'tasks.docs:refresh.last_finished_at'));
         self::assertTrue($this->stateAt($store->state, 'tasks.docs:refresh.last_successful'));
         self::assertSame('Documentation refresh completed.', $this->stateAt($store->state, 'tasks.docs:refresh.last_message'));
+        self::assertIsString($this->stateAt($store->state, 'runs.0.run_id'));
+        self::assertSame('completed', $this->stateAt($store->state, 'runs.0.status'));
+        self::assertSame([], $this->stateAt($store->state, 'runs.0.errors'));
         self::assertIsArray($store->state['tasks'] ?? null);
         self::assertArrayNotHasKey('.last_finished_at', $store->state['tasks']);
         self::assertSame(1, $this->stateAt($store->state, 'providers.local-null-provider.usage.' . gmdate('Y-m-d')));
@@ -106,6 +109,9 @@ final class TaskRunnerTest extends TestCase
 
         self::assertSame(ExitCode::TASK_FAILED, $exitCode);
         self::assertSame('boom', $this->stateAt($store->state, 'tasks.fail:test.last_message'));
+        self::assertSame('failed', $this->stateAt($store->state, 'runs.0.status'));
+        self::assertSame('boom', $this->stateAt($store->state, 'runs.0.errors.0.message'));
+        self::assertSame('fail:test', $this->stateAt($store->state, 'runs.0.errors.0.task'));
         self::assertSame(RuntimeException::class, $this->stateAt($store->state, 'runs.0.results.0.context.exception'));
     }
 

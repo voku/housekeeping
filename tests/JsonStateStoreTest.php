@@ -43,7 +43,8 @@ final class JsonStateStoreTest extends TestCase
         try {
             $state = (new JsonStateStore($path))->load();
 
-            self::assertSame(['tasks', 'providers', 'runs'], array_keys($state));
+            self::assertSame(['schema_version', 'tasks', 'providers', 'runs'], array_keys($state));
+            self::assertSame(1, $state['schema_version'] ?? null);
             self::assertIsArray($state['tasks'] ?? null);
             self::assertIsArray($state['tasks']['demo'] ?? null);
             self::assertSame('ok', $state['tasks']['demo']['last_message'] ?? null);
@@ -54,6 +55,23 @@ final class JsonStateStoreTest extends TestCase
             self::assertIsArray($state['runs'] ?? null);
             self::assertIsArray($state['runs'][0] ?? null);
             self::assertSame(0, $state['runs'][0]['exit_code'] ?? null);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testLoadReturnsDefaultSchemaVersionForMissingStateFile(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-state-default-' . bin2hex(random_bytes(4));
+        $path = $dir . '/state.json';
+
+        try {
+            $state = (new JsonStateStore($path))->load();
+
+            self::assertSame(1, $state['schema_version'] ?? null);
+            self::assertSame([], $state['tasks'] ?? null);
+            self::assertSame([], $state['providers'] ?? null);
+            self::assertSame([], $state['runs'] ?? null);
         } finally {
             (new Filesystem())->remove($dir);
         }

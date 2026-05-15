@@ -29,4 +29,19 @@ final class HousekeepingListCommandTest extends TestCase
         self::assertStringContainsString('phpstan:suggest-fixes', $tester->getDisplay());
         self::assertStringContainsString('slop:scan', $tester->getDisplay());
     }
+
+    public function testListCanRenderJson(): void
+    {
+        $tester = new CommandTester(new HousekeepingListCommand(__DIR__ . '/../config/tasks.php'));
+
+        $exitCode = $tester->execute(['--json' => true]);
+
+        self::assertSame(ExitCode::SUCCESS, $exitCode);
+        $decoded = json_decode($tester->getDisplay(), true);
+        self::assertIsArray($decoded);
+        self::assertIsArray($decoded['tasks'] ?? null);
+        self::assertSame('project:discover', $decoded['tasks'][0]['name'] ?? null);
+        self::assertArrayHasKey('interval_seconds', $decoded['tasks'][0] ?? []);
+        self::assertArrayHasKey('priority', $decoded['tasks'][0] ?? []);
+    }
 }
