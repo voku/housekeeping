@@ -13,6 +13,7 @@ git clone git@github.com:your-org/your-project.git target-project
 
 cd housekeeping-tool
 composer install
+cp config/project-template.php config/project-a.php
 ```
 
 At this point you should have two sibling directories:
@@ -22,9 +23,9 @@ At this point you should have two sibling directories:
 
 ## 2. Point Housekeeping at the target project
 
-Edit `/absolute/path/to/housekeeping-tool/config/tasks.php` and keep the Housekeeping runtime paths inside the Housekeeping checkout while moving repository-facing paths to the target project.
-
-Start by introducing separate roots near the top of the file:
+Edit `/absolute/path/to/housekeeping-tool/config/project-a.php`.
+The template already keeps Housekeeping runtime paths inside the tool checkout, so you only need to point the repository-facing values at the target project.
+Start with these top-level variables:
 
 ```php
 <?php
@@ -33,51 +34,19 @@ declare(strict_types=1);
 
 $housekeepingRoot = dirname(__DIR__);
 $targetProjectRoot = '/absolute/path/to/target-project';
-```
 
-Then update the existing config values to follow this pattern:
+$documentationFiles = [
+    $targetProjectRoot . '/README.md',
+];
 
-```php
-'paths' => [
-    'logs' => $housekeepingRoot . '/var/logs',
-    'state' => $housekeepingRoot . '/var/state/state.json',
-    'lock' => $housekeepingRoot . '/var/lock',
-    'repository_root' => $targetProjectRoot,
-],
-```
+$documentationContextFiles = [
+    $targetProjectRoot . '/composer.json',
+    $targetProjectRoot . '/AGENTS.md',
+];
 
-```php
-'commits:learn' => [
-    'working_directory' => $targetProjectRoot,
-],
-'blindspots:analyze' => [
-    'context_files' => [
-        $targetProjectRoot . '/README.md',
-        $targetProjectRoot . '/AGENTS.md',
-    ],
-],
-'docs:refresh' => [
-    'input_files' => [
-        $targetProjectRoot . '/README.md',
-        $targetProjectRoot . '/docs/architecture.md',
-    ],
-    'context_files' => [
-        $targetProjectRoot . '/composer.json',
-        $targetProjectRoot . '/AGENTS.md',
-    ],
-],
-'todo:refine' => [
-    'input_files' => [$targetProjectRoot . '/TODO.md'],
-],
-'deps:audit' => [
-    'working_directory' => $targetProjectRoot,
-],
-'phpstan:suggest-fixes' => [
-    'working_directory' => $targetProjectRoot,
-],
-'slop:scan' => [
-    'working_directory' => $targetProjectRoot,
-],
+$todoFiles = [
+    $targetProjectRoot . '/TODO.md',
+];
 ```
 
 If you keep the Housekeeping checkout nested inside the maintained repository instead of as a sibling, also exclude that nested tool directory from repository discovery:
@@ -91,12 +60,15 @@ If you keep the Housekeeping checkout nested inside the maintained repository in
 Keep one Housekeeping workspace per maintained project if you want isolated state, logs, budgets, and prompts.
 Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`).
 If you want Housekeeping to auto-pick a provider for one task but still bias that task toward a specific agent, set `'provider' => 'auto'` and add `preferred_providers` in priority order.
+The project template keeps `self-improve:housekeeping` and the PHP-specific audit/fix tasks out of the copied config on purpose, so the destination project gets the generic maintenance automation first instead of spending early cron budget on Housekeeping itself or on stack-specific commands you may not use.
 
 ## 3. Start with dry runs
 
 From the Housekeeping checkout:
 
 ```bash
+export HOUSEKEEPING_CONFIG=/absolute/path/to/housekeeping-tool/config/project-a.php
+php bin/agent-cron housekeeping:doctor
 php bin/agent-cron housekeeping:list
 php bin/agent-cron housekeeping:providers
 php bin/agent-cron housekeeping:run --dry-run

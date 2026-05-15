@@ -29,19 +29,25 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 ## Installation
 
 ```bash
+git clone https://github.com/voku/housekeeping.git housekeeping
+cd housekeeping
 composer install
+cp config/project-template.php config/project-a.php
 ```
 
 Housekeeping is meant to be installed from its own checkout, not added to another project's `composer.json`.
 
 ## Quick start
 
-1. Clone Housekeeping into its own directory and install dependencies there.
-2. Clone or point to the repository you want Housekeeping to maintain.
-3. Update [`config/tasks.php`](config/tasks.php) so `paths.repository_root` and task `working_directory` values point at that target repository, while `logs`, `state`, and `lock` stay inside the Housekeeping directory.
-4. Run `php bin/agent-cron housekeeping:run --dry-run` first.
-5. Only enable external providers after you are happy with the dry-run behavior and prompts.
-6. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
+1. Clone or point to the repository you want Housekeeping to maintain.
+2. Copy [`config/project-template.php`](config/project-template.php) to `config/project-a.php`.
+3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Adjust the documentation, context, and TODO file lists to match that destination repository.
+4. Export `HOUSEKEEPING_CONFIG=/absolute/path/to/housekeeping/config/project-a.php` so local commands and coding agents automatically use the target-project config.
+5. Run `php bin/agent-cron housekeeping:doctor`, `php bin/agent-cron housekeeping:list`, and `php bin/agent-cron housekeeping:run --dry-run`.
+6. Only enable external providers after you are happy with the dry-run behavior and prompts.
+7. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
+
+The template intentionally starts with the generic discovery, learning, docs, and TODO tasks. Add stack-specific audit or fixer tasks later only when they match the destination project.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
@@ -155,7 +161,7 @@ Inside `crontab -e`, paste **only** the raw cron entry. Do **not** paste `sudo s
 
 ## Configuration
 
-Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, preferred provider routing, provider CLI arguments, and runtime paths are configured in [`config/tasks.php`](config/tasks.php) or in additional project-specific config files selected with `--config=/absolute/path/to/tasks.php` or `HOUSEKEEPING_CONFIG=/absolute/path/to/tasks.php`.
+Tasks, provider budgets, cooldowns, command timeouts, provider resource-probe commands, task priority, learned metadata paths, preferred provider routing, provider CLI arguments, and runtime paths are configured in [`config/tasks.php`](config/tasks.php) or in additional project-specific config files selected with `--config=/absolute/path/to/tasks.php` or `HOUSEKEEPING_CONFIG=/absolute/path/to/tasks.php`. For a destination project, start by copying [`config/project-template.php`](config/project-template.php) so you only need to edit the target-repository paths instead of rewriting the dogfood config.
 
 The default configuration uses `local-null-provider`, so fresh installs can run safely without external AI tools or credentials. External providers are disabled by default and must be enabled intentionally.
 
