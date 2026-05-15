@@ -169,11 +169,11 @@ final class HousekeepingNextCommandTest extends TestCase
             self::assertSame(ExitCode::SUCCESS, $exitCode);
             $display = $tester->getDisplay();
             self::assertMatchesRegularExpression(
-                '/\|\s*project:discover\s*\|\s*-\s*\|\s*scheduled\s*\|\s*'
+                '/project:discover\s+-\s+scheduled\s+'
                 . preg_quote(gmdate('Y-m-d H:i:s', $lastFinishedAt) . ' UTC', '/')
-                . '\s*\|\s*'
+                . '\s+'
                 . preg_quote(gmdate('Y-m-d H:i:s', $nextDueAt) . ' UTC', '/')
-                . ' \(in [1-9][0-9]* s\)\s*\|/',
+                . ' \(in [1-9][0-9]* s\)/',
                 $display,
             );
         } finally {
@@ -220,7 +220,7 @@ final class HousekeepingNextCommandTest extends TestCase
 
             self::assertSame(ExitCode::SUCCESS, $exitCode);
             self::assertMatchesRegularExpression(
-                '/\|\s*project:discover\s*\|\s*-\s*\|\s*due now\s*\|\s*-\s*\|\s*now\s*\|/',
+                '/project:discover\s+-\s+due now\s+-\s+now/',
                 $tester->getDisplay(),
             );
         } finally {
