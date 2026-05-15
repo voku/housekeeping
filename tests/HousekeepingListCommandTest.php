@@ -83,4 +83,42 @@ final class HousekeepingListCommandTest extends TestCase
             (new Filesystem())->remove($dir);
         }
     }
+
+    public function testListJsonFallsBackWhenIntervalIsZeroAndPriorityIsNotAnInteger(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-list-invalid-values-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        (new Filesystem())->mkdir($dir);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'tasks' => [
+                'project:discover' => [
+                    'enabled' => true,
+                    'interval_seconds' => 0,
+                    'priority' => 'high',
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingListCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::SUCCESS, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $tasks = $decoded['tasks'] ?? null;
+            self::assertIsArray($tasks);
+            self::assertIsArray($tasks[0] ?? null);
+            self::assertSame('project:discover', $tasks[0]['name'] ?? null);
+            self::assertSame(3600, $tasks[0]['interval_seconds'] ?? null);
+            self::assertSame(0, $tasks[0]['priority'] ?? null);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
 }

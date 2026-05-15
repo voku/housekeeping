@@ -39,12 +39,16 @@ final class HousekeepingListCommand extends Command
             $tasks = $this->factory->tasks($config);
             if ($input->getOption('json') === true) {
                 $json = json_encode([
-                    'tasks' => array_map(fn ($task): array => [
-                        'name' => $task->name(),
-                        'provider' => $task instanceof ProviderBackedTask ? $task->providerName() : '-',
-                        'interval_seconds' => $this->positiveInt($this->taskConfig($config, $task->name())['interval_seconds'] ?? 3600, 3600),
-                        'priority' => $this->intValue($this->taskConfig($config, $task->name())['priority'] ?? 0),
-                    ], $tasks),
+                    'tasks' => array_map(function ($task) use ($config): array {
+                        $taskConfig = $this->taskConfig($config, $task->name());
+
+                        return [
+                            'name' => $task->name(),
+                            'provider' => $task instanceof ProviderBackedTask ? $task->providerName() : '-',
+                            'interval_seconds' => $this->positiveInt($taskConfig['interval_seconds'] ?? null, 3600),
+                            'priority' => $this->intValue($taskConfig['priority'] ?? null),
+                        ];
+                    }, $tasks),
                 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                 if ($json === false) {
                     $output->writeln('<error>Unable to encode task list output.</error>');
