@@ -115,6 +115,25 @@ final class TaskRunnerTest extends TestCase
         self::assertSame(RuntimeException::class, $this->stateAt($store->state, 'runs.0.results.0.context.exception'));
     }
 
+    public function testMultipleFailedTasksPreserveAllRecordedErrors(): void
+    {
+        $store = new InMemoryStateStore();
+
+        $exitCode = (new TaskRunner([
+            $this->failingTask('fail:first', 'first boom'),
+            $this->failingTask('fail:second', 'second boom'),
+        ]))->run($this->context(false, $store, [], ['max_tasks_per_run' => 2]));
+
+        self::assertSame(ExitCode::TASK_FAILED, $exitCode);
+        $errors = $this->stateAt($store->state, 'runs.0.errors');
+        self::assertIsArray($errors);
+        self::assertCount(2, $errors);
+        self::assertSame('fail:first', $this->stateAt($store->state, 'runs.0.errors.0.task'));
+        self::assertSame('first boom', $this->stateAt($store->state, 'runs.0.errors.0.message'));
+        self::assertSame('fail:second', $this->stateAt($store->state, 'runs.0.errors.1.task'));
+        self::assertSame('second boom', $this->stateAt($store->state, 'runs.0.errors.1.message'));
+    }
+
     public function testRuntimeBudgetIsEnforced(): void
     {
         $store = new InMemoryStateStore();
@@ -682,6 +701,32 @@ final class TaskRunnerTest extends TestCase
             public function run(RunContext $context): TaskResult
             {
                 return TaskResult::success('Plain task completed.');
+            }
+        };
+    }
+
+    private function failingTask(string $name, string $message): HousekeepingTask
+    {
+        return new readonly class ($name, $message) implements HousekeepingTask {
+            public function __construct(
+                private string $name,
+                private string $message,
+            ) {
+            }
+
+            public function name(): string
+            {
+                return $this->name;
+            }
+
+            public function isDue(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function run(RunContext $context): TaskResult
+            {
+                return TaskResult::failure($this->message);
             }
         };
     }

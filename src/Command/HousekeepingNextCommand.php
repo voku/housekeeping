@@ -96,7 +96,7 @@ final class HousekeepingNextCommand extends Command
                     $task['provider'],
                     $task['due'] === true ? 'due now' : 'scheduled',
                     $this->formatTimestamp($task['last_finished_at']),
-                    $this->formatNextRun($task['due'] === true, $task['seconds_until_due'], $task['next_due_at']),
+                    $this->formatNextRun($task['seconds_until_due'], $task['next_due_at']),
                 ];
             }
 
@@ -169,11 +169,8 @@ final class HousekeepingNextCommand extends Command
         return gmdate('Y-m-d H:i:s', $timestamp) . ' UTC';
     }
 
-    private function formatNextRun(bool $due, int $secondsUntilDue, ?int $nextDueAt): string
+    private function formatNextRun(int $secondsUntilDue, ?int $nextDueAt): string
     {
-        if ($due) {
-            return 'now';
-        }
         if ($nextDueAt === null) {
             return 'now';
         }
