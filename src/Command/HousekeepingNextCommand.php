@@ -19,6 +19,8 @@ use Throwable;
 #[AsCommand(name: 'housekeeping:next', description: 'Show due and upcoming housekeeping tasks.')]
 final class HousekeepingNextCommand extends Command
 {
+    use ReadsTaskConfig;
+
     public function __construct(
         private readonly string $configFile,
         private readonly ApplicationFactory $factory = new ApplicationFactory(),
@@ -121,27 +123,6 @@ final class HousekeepingNextCommand extends Command
     }
 
     /**
-     * @param array<string, mixed> $config
-     * @return array<string, mixed>
-     */
-    private function taskConfig(array $config, string $taskName): array
-    {
-        $tasks = $config['tasks'] ?? null;
-        if (!is_array($tasks)) {
-            return [];
-        }
-
-        $taskConfig = $tasks[$taskName] ?? null;
-        if (!is_array($taskConfig)) {
-            return [];
-        }
-        /** @var array<string, mixed> $typedTaskConfig */
-        $typedTaskConfig = $taskConfig;
-
-        return $typedTaskConfig;
-    }
-
-    /**
      * @param list<array{name: string, provider: string, priority: int, interval_seconds: int, last_finished_at: int|null, due: bool, seconds_until_due: int, next_due_at: int|null}> $tasks
      * @return array{name: string, provider: string, priority: int, interval_seconds: int, last_finished_at: int|null, due: bool, seconds_until_due: int, next_due_at: int|null}|null
      */
@@ -157,29 +138,26 @@ final class HousekeepingNextCommand extends Command
             return null;
         }
 
-        usort($tasks, static function (array $left, array $right): int {
-            if ($left['seconds_until_due'] === $right['seconds_until_due']) {
-                if ($left['priority'] === $right['priority']) {
-                    return strcmp($left['name'], $right['name']);
-                }
-
-                return $right['priority'] <=> $left['priority'];
-            }
-
-            return $left['seconds_until_due'] <=> $right['seconds_until_due'];
-        });
+        usort($tasks, $this->compareTasks(...));
 
         return $tasks[0];
     }
 
-    private function positiveInt(mixed $value, int $default): int
+    /**
+     * @param array{name: string, provider: string, priority: int, interval_seconds: int, last_finished_at: int|null, due: bool, seconds_until_due: int, next_due_at: int|null} $left
+     * @param array{name: string, provider: string, priority: int, interval_seconds: int, last_finished_at: int|null, due: bool, seconds_until_due: int, next_due_at: int|null} $right
+     */
+    private function compareTasks(array $left, array $right): int
     {
-        return is_int($value) && $value > 0 ? $value : $default;
-    }
+        if ($left['seconds_until_due'] === $right['seconds_until_due']) {
+            if ($left['priority'] === $right['priority']) {
+                return strcmp($left['name'], $right['name']);
+            }
 
-    private function intValue(mixed $value): int
-    {
-        return is_int($value) ? $value : 0;
+            return $right['priority'] <=> $left['priority'];
+        }
+
+        return $left['seconds_until_due'] <=> $right['seconds_until_due'];
     }
 
     private function formatTimestamp(?int $timestamp): string
