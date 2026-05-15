@@ -4,6 +4,8 @@
 declare(strict_types=1);
 
 use HousekeepingAgentCron\Command\HousekeepingListCommand;
+use HousekeepingAgentCron\Command\HousekeepingDoctorCommand;
+use HousekeepingAgentCron\Command\HousekeepingNextCommand;
 use HousekeepingAgentCron\Command\HousekeepingProvidersCommand;
 use HousekeepingAgentCron\Command\HousekeepingRunCommand;
 use HousekeepingAgentCron\Command\HousekeepingStateCommand;
@@ -23,6 +25,8 @@ $_SERVER['argc'] = count($resolvedConfig['argv']);
 $app = new Application('housekeeping agent cron', '1.0.0');
 $app->add(new HousekeepingRunCommand($configFile));
 $app->add(new HousekeepingListCommand($configFile));
+$app->add(new HousekeepingNextCommand($configFile));
+$app->add(new HousekeepingDoctorCommand($configFile));
 $app->add(new HousekeepingProvidersCommand($configFile));
 $app->add(new HousekeepingStateCommand($configFile));
 $app->run();

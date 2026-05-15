@@ -9,6 +9,14 @@ use RuntimeException;
 
 final readonly class JsonStateStore implements StateStore
 {
+    /** @var array{schema_version: int, tasks: array<string, mixed>, providers: array<string, mixed>, runs: list<mixed>} */
+    private const array DEFAULT_STATE = [
+        'schema_version' => 1,
+        'tasks' => [],
+        'providers' => [],
+        'runs' => [],
+    ];
+
     public function __construct(private string $path)
     {
         $dir = dirname($this->path);
@@ -30,11 +38,7 @@ final readonly class JsonStateStore implements StateStore
     public function load(): array
     {
         if (!is_file($this->path)) {
-            return [
-                'tasks' => [],
-                'providers' => [],
-                'runs' => [],
-            ];
+            return self::DEFAULT_STATE;
         }
 
         $json = file_get_contents($this->path);
@@ -49,12 +53,12 @@ final readonly class JsonStateStore implements StateStore
         /** @var array<string, mixed> $typedState */
         $typedState = $state;
 
-        return $typedState;
+        return $this->normalizeState($typedState);
     }
 
     public function save(array $state): void
     {
-        $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $json = json_encode($this->normalizeState($state), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($json === false) {
             throw new RuntimeException('Unable to encode state JSON.');
         }
@@ -66,5 +70,24 @@ final readonly class JsonStateStore implements StateStore
         if (!rename($tmp, $this->path)) {
             throw new RuntimeException('Unable to move state file into place: ' . $this->path);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $state
+     * @return array<string, mixed>
+     */
+    private function normalizeState(array $state): array
+    {
+        $normalizedState = [
+            ...self::DEFAULT_STATE,
+            ...$state,
+        ];
+
+        $normalizedState['schema_version'] = 1;
+        $normalizedState['tasks'] = is_array($normalizedState['tasks']) ? $normalizedState['tasks'] : [];
+        $normalizedState['providers'] = is_array($normalizedState['providers']) ? $normalizedState['providers'] : [];
+        $normalizedState['runs'] = is_array($normalizedState['runs']) ? $normalizedState['runs'] : [];
+
+        return $normalizedState;
     }
 }

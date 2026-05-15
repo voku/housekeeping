@@ -53,6 +53,7 @@ List configured tasks:
 
 ```bash
 php bin/agent-cron housekeeping:list
+php bin/agent-cron housekeeping:list --json
 php bin/agent-cron --config=/path/to/project-a.php housekeeping:list
 ```
 
@@ -61,6 +62,20 @@ Inspect provider budgets, cooldowns, and free-resource probes:
 ```bash
 php bin/agent-cron housekeeping:providers
 php bin/agent-cron housekeeping:providers --json
+```
+
+Inspect which task is due next:
+
+```bash
+php bin/agent-cron housekeeping:next
+php bin/agent-cron housekeeping:next --json
+```
+
+Validate config, writable paths, and enabled provider wiring:
+
+```bash
+php bin/agent-cron housekeeping:doctor
+php bin/agent-cron housekeeping:doctor --json
 ```
 
 Run due tasks without executing providers:

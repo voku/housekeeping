@@ -27,9 +27,12 @@ final readonly class TaskRunner
         $executed = 0;
         $exitCode = ExitCode::SUCCESS;
         $run = [
+            'run_id' => uniqid('run_', true),
             'started_at' => $context->startedAt,
             'dry_run' => $context->dryRun,
             'task_filter' => $context->taskFilter,
+            'status' => 'running',
+            'errors' => [],
             'results' => [],
         ];
 
@@ -133,6 +136,7 @@ final readonly class TaskRunner
 
         $run['finished_at'] = time();
         $run['exit_code'] = $exitCode;
+        $run['status'] = $exitCode === ExitCode::SUCCESS ? 'completed' : 'failed';
         $runs = $context->stateValue('runs');
         $runs = is_array($runs) ? $runs : [];
         $runs[] = $run;
@@ -243,6 +247,16 @@ final readonly class TaskRunner
             $run['results'] = [];
         }
         $run['results'][] = $record;
+        if (!$result->successful) {
+            if (!isset($run['errors']) || !is_array($run['errors'])) {
+                $run['errors'] = [];
+            }
+            $run['errors'][] = [
+                'task' => $taskName,
+                'message' => $result->message,
+                'code' => null,
+            ];
+        }
         $context->logger()->log($result->successful ? 'info' : 'error', 'task_result', $record);
 
         if (!$context->dryRun && !$result->skipped) {
