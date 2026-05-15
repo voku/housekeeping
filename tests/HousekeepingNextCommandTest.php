@@ -113,8 +113,10 @@ final class HousekeepingNextCommandTest extends TestCase
             self::assertIsArray($decoded);
             self::assertSame('project:discover', $decoded['recommended_task'] ?? null);
             self::assertSame('due_now', $decoded['recommended_reason'] ?? null);
-            self::assertIsArray($decoded['tasks'] ?? null);
-            self::assertTrue($decoded['tasks'][0]['due'] ?? false);
+            $tasks = $decoded['tasks'] ?? null;
+            self::assertIsArray($tasks);
+            self::assertIsArray($tasks[0] ?? null);
+            self::assertTrue($tasks[0]['due'] ?? false);
         } finally {
             (new Filesystem())->remove($dir);
         }

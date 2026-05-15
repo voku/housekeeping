@@ -87,8 +87,13 @@ final class HousekeepingListCommand extends Command
         }
 
         $taskConfig = $tasks[$taskName] ?? null;
+        if (!is_array($taskConfig)) {
+            return [];
+        }
+        /** @var array<string, mixed> $typedTaskConfig */
+        $typedTaskConfig = $taskConfig;
 
-        return is_array($taskConfig) ? $taskConfig : [];
+        return $typedTaskConfig;
     }
 
     private function positiveInt(mixed $value, int $default): int

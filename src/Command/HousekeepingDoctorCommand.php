@@ -108,7 +108,9 @@ final class HousekeepingDoctorCommand extends Command
                 continue;
             }
 
-            $command = array_values(array_filter($providerConfig['command'] ?? [], static fn (mixed $item): bool => is_string($item) && $item !== ''));
+            $configuredCommand = $providerConfig['command'] ?? [];
+            $configuredCommand = is_array($configuredCommand) ? $configuredCommand : [];
+            $command = array_values(array_filter($configuredCommand, static fn (mixed $item): bool => is_string($item) && $item !== ''));
             $checks[] = [
                 'name' => 'provider:' . $providerName,
                 'ok' => $command !== [],

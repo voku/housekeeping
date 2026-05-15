@@ -102,12 +102,12 @@ final class HousekeepingNextCommand extends Command
             $io->table(['Task', 'Provider', 'Status', 'Last finished', 'Next run'], $rows);
             if ($recommendedTask === null) {
                 $io->warning('No enabled housekeeping tasks are configured.');
-            } elseif (($recommendedTask['due'] ?? false) === true) {
+            } elseif ($recommendedTask['due'] === true) {
                 $io->success('Next due task: ' . $recommendedTask['name']);
             } else {
                 $io->writeln(sprintf(
                     'Next scheduled task: %s in %d s.',
-                    $recommendedTask['name'],
+                    (string) $recommendedTask['name'],
                     $recommendedTask['seconds_until_due'],
                 ));
             }
@@ -132,8 +132,13 @@ final class HousekeepingNextCommand extends Command
         }
 
         $taskConfig = $tasks[$taskName] ?? null;
+        if (!is_array($taskConfig)) {
+            return [];
+        }
+        /** @var array<string, mixed> $typedTaskConfig */
+        $typedTaskConfig = $taskConfig;
 
-        return is_array($taskConfig) ? $taskConfig : [];
+        return $typedTaskConfig;
     }
 
     /**
@@ -164,7 +169,7 @@ final class HousekeepingNextCommand extends Command
             return $left['seconds_until_due'] <=> $right['seconds_until_due'];
         });
 
-        return $tasks[0] ?? null;
+        return $tasks[0];
     }
 
     private function positiveInt(mixed $value, int $default): int

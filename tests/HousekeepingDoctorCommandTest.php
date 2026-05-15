@@ -78,9 +78,11 @@ final class HousekeepingDoctorCommandTest extends TestCase
             $decoded = json_decode($tester->getDisplay(), true);
             self::assertIsArray($decoded);
             self::assertFalse($decoded['ok'] ?? true);
-            self::assertIsArray($decoded['checks'] ?? null);
-            self::assertSame('provider:codex', $decoded['checks'][3]['name'] ?? null);
-            self::assertSame('Enabled provider command is missing.', $decoded['checks'][3]['message'] ?? null);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertIsArray($checks[3] ?? null);
+            self::assertSame('provider:codex', $checks[3]['name'] ?? null);
+            self::assertSame('Enabled provider command is missing.', $checks[3]['message'] ?? null);
         } finally {
             (new Filesystem())->remove($dir);
         }

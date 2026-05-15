@@ -39,9 +39,11 @@ final class HousekeepingListCommandTest extends TestCase
         self::assertSame(ExitCode::SUCCESS, $exitCode);
         $decoded = json_decode($tester->getDisplay(), true);
         self::assertIsArray($decoded);
-        self::assertIsArray($decoded['tasks'] ?? null);
-        self::assertSame('project:discover', $decoded['tasks'][0]['name'] ?? null);
-        self::assertArrayHasKey('interval_seconds', $decoded['tasks'][0] ?? []);
-        self::assertArrayHasKey('priority', $decoded['tasks'][0] ?? []);
+        $tasks = $decoded['tasks'] ?? null;
+        self::assertIsArray($tasks);
+        self::assertIsArray($tasks[0] ?? null);
+        self::assertSame('project:discover', $tasks[0]['name'] ?? null);
+        self::assertArrayHasKey('interval_seconds', $tasks[0]);
+        self::assertArrayHasKey('priority', $tasks[0]);
     }
 }
