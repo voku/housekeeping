@@ -105,5 +105,13 @@ return [
             'command' => ['claude'],
             'resource_command' => ['claude', '--version'],
         ],
+        'opencode' => [
+            'enabled' => false,
+            'daily_budget' => 10,
+            'cooldown_seconds' => 1800,
+            'timeout_seconds' => 600,
+            'command' => ['opencode'],
+            'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+        ],
     ],
 ];

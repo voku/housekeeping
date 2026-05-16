@@ -35,6 +35,7 @@ final class ApplicationFactoryTest extends TestCase
         self::assertArrayNotHasKey('gemini', $providers);
         self::assertArrayNotHasKey('copilot', $providers);
         self::assertArrayNotHasKey('claude', $providers);
+        self::assertArrayNotHasKey('opencode', $providers);
     }
 
     public function testFactoryIncludesEveryExplicitlyEnabledExternalProvider(): void
@@ -65,14 +66,20 @@ final class ApplicationFactoryTest extends TestCase
                     'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
                     'working_directory' => __DIR__,
                 ],
+                'opencode' => [
+                    'enabled' => true,
+                    'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
+                    'working_directory' => __DIR__,
+                ],
             ],
         ]);
 
-        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot', 'claude'], array_keys($providers));
+        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot', 'claude', 'opencode'], array_keys($providers));
         self::assertTrue($providers['codex']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['gemini']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['copilot']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['claude']->isAvailable($this->runContext($providers)));
+        self::assertTrue($providers['opencode']->isAvailable($this->runContext($providers)));
     }
 
     public function testFactoryDoesNotEnableExternalProviderWithoutEnabledFlag(): void
@@ -278,19 +285,27 @@ final class ApplicationFactoryTest extends TestCase
         $commands = $taskConfig['validation_commands'] ?? null;
 
         self::assertIsArray($commands);
-        $commandNames = [];
-        foreach (array_slice($commands, 1) as $command) {
-            self::assertIsArray($command);
+        self::assertCount(4, $commands);
 
-            $commandName = $command[2] ?? '';
-            self::assertIsScalar($commandName);
-            $commandNames[] = (string) $commandName;
-        }
+        $firstCommand = $commands[0] ?? [];
+        self::assertIsArray($firstCommand);
+        $phpstanPath = $firstCommand[1] ?? '';
+        self::assertIsString($phpstanPath);
+        self::assertStringEndsWith('phpstan', $phpstanPath);
 
-        self::assertSame(
-            ['housekeeping:list', 'housekeeping:state'],
-            $commandNames,
-        );
+        $secondCommand = $commands[1] ?? [];
+        self::assertIsArray($secondCommand);
+        $phpunitPath = $secondCommand[1] ?? '';
+        self::assertIsString($phpunitPath);
+        self::assertStringEndsWith('phpunit', $phpunitPath);
+
+        $thirdCommand = $commands[2] ?? [];
+        self::assertIsArray($thirdCommand);
+        self::assertSame('housekeeping:list', $thirdCommand[2] ?? null);
+
+        $fourthCommand = $commands[3] ?? [];
+        self::assertIsArray($fourthCommand);
+        self::assertSame('housekeeping:state', $fourthCommand[2] ?? null);
     }
 
     /**

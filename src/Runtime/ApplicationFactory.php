@@ -11,6 +11,7 @@ use HousekeepingAgentCron\Provider\ClaudeProvider;
 use HousekeepingAgentCron\Provider\CopilotProvider;
 use HousekeepingAgentCron\Provider\GeminiProvider;
 use HousekeepingAgentCron\Provider\NullProvider;
+use HousekeepingAgentCron\Provider\OpenCodeProvider;
 use HousekeepingAgentCron\State\JsonStateStore;
 use HousekeepingAgentCron\Task\CommitLearningTask;
 use HousekeepingAgentCron\Task\DependencyAuditTask;
@@ -262,6 +263,7 @@ final class ApplicationFactory
             'gemini' => new GeminiProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             'copilot' => new CopilotProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             'claude' => new ClaudeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
+            'opencode' => new OpenCodeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
             default => throw new RuntimeException('Unknown provider configuration: ' . $name),
         };
     }

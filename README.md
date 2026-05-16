@@ -14,7 +14,7 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 - Learn from recent commits before later provider-backed tasks run.
 - Discover repository docs and TODO files automatically so later runs can sync docs with code.
 - Execute safe default tasks with a local null provider.
-- Keep provider-backed Codex, Gemini, Copilot, and Claude Code integrations disabled unless explicitly configured.
+- Keep provider-backed Codex, Gemini, Copilot, Claude Code, and OpenCode integrations disabled unless explicitly configured.
 - Support per-project config files and configurable external coding-agent CLI flags.
 - Normalize provider responses into structured summaries and patch metadata for task state persistence.
 - Support task-level preferred-provider routing when a task should override the global provider readiness ranking.
@@ -174,7 +174,7 @@ For real use, treat `config/tasks.php` as the control plane for one target repos
 
 The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated. If you share one workspace across multiple cron jobs, give each job its own config file with separate state, log, and lock paths.
 
-The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`), but you can replace those commands with any compatible local tool that prints JSON or percentage-based text.
+The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`). OpenCode ships without a default quota probe because its free-tier model selection is configured directly via CLI arguments, but you can still add any compatible local `resource_command` later.
 
 If a task uses `'provider' => 'auto'`, Housekeeping picks the first ready provider from that global readiness ranking unless the task also declares `preferred_providers`, in which case the first ready preferred provider wins.
 
@@ -188,13 +188,30 @@ External providers can be tuned from config instead of code changes:
 ],
 'docs:refresh' => [
     'provider' => 'auto',
-    'preferred_providers' => ['claude', 'codex'],
+    'preferred_providers' => ['opencode', 'claude', 'codex'],
 ],
 ```
 
-The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `--prompt`, Copilot uses `--prompt`, and Claude Code uses `--print`. Keep `command` focused on the executable (or wrapper script), and put extra provider flags into `arguments`.
+The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `--prompt`, Copilot uses `--prompt`, Claude Code uses `--print`, and OpenCode uses `run`. Keep `command` focused on the executable (or wrapper script), and put extra provider flags into `arguments`.
 
-When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, Copilot, or Claude Code against a copied config will run them inside the maintained repository unless you override it.
+When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, Copilot, Claude Code, or OpenCode against a copied config will run them inside the maintained repository unless you override it.
+
+To try OpenCode quickly with its current free OpenCode Zen models, install it and enable the bundled provider entry:
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+```php
+'opencode' => [
+    'enabled' => true,
+    'command' => ['opencode'],
+    'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+],
+'docs:refresh' => [
+    'provider' => 'opencode',
+],
+```
 
 If the Housekeeping checkout lives inside the maintained repository instead of alongside it, configure `tasks['project:discover']['ignored_paths']` so repository discovery skips that nested workspace (for example `['housekeeping']`). Otherwise the learned documentation and TODO metadata will drift toward the Housekeeping tool's own files.
 
@@ -228,7 +245,7 @@ composer install-infection
 composer provider-smoke
 ```
 
-`composer provider-smoke` expects `codex`, `gemini`, `copilot`, and `claude` on `PATH`; CI and the Copilot setup steps install pinned npm CLI versions before running it.
+`composer provider-smoke` expects `codex`, `gemini`, `copilot`, `claude`, and `opencode` on `PATH`; CI and the Copilot setup steps install pinned CLI versions before running it.
 
 ## License
 
