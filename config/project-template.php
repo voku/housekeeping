@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 $housekeepingRoot = dirname(__DIR__);
-// CHANGEME: replace this with the absolute path to the repository that Housekeeping should maintain.
+// CHANGE ME: replace this with the absolute path to the repository that Housekeeping should maintain.
 $targetProjectRoot = '/absolute/path/to/YOUR-PROJECT-HERE';
 
 $documentationFiles = [

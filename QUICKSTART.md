@@ -25,7 +25,7 @@ At this point you should have two sibling directories:
 
 Edit `/absolute/path/to/housekeeping-tool/config/project-a.php`.
 The template already keeps Housekeeping runtime paths inside the tool checkout, so you only need to point the repository-facing values at the target project.
-Start with these top-level variables:
+Near the top of the copied template, update these variables in place:
 
 ```php
 <?php
