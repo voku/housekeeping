@@ -19,4 +19,5 @@ All notable changes to this project will be documented in this file.
 - Extended `housekeeping:doctor` so it now fails fast when enabled tasks reference missing `input_files` or `context_files`, and restored the dogfood `TODO.md` target so `todo:refine` has a real tracked document again.
 - Simplified README and Quick Start onboarding so local installs can export `HOUSEKEEPING_CONFIG`, run the doctor/list/dry-run flow quickly, and point Housekeeping at a destination project with fewer edits.
 - Tightened the dogfood `self-improve:housekeeping` validation pipeline so accepted changes must now pass PHPStan in addition to PHPUnit and the existing CLI smoke checks.
-- Updated the provider CLI smoke workflow to install OpenCode and export its bin directory so CI can validate the new built-in provider successfully.
+- Updated the provider CLI smoke workflow and Copilot setup steps to install the pinned OpenCode npm package so CI can validate the new built-in provider successfully.
+- Aligned the dogfood docs with the current PHP requirement, provider setup, and default task ordering.

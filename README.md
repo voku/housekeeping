@@ -23,7 +23,7 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 
 ## Requirements
 
-- PHP 8.2 or newer
+- PHP 8.3 or newer
 - Composer
 
 ## Installation
@@ -52,7 +52,7 @@ The template intentionally starts with the generic discovery, learning, docs, an
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
-Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `blindspots:analyze`, and `todo:refine` first. `docs:refresh` becomes the next provider-backed doc task only when you either raise the task budget to `5` or let a later run pick it up after the earlier tasks are no longer due.
+Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh` first. `todo:refine` becomes the next provider-backed document task only when you either raise the task budget to `5` or let a later run pick it up after the earlier tasks are no longer due.
 
 ## Usage
 
@@ -200,7 +200,7 @@ When `working_directory` is omitted for a provider, Housekeeping defaults that p
 To try OpenCode quickly with its current free OpenCode Zen models, install it and enable the bundled provider entry:
 
 ```bash
-curl -fsSL https://opencode.ai/install | bash
+npm install -g --no-audit --no-fund --no-progress opencode-ai@1.15.3
 ```
 
 ```php

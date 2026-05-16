@@ -81,7 +81,7 @@ When you enable a real provider, keep it in patch mode: cron-triggered Housekeep
 For OpenCode specifically, the bundled template already includes a ready-to-enable free-tier model selection:
 
 ```bash
-curl -fsSL https://opencode.ai/install | bash
+npm install -g --no-audit --no-fund --no-progress opencode-ai@1.15.3
 ```
 
 ```php
@@ -100,11 +100,9 @@ For a first real smoke test, prefer a single `commits:learn` run before scheduli
 php bin/agent-cron housekeeping:run --task=commits:learn
 ```
 
-If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it. On the IT-Portal dogfood config, the default top four are now `project:discover`, `commits:learn`, `blindspots:analyze`, and `todo:refine`; set the limit to `5` if you also want `docs:refresh` in that same cron wave.
+If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it. In this repository's dogfood config, the default top four are now `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh`; set the limit to `5` if you also want `todo:refine` in that same cron wave.
 
-The IT-Portal dogfood config can also run lower-frequency hygiene waves inspired by recent maintenance commits: `phpdocs:refresh`, `magic-numbers:reduce`, `todo-comments:cleanup`, and `small-refactors:polish`. These jobs select a small file set from git history or existing `TODO@` markers and only count as successful when at least one selected file actually changed.
-
-Its `todo:refine` job is also aligned with the repository board workflow: it reads board-helper output from the local PHP TODO scripts (`todo_board_cli.php summary`, `next-pull`, and filtered `render` output), uses that compiled context when editing `TODO.md`, and validates the result with `verify_todo_board.php` before the run is allowed to finish successfully. In WSL2/Linux cron this avoids `docker compose exec` for these board-only parser steps and has proven much more reliable. If validation fails, Housekeeping restores the pre-run `TODO.md` content instead of leaving an invalid board behind.
+This repository's dogfood config keeps `docs:refresh` pointed at `README.md` and `QUICKSTART.md`, while `todo:refine` owns `TODO.md`. Keep those file lists aligned whenever CI or provider setup changes, because `housekeeping:doctor` now fails fast when enabled tasks reference missing `input_files` or `context_files`.
 
 The dogfood config also includes `self-improve:housekeeping` as a slower meta-maintenance wave. After about 10 non-dry runs since its last review window, it analyzes recent run summaries plus `housekeeping.log`, lets one provider attempt at most one small improvement inside the Housekeeping package (`src`, `config`, `tests`, `README.md`, `QUICKSTART.md`), then runs `php -l` on changed PHP files plus its configured validation/smoke commands. If any check fails, Housekeeping restores the previous files automatically.
 
@@ -130,7 +128,7 @@ Keep provider-backed tasks focused on no-breaking-changes maintenance work.
 They should return patches or uncommitted edits for review, never self-commit from cron.
 The default blind-spot loop works best when its context files point at the docs or agent instructions you expect Housekeeping to keep aligned over time.
 
-In the current IT-Portal dogfood setup, repeated real runs are now useful instead of purely advisory: `todo:refine` only counts as successful when it actually changed a tracked TODO document, and a three-pass isolated trial showed the queue can keep refining `TODO.md` plus `README.md` over successive runs once learned state exists.
+In the current dogfood setup, repeated real runs are useful instead of purely advisory: `todo:refine` only counts as successful when it actually changed a tracked TODO document, while `docs:refresh` can keep refining `README.md` and `QUICKSTART.md` over successive runs once learned state exists.
 
 ## 5. Schedule it
 
