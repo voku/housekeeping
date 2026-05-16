@@ -2,7 +2,7 @@
 
 ## Ready
 
-- [ ] Keep the dogfood docs and changelog aligned whenever CI or provider setup changes.
+- [x] Keep the dogfood docs and changelog aligned whenever CI or provider setup changes.
 
 ## Backlog
 
