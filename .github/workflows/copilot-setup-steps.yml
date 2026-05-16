@@ -29,5 +29,7 @@ jobs:
             @openai/codex@0.130.0 \
             @anthropic-ai/claude-code@2.1.138 \
             @github/copilot@1.0.44
+          curl -fsSL https://opencode.ai/install | bash -s -- --no-modify-path
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
       - name: Smoke test provider CLIs
         run: bin/provider-cli-smoke
