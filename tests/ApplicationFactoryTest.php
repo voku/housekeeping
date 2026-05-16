@@ -293,21 +293,19 @@ final class ApplicationFactoryTest extends TestCase
         self::assertIsString($phpstanPath);
         self::assertStringEndsWith('phpstan', $phpstanPath);
 
-        $commandNames = [];
-        foreach (array_slice($commands, 1) as $command) {
-            self::assertIsArray($command);
+        $secondCommand = $commands[1] ?? [];
+        self::assertIsArray($secondCommand);
+        $phpunitPath = $secondCommand[1] ?? '';
+        self::assertIsString($phpunitPath);
+        self::assertStringEndsWith('phpunit', $phpunitPath);
 
-            $commandName = $command[2] ?? '';
-            self::assertIsScalar($commandName);
-            if ($commandName !== '') {
-                $commandNames[] = (string) $commandName;
-            }
-        }
+        $thirdCommand = $commands[2] ?? [];
+        self::assertIsArray($thirdCommand);
+        self::assertSame('housekeeping:list', $thirdCommand[2] ?? null);
 
-        self::assertSame(
-            ['housekeeping:list', 'housekeeping:state'],
-            $commandNames,
-        );
+        $fourthCommand = $commands[3] ?? [];
+        self::assertIsArray($fourthCommand);
+        self::assertSame('housekeeping:state', $fourthCommand[2] ?? null);
     }
 
     /**
