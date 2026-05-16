@@ -8,6 +8,7 @@ use HousekeepingAgentCron\Provider\CodexProvider;
 use HousekeepingAgentCron\Provider\ClaudeProvider;
 use HousekeepingAgentCron\Provider\CopilotProvider;
 use HousekeepingAgentCron\Provider\GeminiProvider;
+use HousekeepingAgentCron\Provider\OpenCodeProvider;
 use HousekeepingAgentCron\Runtime\ProcessExecutor;
 use HousekeepingAgentCron\Runtime\ProviderRequest;
 use PHPUnit\Framework\TestCase;
@@ -265,6 +266,52 @@ PROMPT);
         $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded);
         self::assertNotContains('--dangerously-skip-permissions', $decoded);
+    }
+
+    public function testOpenCodeProviderUsesRunPromptArgument(): void
+    {
+        $expectedPrompt = $this->expectedDocsPrompt();
+
+        $provider = new OpenCodeProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+            false,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        self::assertSame(json_encode(['run', $expectedPrompt], JSON_UNESCAPED_SLASHES), $result->context['stdout'] ?? null);
+    }
+
+    public function testOpenCodeProviderAllowsModelSelectionAndPermissionBypass(): void
+    {
+        $provider = new OpenCodeProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            ['--model', 'opencode/minimax-m2.5-free'],
+            __DIR__,
+            30,
+            true,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame([
+            'run',
+            '--model',
+            'opencode/minimax-m2.5-free',
+            '--dangerously-skip-permissions',
+            $this->expectedDocsPrompt(),
+        ], $decoded);
     }
 
     public function testCodexProviderDefaultsToExecModeWithoutDangerousBypass(): void

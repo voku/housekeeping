@@ -58,7 +58,7 @@ If you keep the Housekeeping checkout nested inside the maintained repository in
 ```
 
 Keep one Housekeeping workspace per maintained project if you want isolated state, logs, budgets, and prompts.
-Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`).
+Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`, `opencode run`).
 If you want Housekeeping to auto-pick a provider for one task but still bias that task toward a specific agent, set `'provider' => 'auto'` and add `preferred_providers` in priority order.
 The project template keeps `self-improve:housekeeping` and the PHP-specific audit/fix tasks out of the copied config on purpose, so the destination project gets the generic maintenance automation first instead of spending early cron budget on Housekeeping itself or on stack-specific commands you may not use.
 
@@ -77,6 +77,22 @@ php bin/agent-cron housekeeping:run --dry-run
 This lets you confirm the task list, provider status, and file discovery before any provider-backed work runs.
 For real runs that you want to tail in a terminal or cron log, add `--verbose` to emit timestamped per-task `[run]`, `[ok]`, `[skip]`, and `[fail]` progress lines.
 When you enable a real provider, keep it in patch mode: cron-triggered Housekeeping runs should never run `git commit` or create commits on their own.
+
+For OpenCode specifically, the bundled template already includes a ready-to-enable free-tier model selection:
+
+```bash
+curl -fsSL https://opencode.ai/install | bash
+```
+
+```php
+'opencode' => [
+    'enabled' => true,
+    'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+],
+'docs:refresh' => [
+    'provider' => 'opencode',
+],
+```
 
 For a first real smoke test, prefer a single `commits:learn` run before scheduling the full queue. It only reads recent git history and updates Housekeeping state:
 

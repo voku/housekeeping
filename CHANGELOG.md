@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Added `housekeeping:next` to show the next due housekeeping work in table and JSON formats.
 - Added persisted per-run `results` and `errors` history so completed runs expose richer execution details.
 - Added `config/project-template.php` so local installs can copy a target-project config instead of rewriting the dogfood config from scratch.
+- Added built-in OpenCode provider support, including default config entries, CLI smoke coverage, and docs for trying the bundled free-tier model selection.
 
 ### Changed
 
