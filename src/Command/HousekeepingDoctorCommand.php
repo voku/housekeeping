@@ -44,6 +44,9 @@ final class HousekeepingDoctorCommand extends Command
             $this->factory->stateStore($config)->load();
             $this->factory->logger($config);
 
+            foreach ($this->taskFileChecks($config) as $check) {
+                $checks[] = $check;
+            }
             foreach ($this->providerChecks($config) as $check) {
                 $checks[] = $check;
             }
@@ -124,6 +127,54 @@ final class HousekeepingDoctorCommand extends Command
     }
 
     /**
+     * @param array<string, mixed> $config
+     * @return list<array{name: string, ok: bool, message: string}>
+     */
+    private function taskFileChecks(array $config): array
+    {
+        $tasks = $config['tasks'] ?? null;
+        if (!is_array($tasks)) {
+            return [['name' => 'tasks', 'ok' => false, 'message' => 'Config key "tasks" must be an array.']];
+        }
+
+        $checks = [];
+        $repositoryRoot = $this->repositoryRoot($config);
+        foreach ($tasks as $taskName => $taskConfig) {
+            if (!is_string($taskName) || !is_array($taskConfig) || ($taskConfig['enabled'] ?? false) !== true) {
+                continue;
+            }
+
+            $configuredFiles = [];
+            foreach (['input_files', 'context_files'] as $key) {
+                foreach ($this->configuredTaskFiles($taskConfig[$key] ?? [], $repositoryRoot) as $path) {
+                    $configuredFiles[] = ['group' => $key, 'path' => $path];
+                }
+            }
+
+            if ($configuredFiles === []) {
+                continue;
+            }
+
+            $missingFiles = [];
+            foreach ($configuredFiles as $configuredFile) {
+                if (!is_file($configuredFile['path'])) {
+                    $missingFiles[] = $configuredFile['group'] . '=' . $configuredFile['path'];
+                }
+            }
+
+            $checks[] = [
+                'name' => 'task:' . $taskName . ':files',
+                'ok' => $missingFiles === [],
+                'message' => $missingFiles === []
+                    ? 'Configured input/context files exist.'
+                    : 'Missing configured input/context files: ' . implode(', ', $missingFiles),
+            ];
+        }
+
+        return $checks;
+    }
+
+    /**
      * @return array{name: string, ok: bool, message: string}
      */
     private function pathCheck(string $label, string $path): array
@@ -162,6 +213,30 @@ final class HousekeepingDoctorCommand extends Command
     }
 
     /**
+     * @param mixed $value
+     * @return list<string>
+     */
+    private function configuredTaskFiles(mixed $value, string $repositoryRoot): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $paths = [];
+        foreach ($value as $path) {
+            if (!is_string($path) || $path === '') {
+                continue;
+            }
+
+            $paths[] = str_starts_with($path, '/')
+                ? $path
+                : rtrim($repositoryRoot, '/') . '/' . ltrim($path, '/');
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    /**
      * @param array<string, mixed> $config
      */
     private function statePath(array $config): string
@@ -185,5 +260,18 @@ final class HousekeepingDoctorCommand extends Command
         }
 
         return dirname(__DIR__, 2) . '/var/logs';
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    private function repositoryRoot(array $config): string
+    {
+        $paths = $config['paths'] ?? null;
+        if (is_array($paths) && is_string($paths['repository_root'] ?? null) && $paths['repository_root'] !== '') {
+            return $paths['repository_root'];
+        }
+
+        return dirname(__DIR__, 2);
     }
 }

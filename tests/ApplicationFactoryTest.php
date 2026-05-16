@@ -308,6 +308,35 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame('housekeeping:state', $fourthCommand[2] ?? null);
     }
 
+    public function testDefaultDogfoodConfiguredTaskFilesExist(): void
+    {
+        /** @var array<string, mixed> $config */
+        $config = require __DIR__ . '/../config/tasks.php';
+        $tasks = $config['tasks'] ?? null;
+        self::assertIsArray($tasks);
+
+        foreach ($tasks as $taskName => $taskConfig) {
+            if (!is_string($taskName) || !is_array($taskConfig) || ($taskConfig['enabled'] ?? false) !== true) {
+                continue;
+            }
+
+            foreach (['input_files', 'context_files'] as $key) {
+                $files = $taskConfig[$key] ?? [];
+                if (!is_array($files)) {
+                    continue;
+                }
+
+                foreach ($files as $path) {
+                    if (!is_string($path) || $path === '') {
+                        continue;
+                    }
+
+                    self::assertFileExists($path, sprintf('Configured %s file for %s is missing: %s', $key, $taskName, $path));
+                }
+            }
+        }
+    }
+
     /**
      * @param array<string, \HousekeepingAgentCron\Contract\ProviderAdapter> $providers
      */

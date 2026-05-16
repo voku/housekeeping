@@ -139,6 +139,340 @@ final class HousekeepingDoctorCommandTest extends TestCase
         }
     }
 
+    public function testDoctorCommandFailsWhenConfiguredTaskFilesAreMissing(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-missing-task-files-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($repositoryRoot . '/README.md', '# Docs');
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'input_files' => ['README.md'],
+                    'context_files' => ['MISSING.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            self::assertFalse($decoded['ok'] ?? true);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains(
+                [
+                    'name' => 'task:docs:refresh:files',
+                    'ok' => false,
+                    'message' => 'Missing configured input/context files: context_files=' . $repositoryRoot . '/MISSING.md',
+                ],
+                $checks,
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandIgnoresTaskFileChecksWhenTaskIsNotExplicitlyEnabled(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-disabled-task-files-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($repositoryRoot . '/README.md', '# Docs');
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'input_files' => ['README.md'],
+                    'context_files' => ['MISSING.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::SUCCESS, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            self::assertTrue($decoded['ok'] ?? false);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertNotContains('task:docs:refresh:files', array_column($checks, 'name'));
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandContinuesPastDisabledTasksBeforeCheckingLaterEnabledOnes(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-later-enabled-task-files-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($repositoryRoot . '/README.md', '# Docs');
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'input_files' => ['README.md'],
+                ],
+                'todo:refine' => [
+                    'enabled' => true,
+                    'input_files' => ['MISSING-TODO.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains(
+                [
+                    'name' => 'task:todo:refine:files',
+                    'ok' => false,
+                    'message' => 'Missing configured input/context files: input_files=' . $repositoryRoot . '/MISSING-TODO.md',
+                ],
+                $checks,
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandFailsWhenConfiguredTaskInputFilesAreMissing(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-missing-task-input-files-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'input_files' => ['README.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains(
+                [
+                    'name' => 'task:docs:refresh:files',
+                    'ok' => false,
+                    'message' => 'Missing configured input/context files: input_files=' . $repositoryRoot . '/README.md',
+                ],
+                $checks,
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandJsonIncludesEveryTaskFileCheck(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-task-file-check-count-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'input_files' => ['README.md'],
+                ],
+                'todo:refine' => [
+                    'enabled' => true,
+                    'input_files' => ['TODO.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains('task:docs:refresh:files', array_column($checks, 'name'));
+            self::assertContains('task:todo:refine:files', array_column($checks, 'name'));
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandNormalizesRepositoryRootWithoutDuplicateSlashes(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-normalized-task-paths-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo/';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'input_files' => ['MISSING.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains(
+                [
+                    'name' => 'task:docs:refresh:files',
+                    'ok' => false,
+                    'message' => 'Missing configured input/context files: input_files=' . rtrim($repositoryRoot, '/') . '/MISSING.md',
+                ],
+                $checks,
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
+    public function testDoctorCommandUsesPackageRootWhenRepositoryRootIsNotConfigured(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-default-repository-root-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        (new Filesystem())->mkdir($dir);
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'input_files' => ['README.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::SUCCESS, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains(
+                [
+                    'name' => 'task:docs:refresh:files',
+                    'ok' => true,
+                    'message' => 'Configured input/context files exist.',
+                ],
+                $checks,
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
     public function testDoctorCommandJsonUsesPrettyPrintedUnescapedPathsAndIncludesAllEnabledProviders(): void
     {
         $dir = sys_get_temp_dir() . '/agent-cron-doctor-json-' . bin2hex(random_bytes(4));

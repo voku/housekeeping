@@ -48,6 +48,7 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 7. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
 
 The template intentionally starts with the generic discovery, learning, docs, and TODO tasks. Add stack-specific audit or fixer tasks later only when they match the destination project.
+`housekeeping:doctor` now also validates that enabled tasks do not point at missing configured `input_files` or `context_files`, so stale dogfood/project paths fail fast.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
