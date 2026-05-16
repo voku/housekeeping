@@ -65,6 +65,7 @@ return [
                 $packageRoot . '/src/Task/TodoRefinementTask.php',
             ],
             'validation_commands' => [
+                [PHP_BINARY, $packageRoot . '/vendor/bin/phpstan', 'analyse', '--level=max', 'src', 'tests', '--no-progress'],
                 [PHP_BINARY, $packageRoot . '/vendor/bin/phpunit'],
                 [PHP_BINARY, $packageRoot . '/bin/agent-cron', 'housekeeping:list', '--config=' . $packageRoot . '/config/tasks.php'],
                 [PHP_BINARY, $packageRoot . '/bin/agent-cron', 'housekeeping:state', '--config=' . $packageRoot . '/config/tasks.php'],

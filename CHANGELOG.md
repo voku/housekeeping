@@ -17,3 +17,4 @@ All notable changes to this project will be documented in this file.
 - Unified task config parsing for `housekeeping:list` and `housekeeping:next` so interval and priority fallbacks stay consistent.
 - Hardened command output and regression coverage for `housekeeping:doctor`, `housekeeping:list`, `housekeeping:next`, and `TaskRunner` so the diff-based Infection CI job stays green.
 - Simplified README and Quick Start onboarding so local installs can export `HOUSEKEEPING_CONFIG`, run the doctor/list/dry-run flow quickly, and point Housekeeping at a destination project with fewer edits.
+- Tightened the dogfood `self-improve:housekeeping` validation pipeline so accepted changes must now pass PHPStan in addition to PHPUnit and the existing CLI smoke checks.

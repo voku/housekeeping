@@ -285,13 +285,23 @@ final class ApplicationFactoryTest extends TestCase
         $commands = $taskConfig['validation_commands'] ?? null;
 
         self::assertIsArray($commands);
+        self::assertCount(4, $commands);
+
+        $firstCommand = $commands[0] ?? [];
+        self::assertIsArray($firstCommand);
+        $phpstanPath = $firstCommand[1] ?? '';
+        self::assertIsString($phpstanPath);
+        self::assertStringEndsWith('phpstan', $phpstanPath);
+
         $commandNames = [];
         foreach (array_slice($commands, 1) as $command) {
             self::assertIsArray($command);
 
             $commandName = $command[2] ?? '';
             self::assertIsScalar($commandName);
-            $commandNames[] = (string) $commandName;
+            if ($commandName !== '') {
+                $commandNames[] = (string) $commandName;
+            }
         }
 
         self::assertSame(
