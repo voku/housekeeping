@@ -18,3 +18,4 @@ All notable changes to this project will be documented in this file.
 - Hardened command output and regression coverage for `housekeeping:doctor`, `housekeeping:list`, `housekeeping:next`, and `TaskRunner` so the diff-based Infection CI job stays green.
 - Simplified README and Quick Start onboarding so local installs can export `HOUSEKEEPING_CONFIG`, run the doctor/list/dry-run flow quickly, and point Housekeeping at a destination project with fewer edits.
 - Tightened the dogfood `self-improve:housekeeping` validation pipeline so accepted changes must now pass PHPStan in addition to PHPUnit and the existing CLI smoke checks.
+- Updated the provider CLI smoke workflow to install OpenCode and export its bin directory so CI can validate the new built-in provider successfully.
