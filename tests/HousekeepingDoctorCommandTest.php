@@ -139,6 +139,57 @@ final class HousekeepingDoctorCommandTest extends TestCase
         }
     }
 
+    public function testDoctorCommandFailsWhenConfiguredTaskFilesAreMissing(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-doctor-missing-task-files-' . bin2hex(random_bytes(4));
+        $configFile = $dir . '/tasks.php';
+        $repositoryRoot = $dir . '/repo';
+        (new Filesystem())->mkdir([$dir, $repositoryRoot]);
+        file_put_contents($repositoryRoot . '/README.md', '# Docs');
+        file_put_contents($configFile, '<?php return ' . var_export([
+            'paths' => [
+                'state' => $dir . '/state/state.json',
+                'logs' => $dir . '/logs',
+                'lock' => $dir . '/lock',
+                'repository_root' => $repositoryRoot,
+            ],
+            'tasks' => [
+                'docs:refresh' => [
+                    'enabled' => true,
+                    'input_files' => ['README.md'],
+                    'context_files' => ['MISSING.md'],
+                ],
+            ],
+            'providers' => [
+                'local-null-provider' => [
+                    'enabled' => true,
+                ],
+            ],
+        ], true) . ';');
+
+        try {
+            $tester = new CommandTester(new HousekeepingDoctorCommand($configFile));
+            $exitCode = $tester->execute(['--json' => true]);
+
+            self::assertSame(ExitCode::INVALID_CONFIG, $exitCode);
+            $decoded = json_decode($tester->getDisplay(), true);
+            self::assertIsArray($decoded);
+            self::assertFalse($decoded['ok'] ?? true);
+            $checks = $decoded['checks'] ?? null;
+            self::assertIsArray($checks);
+            self::assertContains(
+                [
+                    'name' => 'task:docs:refresh:files',
+                    'ok' => false,
+                    'message' => 'Missing configured input/context files: context_files=' . $repositoryRoot . '/MISSING.md',
+                ],
+                $checks,
+            );
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
     public function testDoctorCommandJsonUsesPrettyPrintedUnescapedPathsAndIncludesAllEnabledProviders(): void
     {
         $dir = sys_get_temp_dir() . '/agent-cron-doctor-json-' . bin2hex(random_bytes(4));
