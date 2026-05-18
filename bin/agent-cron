@@ -22,7 +22,7 @@ $resolvedConfig = (new ConfigFileResolver())->resolve(
 $configFile = $resolvedConfig['config_file'];
 $_SERVER['argv'] = $resolvedConfig['argv'];
 $_SERVER['argc'] = count($resolvedConfig['argv']);
-$app = new Application('housekeeping agent cron', '1.0.0');
+$app = new Application('housekeeping agent cron', '0.1.0');
 $app->add(new HousekeepingRunCommand($configFile));
 $app->add(new HousekeepingListCommand($configFile));
 $app->add(new HousekeepingNextCommand($configFile));
