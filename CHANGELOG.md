@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.2.0 - 2026-05-26
+
+- Hardened config loading so commands now fail cleanly when `--config` or `HOUSEKEEPING_CONFIG` points at a missing or unreadable file instead of surfacing a raw PHP warning.
+- Added a generic `skills:sync` selected-files task for repositories with `SKILL.md` files, and split the advanced example-project config so skill-file validation no longer piggybacks on `docs:refresh`.
+- Added a dogfood `AGENTS.md`, five repo-specific `SKILL.md` subagents, and the config/discovery wiring so Housekeeping can keep its own agent guidance aligned with the code and TODO workflow.
+- Added a first-class provider `model` config key so Codex, Gemini, Copilot, Claude Code, and OpenCode can select models such as `gpt-5.4` or `gpt-5.5` without spelling `--model` inside raw arguments.
+- Tightened the repo's own agent guidance so forced provider smoke runs use isolated state plus longer wait windows, and so wait-window expiry is not misread as a real provider failure.
+- Hardened the advanced example-project selected-file commands with pipe-safe fallbacks, switched its `slop:scan` task to a Dockerized `slop-scan.phar --json` invocation that matches Housekeeping's JSON contract, and tightened TODO refinement guidance around board snapshot and Agent Task Brief integrity.
+- Tightened `deps:audit` so it now parses Composer's JSON output into structured abandoned/major-update summaries, and extended the example-project/TODO guardrails around Decision Log freshness plus autoloader regeneration for any unavoidable class-identity edits.
+
 ## 0.1.0 - 2026-05-18
 
 - Added `housekeeping:doctor` to validate config, writable paths, and enabled provider wiring from the CLI.

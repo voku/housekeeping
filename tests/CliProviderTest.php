@@ -134,6 +134,33 @@ PROMPT);
         ], $decoded['argv'] ?? null);
     }
 
+    public function testCodexProviderAllowsConfiguredModelSelection(): void
+    {
+        $provider = new CodexProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+            false,
+            'gpt-5.5',
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame([
+            'exec',
+            '--model',
+            'gpt-5.5',
+            $this->expectedDocsPrompt(),
+        ], $decoded);
+    }
+
     public function testGeminiProviderUsesPromptFlag(): void
     {
         $expectedPrompt = $this->expectedDocsPrompt();
@@ -226,6 +253,29 @@ PROMPT);
         $argv = $decoded['argv'] ?? null;
         self::assertIsArray($argv);
         self::assertNotContains('--yolo', $argv);
+        self::assertSame($this->expectedDocsPrompt(), $decoded['stdin'] ?? null);
+    }
+
+    public function testCopilotProviderAllowsConfiguredModelSelection(): void
+    {
+        $provider = new CopilotProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(["argv" => array_slice($argv, 1), "stdin" => stream_get_contents(STDIN)], JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+            false,
+            'gpt-5.4',
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(['--model', 'gpt-5.4', '--prompt', ''], $decoded['argv'] ?? null);
         self::assertSame($this->expectedDocsPrompt(), $decoded['stdin'] ?? null);
     }
 

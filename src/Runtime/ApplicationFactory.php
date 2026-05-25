@@ -36,6 +36,18 @@ final class ApplicationFactory
      */
     public function loadConfig(string $configFile): array
     {
+        if ($configFile === '') {
+            throw new RuntimeException('Config file path must not be empty.');
+        }
+
+        if (!is_file($configFile)) {
+            throw new RuntimeException('Config file not found: ' . $configFile);
+        }
+
+        if (!is_readable($configFile)) {
+            throw new RuntimeException('Config file is not readable: ' . $configFile);
+        }
+
         $config = require $configFile;
         if (!is_array($config)) {
             throw new RuntimeException('Config file must return an array.');
@@ -252,6 +264,7 @@ final class ApplicationFactory
     {
         $command = $this->stringList($providerConfig['command'] ?? []);
         $arguments = $this->stringList($providerConfig['arguments'] ?? []);
+        $model = is_string($providerConfig['model'] ?? null) ? $providerConfig['model'] : null;
         $workingDirectory = is_string($providerConfig['working_directory'] ?? null)
             ? $providerConfig['working_directory']
             : $this->path($config, 'repository_root', dirname(__DIR__, 2));
@@ -259,11 +272,11 @@ final class ApplicationFactory
         $appendYolo = ($providerConfig['append_yolo'] ?? false) === true;
 
         return match ($name) {
-            'codex' => new CodexProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
-            'gemini' => new GeminiProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
-            'copilot' => new CopilotProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
-            'claude' => new ClaudeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
-            'opencode' => new OpenCodeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo),
+            'codex' => new CodexProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
+            'gemini' => new GeminiProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
+            'copilot' => new CopilotProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
+            'claude' => new ClaudeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
+            'opencode' => new OpenCodeProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
             default => throw new RuntimeException('Unknown provider configuration: ' . $name),
         };
     }

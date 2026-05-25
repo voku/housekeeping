@@ -44,6 +44,12 @@ $documentationContextFiles = [
     $targetProjectRoot . '/AGENTS.md',
 ];
 
+$skillContextFiles = array_values(array_filter([
+    $targetProjectRoot . '/README.md',
+    $targetProjectRoot . '/composer.json',
+    $targetProjectRoot . '/AGENTS.md',
+], 'is_file'));
+
 $todoFiles = [
     $targetProjectRoot . '/TODO.md',
 ];
@@ -60,7 +66,7 @@ If you keep the Housekeeping checkout nested inside the maintained repository in
 Keep one Housekeeping workspace per maintained project if you want isolated state, logs, budgets, and prompts.
 Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`, `opencode run`).
 If you want Housekeeping to auto-pick a provider for one task but still bias that task toward a specific agent, set `'provider' => 'auto'` and add `preferred_providers` in priority order.
-The project template keeps `self-improve:housekeeping` and the PHP-specific audit/fix tasks out of the copied config on purpose, so the destination project gets the generic maintenance automation first instead of spending early cron budget on Housekeeping itself or on stack-specific commands you may not use.
+The project template keeps `self-improve:housekeeping` and the PHP-specific audit/fix tasks out of the copied config on purpose, so the destination project gets the generic maintenance automation first instead of spending early cron budget on Housekeeping itself or on stack-specific commands you may not use. That starter config now also includes a dedicated `skills:sync` pass which auto-discovers `SKILL.md` files and skips cleanly if the repository does not use skill files.
 
 ## 3. Start with dry runs
 
@@ -87,7 +93,7 @@ npm install -g --no-audit --no-fund --no-progress opencode-ai@1.15.3
 ```php
 'opencode' => [
     'enabled' => true,
-    'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+    'model' => 'opencode/minimax-m2.5-free',
 ],
 'docs:refresh' => [
     'provider' => 'opencode',
@@ -100,9 +106,9 @@ For a first real smoke test, prefer a single `commits:learn` run before scheduli
 php bin/agent-cron housekeeping:run --task=commits:learn
 ```
 
-If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it. In this repository's dogfood config, the default top four are now `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh`; set the limit to `5` if you also want `todo:refine` in that same cron wave.
+If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it. In this repository's dogfood config, the default top four are now `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh`; set the limit to `5` if you also want `skills:sync` in that same cron wave. `todo:refine` comes after that.
 
-This repository's dogfood config keeps `docs:refresh` pointed at `README.md` and `QUICKSTART.md`, while `todo:refine` owns `TODO.md`. Keep those file lists aligned whenever CI or provider setup changes, because `housekeeping:doctor` now fails fast when enabled tasks reference missing `input_files` or `context_files`.
+This repository's dogfood config keeps `docs:refresh` pointed at `README.md`, `QUICKSTART.md`, and `AGENTS.md`, while `skills:sync` owns the `skills/*/SKILL.md` files and `todo:refine` owns `TODO.md`. Keep those file lists aligned whenever CI or provider setup changes, because `housekeeping:doctor` now fails fast when enabled tasks reference missing `input_files` or `context_files`.
 
 The dogfood config also includes `self-improve:housekeeping` as a slower meta-maintenance wave. After about 10 non-dry runs since its last review window, it analyzes recent run summaries plus `housekeeping.log`, lets one provider attempt at most one small improvement inside the Housekeeping package (`src`, `config`, `tests`, `README.md`, `QUICKSTART.md`), then runs `php -l` on changed PHP files plus its configured validation/smoke commands. If any check fails, Housekeeping restores the previous files automatically.
 
@@ -121,14 +127,14 @@ Housekeeping works best when it behaves like a careful junior developer:
 - review dependency updates
 - suggest or add missing tests
 - fix PHPDocs without changing runtime behavior
-- refresh `AGENTS.md` or skills files using recent git learnings
+- refresh `AGENTS.md` or `SKILL.md` files using recent git learnings
 - sync docs with the current code, database, and infrastructure reality
 
 Keep provider-backed tasks focused on no-breaking-changes maintenance work.
 They should return patches or uncommitted edits for review, never self-commit from cron.
 The default blind-spot loop works best when its context files point at the docs or agent instructions you expect Housekeeping to keep aligned over time.
 
-In the current dogfood setup, repeated real runs are useful instead of purely advisory: `todo:refine` only counts as successful when it actually changed a tracked TODO document, while `docs:refresh` can keep refining `README.md` and `QUICKSTART.md` over successive runs once learned state exists.
+In the current dogfood setup, repeated real runs are useful instead of purely advisory: `todo:refine` only counts as successful when it actually changed a tracked TODO document, while `docs:refresh` and `skills:sync` can keep refining `README.md`, `QUICKSTART.md`, `AGENTS.md`, and the repo skill files over successive runs once learned state exists.
 
 ## 5. Schedule it
 

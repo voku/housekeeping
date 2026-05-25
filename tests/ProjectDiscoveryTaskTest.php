@@ -20,7 +20,10 @@ final class ProjectDiscoveryTaskTest extends TestCase
         (new Filesystem())->mkdir([$repositoryRoot . '/docs', $repositoryRoot . '/src', $repositoryRoot . '/vendor']);
         file_put_contents($repositoryRoot . '/README.md', '# Docs');
         file_put_contents($repositoryRoot . '/QUICKSTART.md', '# Quick start');
+        file_put_contents($repositoryRoot . '/AGENTS.md', '# Agents');
         file_put_contents($repositoryRoot . '/docs/guide.md', '# Guide');
+        (new Filesystem())->mkdir($repositoryRoot . '/skills/run-archaeologist');
+        file_put_contents($repositoryRoot . '/skills/run-archaeologist/SKILL.md', '# Skill');
         file_put_contents($repositoryRoot . '/TODO.txt', 'Ship it');
         file_put_contents($repositoryRoot . '/composer.json', '{}');
         file_put_contents($repositoryRoot . '/crontab.example', '* * * * * php bin/agent-cron housekeeping:run');
@@ -50,11 +53,12 @@ final class ProjectDiscoveryTaskTest extends TestCase
             $keyFiles = $this->stateAt($store->state, 'metadata.project.key_files');
 
             self::assertTrue($result->successful);
-            self::assertSame(['QUICKSTART.md', 'README.md', 'docs/guide.md'], $this->stateAt($store->state, 'metadata.project.documentation_files'));
+            self::assertSame(['AGENTS.md', 'QUICKSTART.md', 'README.md', 'docs/guide.md', 'skills/run-archaeologist/SKILL.md'], $this->stateAt($store->state, 'metadata.project.documentation_files'));
             self::assertSame(['TODO.txt'], $this->stateAt($store->state, 'metadata.project.todo_files'));
             self::assertIsArray($keyFiles);
             self::assertContains('README.md', $keyFiles);
             self::assertContains('QUICKSTART.md', $keyFiles);
+            self::assertContains('AGENTS.md', $keyFiles);
             self::assertContains('composer.json', $keyFiles);
             self::assertContains('crontab.example', $keyFiles);
         } finally {

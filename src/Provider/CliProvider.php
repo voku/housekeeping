@@ -23,6 +23,7 @@ abstract readonly class CliProvider implements ProviderAdapter
         private string $workingDirectory,
         private int $timeoutSeconds,
         private bool $appendYolo,
+        private ?string $model = null,
     ) {
     }
 
@@ -92,6 +93,11 @@ abstract readonly class CliProvider implements ProviderAdapter
         return $this->arguments;
     }
 
+    final protected function configuredModel(): ?string
+    {
+        return $this->model;
+    }
+
     /**
      * @param list<string> $command
      * @return list<string>
@@ -115,6 +121,32 @@ abstract readonly class CliProvider implements ProviderAdapter
             $command[] = $option;
             $command[] = $value;
         }
+
+        return $command;
+    }
+
+    /**
+     * @param list<string> $command
+     * @param list<string> $existingTokens
+     * @return list<string>
+     */
+    final protected function appendArgumentPairIfConfigured(
+        array $command,
+        string $option,
+        ?string $value,
+        array $existingTokens = [],
+    ): array {
+        if ($value === null || $value === '') {
+            return $command;
+        }
+
+        $tokens = $existingTokens !== [] ? $existingTokens : [$option];
+        if ($this->hasToken($command, ...$tokens)) {
+            return $command;
+        }
+
+        $command[] = $option;
+        $command[] = $value;
 
         return $command;
     }

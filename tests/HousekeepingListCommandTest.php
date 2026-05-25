@@ -24,6 +24,7 @@ final class HousekeepingListCommandTest extends TestCase
         self::assertStringContainsString('project:discover', $tester->getDisplay());
         self::assertStringContainsString('commits:learn', $tester->getDisplay());
         self::assertStringContainsString('docs:refresh', $tester->getDisplay());
+        self::assertStringContainsString('skills:sync', $tester->getDisplay());
         self::assertStringContainsString('todo:refine', $tester->getDisplay());
         self::assertStringContainsString('self-improve:housekeeping', $tester->getDisplay());
         self::assertStringContainsString('deps:audit', $tester->getDisplay());

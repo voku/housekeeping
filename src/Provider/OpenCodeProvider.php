@@ -12,9 +12,9 @@ final readonly class OpenCodeProvider extends CliProvider
      * @param list<string> $command
      * @param list<string> $arguments
      */
-    public function __construct(ProcessExecutor $processExecutor, array $command, array $arguments, string $workingDirectory, int $timeoutSeconds, bool $appendYolo = false)
+    public function __construct(ProcessExecutor $processExecutor, array $command, array $arguments, string $workingDirectory, int $timeoutSeconds, bool $appendYolo = false, ?string $model = null)
     {
-        parent::__construct($processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo);
+        parent::__construct($processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model);
     }
 
     public function name(): string
@@ -30,6 +30,7 @@ final readonly class OpenCodeProvider extends CliProvider
         }
 
         $command = [...$command, ...$this->configuredArguments()];
+        $command = $this->appendArgumentPairIfConfigured($command, '--model', $this->configuredModel(), ['--model', '-m']);
         $command = $this->appendTokenIfYoloConfigured($command, '--dangerously-skip-permissions');
         $command[] = $prompt;
 

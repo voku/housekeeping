@@ -12,7 +12,7 @@ It uses Symfony Console for commands, Symfony Lock to prevent overlapping runs, 
 - Prevent concurrent runs with a filesystem lock.
 - Track task state, learned repository metadata, provider usage, cooldowns, and runtime budgets in the Housekeeping workspace.
 - Learn from recent commits before later provider-backed tasks run.
-- Discover repository docs and TODO files automatically so later runs can sync docs with code.
+- Discover repository docs, agent guidance, and TODO files automatically so later runs can sync docs with code.
 - Execute safe default tasks with a local null provider.
 - Keep provider-backed Codex, Gemini, Copilot, Claude Code, and OpenCode integrations disabled unless explicitly configured.
 - Support per-project config files and configurable external coding-agent CLI flags.
@@ -41,18 +41,18 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 
 1. Clone or point to the repository you want Housekeeping to maintain.
 2. Copy [`config/project-template.php`](config/project-template.php) to `config/project-a.php`.
-3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Adjust the documentation, context, and TODO file lists to match that destination repository.
+3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Adjust the documentation, skill, context, and TODO file lists to match that destination repository.
 4. Export `HOUSEKEEPING_CONFIG=/absolute/path/to/housekeeping/config/project-a.php` so local commands and coding agents automatically use the target-project config.
 5. Run `php bin/agent-cron housekeeping:doctor`, `php bin/agent-cron housekeeping:list`, and `php bin/agent-cron housekeeping:run --dry-run`.
 6. Only enable external providers after you are happy with the dry-run behavior and prompts.
 7. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
 
-The template intentionally starts with the generic discovery, learning, docs, and TODO tasks. Add stack-specific audit or fixer tasks later only when they match the destination project.
+The template intentionally starts with the generic discovery, learning, docs, skill-sync, and TODO tasks. Add stack-specific audit or fixer tasks later only when they match the destination project.
 `housekeeping:doctor` now also validates that enabled tasks do not point at missing configured `input_files` or `context_files`, so stale dogfood/project paths fail fast.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
 
-Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh` first. `todo:refine` becomes the next provider-backed document task only when you either raise the task budget to `5` or let a later run pick it up after the earlier tasks are no longer due.
+Dogfooding note: with the default `max_tasks_per_run` of `4`, a fresh run on this repository currently executes `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh` first. `skills:sync` becomes the next provider-backed guidance task when you raise the task budget to `5`; `todo:refine` follows after that once the earlier tasks are no longer due.
 
 ## Usage
 
@@ -171,11 +171,11 @@ For real use, treat `config/tasks.php` as the control plane for one target repos
 - Keep the Housekeeping checkout, logs, state, and lock files in the standalone Housekeeping directory.
 - Point `paths.repository_root` at the repository you want to maintain.
 - Point task `working_directory` values at that same target repository when the task shells out to `git`, Composer, PHPStan, or other project-local tools.
-- Set `input_files` and `context_files` to the actual docs and key files you want the doc-sync task to compare. In this repository's default dogfood config, `docs:refresh` tracks `README.md` and `QUICKSTART.md`, while `todo:refine` owns `TODO.md`.
+- Set `input_files` and `context_files` to the actual docs and key files you want the doc-sync task to compare. In this repository's default dogfood config, `docs:refresh` tracks `README.md`, `QUICKSTART.md`, and `AGENTS.md`, `skills:sync` owns the `skills/*/SKILL.md` files, and `todo:refine` owns `TODO.md`.
 
 The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated. If you share one workspace across multiple cron jobs, give each job its own config file with separate state, log, and lock paths.
 
-The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`). OpenCode ships without a default quota probe because its free-tier model selection is configured directly via CLI arguments, but you can still add any compatible local `resource_command` later.
+The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`). OpenCode ships without a default quota probe because its free-tier model selection is configured directly in the provider config, but you can still add any compatible local `resource_command` later.
 
 If a task uses `'provider' => 'auto'`, Housekeeping picks the first ready provider from that global readiness ranking unless the task also declares `preferred_providers`, in which case the first ready preferred provider wins.
 
@@ -185,6 +185,7 @@ External providers can be tuned from config instead of code changes:
 'codex' => [
     'enabled' => true,
     'command' => ['codex'],
+    'model' => 'gpt-5.5',
     'arguments' => ['--sandbox', 'workspace-write'],
 ],
 'docs:refresh' => [
@@ -193,7 +194,7 @@ External providers can be tuned from config instead of code changes:
 ],
 ```
 
-The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `--prompt`, Copilot uses `--prompt`, Claude Code uses `--print`, and OpenCode uses `run`. Keep `command` focused on the executable (or wrapper script), and put extra provider flags into `arguments`.
+The built-in adapters add the provider-specific non-interactive CLI shape for you: Codex uses `exec`, Gemini uses `--prompt`, Copilot uses `--prompt`, Claude Code uses `--print`, and OpenCode uses `run`. When you set a provider `model`, Housekeeping maps that to the provider's `--model` flag for you, so switching Codex between values like `gpt-5.4` and `gpt-5.5` no longer requires hand-editing raw arguments. Keep `command` focused on the executable (or wrapper script), use `model` for the primary model selection, and reserve `arguments` for extra provider flags.
 
 When `working_directory` is omitted for a provider, Housekeeping defaults that provider to `paths.repository_root` so coding agents execute inside the maintained project by default. The default config now relies on that behavior, so enabling Codex, Gemini, Copilot, Claude Code, or OpenCode against a copied config will run them inside the maintained repository unless you override it.
 
@@ -207,7 +208,7 @@ npm install -g --no-audit --no-fund --no-progress opencode-ai@1.15.3
 'opencode' => [
     'enabled' => true,
     'command' => ['opencode'],
-    'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+    'model' => 'opencode/minimax-m2.5-free',
 ],
 'docs:refresh' => [
     'provider' => 'opencode',
@@ -216,13 +217,13 @@ npm install -g --no-audit --no-fund --no-progress opencode-ai@1.15.3
 
 If the Housekeeping checkout lives inside the maintained repository instead of alongside it, configure `tasks['project:discover']['ignored_paths']` so repository discovery skips that nested workspace (for example `['housekeeping']`). Otherwise the learned documentation and TODO metadata will drift toward the Housekeeping tool's own files.
 
-Default runs now start with `project:discover` and `commits:learn`, then use `blindspots:analyze` to review the previous run before later provider-backed tasks continue with documentation, TODO, audit, and analysis work.
+Default runs now start with `project:discover` and `commits:learn`, then use `blindspots:analyze` to review the previous run before later provider-backed tasks continue with documentation, skill, TODO, audit, and analysis work.
 
 `blindspots:analyze` is the self-optimization loop: it reviews the last completed housekeeping run, stores blind-spot guidance under `metadata.blind_spots`, and later provider-backed tasks receive that metadata alongside the normal repository-learning metadata.
 
 Provider-backed tasks now also persist normalized provider output under task metadata so follow-up automation can reuse structured summaries, patch targets, and related provider metadata without reparsing raw stdout/stderr every time.
 
-When you enable a real provider, keep the task scope conservative: review dependency updates, suggest or add missing tests, fix PHPDocs without runtime changes, refresh `AGENTS.md` or skills files from recent repository learnings, and sync docs with the current code, database, or infrastructure reality. Treat Housekeeping as a no-breaking-changes assistant, not an autonomous refactoring bot. Cron-driven agents should stop at patch suggestions or uncommitted file edits and must never run `git commit` or create commits by themselves.
+When you enable a real provider, keep the task scope conservative: review dependency updates, suggest or add missing tests, fix PHPDocs without runtime changes, refresh `AGENTS.md` or `SKILL.md` files from recent repository learnings, and sync docs with the current code, database, or infrastructure reality. The starter template now includes a dedicated `skills:sync` task that auto-discovers `SKILL.md` files and skips cleanly when a repository has none. Treat Housekeeping as a no-breaking-changes assistant, not an autonomous refactoring bot. Cron-driven agents should stop at patch suggestions or uncommitted file edits and must never run `git commit` or create commits by themselves.
 
 ## Development
 

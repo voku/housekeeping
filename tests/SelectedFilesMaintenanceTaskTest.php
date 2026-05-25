@@ -60,6 +60,50 @@ final class SelectedFilesMaintenanceTaskTest extends TestCase
         }
     }
 
+    public function testSelectedFilesMaintenanceSkipsWhenSelectionCommandReturnsNoMatches(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-selected-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($dir);
+
+        $provider = new class implements ProviderAdapter {
+            public function name(): string
+            {
+                return 'local-null-provider';
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                return ProviderResult::success('Accepted.');
+            }
+        };
+
+        try {
+            $task = new SelectedFilesMaintenanceTask(
+                'todo-comments:cleanup',
+                3600,
+                'local-null-provider',
+                new ProcessExecutor(),
+                $dir,
+                ['php', '-r', 'exit(1);'],
+                'Prompt',
+                'Done.',
+            );
+
+            $result = $task->run($this->context($dir, $provider));
+
+            self::assertTrue($result->successful);
+            self::assertTrue($result->skipped);
+            self::assertSame('No candidate files were selected.', $result->message);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
     public function testSelectedFilesMaintenanceIsSkippedWhenProviderDoesNotChangeFiles(): void
     {
         $dir = sys_get_temp_dir() . '/agent-cron-selected-' . bin2hex(random_bytes(4));

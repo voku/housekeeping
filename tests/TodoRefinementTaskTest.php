@@ -281,6 +281,49 @@ final class TodoRefinementTaskTest extends TestCase
         }
     }
 
+    public function testTodoRefinementPromptMentionsBoardSnapshotAndBriefInventory(): void
+    {
+        $dir = sys_get_temp_dir() . '/agent-cron-todo-' . bin2hex(random_bytes(4));
+        (new Filesystem())->mkdir($dir);
+        $todoFile = $dir . '/TODO.md';
+        file_put_contents($todoFile, "Initial TODO\n");
+
+        $provider = new class implements ProviderAdapter {
+            public ?string $prompt = null;
+
+            public function name(): string
+            {
+                return 'local-null-provider';
+            }
+
+            public function isAvailable(RunContext $context): bool
+            {
+                return true;
+            }
+
+            public function execute(ProviderRequest $request): ProviderResult
+            {
+                $this->prompt = $request->prompt;
+
+                return ProviderResult::success('Accepted.');
+            }
+        };
+
+        try {
+            $result = (new TodoRefinementTask(3600, 'local-null-provider', [$todoFile]))->run($this->context($dir, $provider));
+
+            self::assertTrue($result->successful);
+            self::assertTrue($result->skipped);
+            self::assertIsString($provider->prompt);
+            self::assertStringContainsString('Board Snapshot', $provider->prompt);
+            self::assertStringContainsString('Agent Task Brief inventory', $provider->prompt);
+            self::assertStringContainsString('DONE cards do not keep an active brief', $provider->prompt);
+            self::assertStringContainsString('Decision Log', $provider->prompt);
+        } finally {
+            (new Filesystem())->remove($dir);
+        }
+    }
+
     public function testTodoRefinementFailsWhenBoardValidationFails(): void
     {
         $dir = sys_get_temp_dir() . '/agent-cron-todo-' . bin2hex(random_bytes(4));

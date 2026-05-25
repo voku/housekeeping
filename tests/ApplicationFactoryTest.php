@@ -7,6 +7,7 @@ namespace HousekeepingAgentCron\Tests;
 use HousekeepingAgentCron\Contract\ProviderBackedTask;
 use HousekeepingAgentCron\Runtime\ApplicationFactory;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class ApplicationFactoryTest extends TestCase
 {
@@ -18,7 +19,7 @@ final class ApplicationFactoryTest extends TestCase
         $tasks = $factory->tasks($config);
 
         self::assertSame(
-            ['project:discover', 'commits:learn', 'blindspots:analyze', 'docs:refresh', 'todo:refine', 'self-improve:housekeeping', 'deps:audit', 'phpstan:suggest-fixes', 'slop:scan'],
+            ['project:discover', 'commits:learn', 'blindspots:analyze', 'docs:refresh', 'skills:sync', 'todo:refine', 'self-improve:housekeeping', 'deps:audit', 'phpstan:suggest-fixes', 'slop:scan'],
             array_map(static fn ($task) => $task->name(), $tasks),
         );
     }
@@ -36,6 +37,17 @@ final class ApplicationFactoryTest extends TestCase
         self::assertArrayNotHasKey('copilot', $providers);
         self::assertArrayNotHasKey('claude', $providers);
         self::assertArrayNotHasKey('opencode', $providers);
+    }
+
+    public function testFactoryLoadConfigFailsCleanlyWhenFileIsMissing(): void
+    {
+        $factory = new ApplicationFactory();
+        $missingConfigFile = sys_get_temp_dir() . '/agent-cron-missing-config-' . bin2hex(random_bytes(4)) . '.php';
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Config file not found: ' . $missingConfigFile);
+
+        $factory->loadConfig($missingConfigFile);
     }
 
     public function testFactoryIncludesEveryExplicitlyEnabledExternalProvider(): void
@@ -152,6 +164,32 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame($result->context['prompt'] ?? null, $decoded[3] ?? null);
     }
 
+    public function testFactoryMapsFirstClassProviderModelConfigToCliFlag(): void
+    {
+        $factory = new ApplicationFactory();
+        $providers = $factory->providers([
+            'providers' => [
+                'codex' => [
+                    'enabled' => true,
+                    'command' => ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+                    'arguments' => ['--sandbox', 'workspace-write'],
+                    'model' => 'gpt-5.5',
+                    'working_directory' => __DIR__,
+                    'append_yolo' => false,
+                ],
+            ],
+        ]);
+
+        $result = $providers['codex']->execute(new \HousekeepingAgentCron\Runtime\ProviderRequest('docs:refresh', 'Prompt', []));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame(['exec', '--sandbox', 'workspace-write', '--model', 'gpt-5.5'], array_slice($decoded, 0, 5));
+    }
+
     public function testFactoryUsesPackageRootForProviderWorkingDirectoryWhenRepositoryRootIsNotConfigured(): void
     {
         $factory = new ApplicationFactory();
@@ -241,6 +279,78 @@ final class ApplicationFactoryTest extends TestCase
         self::assertSame('phpdocs:refresh', $tasks[0]->name());
         self::assertSame('auto', $tasks[0]->providerName());
         self::assertSame(['gemini', 'copilot'], $tasks[0]->preferredProviderNames());
+    }
+
+    public function testProjectTemplateIncludesGenericSkillSyncTask(): void
+    {
+        /** @var array<string, mixed> $config */
+        $config = require __DIR__ . '/../config/project-template.php';
+        $tasks = $config['tasks'] ?? null;
+        self::assertIsArray($tasks);
+
+        $taskConfig = $tasks['skills:sync'] ?? null;
+        self::assertIsArray($taskConfig);
+        self::assertTrue($taskConfig['enabled'] ?? false);
+        self::assertSame(86400, $taskConfig['interval_seconds'] ?? null);
+        self::assertSame(95, $taskConfig['priority'] ?? null);
+        self::assertSame('local-null-provider', $taskConfig['provider'] ?? null);
+        self::assertIsArray($taskConfig['selection_command'] ?? null);
+        self::assertSame('Skill file sync completed.', $taskConfig['success_message'] ?? null);
+    }
+
+    public function testExampleProjectConfigUsesHardenedSelectorsAndProjectSlopScanCommand(): void
+    {
+        /** @var array<string, mixed> $config */
+        $config = require __DIR__ . '/../config/example-project.php';
+        $tasks = $config['tasks'] ?? null;
+        self::assertIsArray($tasks);
+
+        $phpdocTask = $tasks['phpdocs:refresh'] ?? null;
+        self::assertIsArray($phpdocTask);
+        $phpdocSelectionCommand = $phpdocTask['selection_command'] ?? null;
+        self::assertIsArray($phpdocSelectionCommand);
+        self::assertSame(
+            'git log --since="120 days ago" --name-only --pretty=format: -- "*.php" | awk \'NF && !seen[$0]++\' | head -n 12 || true',
+            $phpdocSelectionCommand[2] ?? null,
+        );
+
+        $magicNumbersTask = $tasks['magic-numbers:reduce'] ?? null;
+        self::assertIsArray($magicNumbersTask);
+        $magicNumbersSelectionCommand = $magicNumbersTask['selection_command'] ?? null;
+        self::assertIsArray($magicNumbersSelectionCommand);
+        self::assertSame(
+            'git grep -l -iE "TODO.*(magic number|constant|hardcoded)" -- "*.php" | head -n 10 || true',
+            $magicNumbersSelectionCommand[2] ?? null,
+        );
+
+        $todoCommentsTask = $tasks['todo-comments:cleanup'] ?? null;
+        self::assertIsArray($todoCommentsTask);
+        $todoCommentsSelectionCommand = $todoCommentsTask['selection_command'] ?? null;
+        self::assertIsArray($todoCommentsSelectionCommand);
+        self::assertSame(
+            'git grep -l -E "TODO\\s*@" -- "*.php" | head -n 10 || true',
+            $todoCommentsSelectionCommand[2] ?? null,
+        );
+
+        $smallRefactorsTask = $tasks['small-refactors:polish'] ?? null;
+        self::assertIsArray($smallRefactorsTask);
+        $smallRefactorsSelectionCommand = $smallRefactorsTask['selection_command'] ?? null;
+        self::assertIsArray($smallRefactorsSelectionCommand);
+        self::assertSame(
+            'git log --since="90 days ago" --name-only --pretty=format: -- "*.php" | awk \'NF && !seen[$0]++\' | head -n 10 || true',
+            $smallRefactorsSelectionCommand[2] ?? null,
+        );
+        self::assertIsString($smallRefactorsTask['prompt'] ?? null);
+        self::assertStringContainsString('regenerate the autoloader map', $smallRefactorsTask['prompt']);
+
+        $slopScanTask = $tasks['slop:scan'] ?? null;
+        self::assertIsArray($slopScanTask);
+        $slopScanCommand = $slopScanTask['command'] ?? null;
+        self::assertIsArray($slopScanCommand);
+        self::assertSame(
+            'cd /var/www/html && php -d memory_limit=2G vendor/slop-scan.phar scan /var/www/html --config-file infra/githooks/slop-scan.config.json --cache-file /tmp/example-project-slop-scan-cache.json --baseline-file /var/www/html/infra/githooks/slop-scan-baseline.toon --min-score 2 --json',
+            $slopScanCommand[7] ?? null,
+        );
     }
 
     public function testFactoryBuildsSelfImprovementTask(): void

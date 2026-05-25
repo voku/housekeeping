@@ -15,6 +15,12 @@ $documentationContextFiles = [
     $targetProjectRoot . '/AGENTS.md',
 ];
 
+$skillContextFiles = array_values(array_filter([
+    $targetProjectRoot . '/README.md',
+    $targetProjectRoot . '/composer.json',
+    $targetProjectRoot . '/AGENTS.md',
+], 'is_file'));
+
 $todoFiles = [
     $targetProjectRoot . '/TODO.md',
 ];
@@ -58,6 +64,23 @@ return [
             'input_files' => $documentationFiles,
             'context_files' => $documentationContextFiles,
         ],
+        'skills:sync' => [
+            'enabled' => true,
+            'interval_seconds' => 86400,
+            'priority' => 95,
+            'provider' => 'local-null-provider',
+            'working_directory' => $targetProjectRoot,
+            'selection_command' => [
+                'bash',
+                '-lc',
+                'find . -path "./.git" -prune -o -path "./vendor" -prune -o -path "./var" -prune -o -type f -name "SKILL.md" -print | sed "s#^\\./##" | head -n 12',
+            ],
+            'context_files' => $skillContextFiles,
+            'prompt' => 'Review the selected SKILL.md files and keep them aligned with the current repository code, commands, AGENTS routing, and TODO workflow when present. Fix stale task names, file paths, validation commands, and workflow guidance inside the skill files only. Do not change application code as part of this task.',
+            'success_message' => 'Skill file sync completed.',
+            'timeout_seconds' => 120,
+            'max_files' => 12,
+        ],
         'todo:refine' => [
             'enabled' => true,
             'interval_seconds' => 21600,
@@ -79,6 +102,7 @@ return [
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
             'command' => ['codex'],
+            'model' => 'gpt-5.4',
             'resource_command' => ['codex-cli-usage', 'json'],
         ],
         'gemini' => [
@@ -111,7 +135,7 @@ return [
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
             'command' => ['opencode'],
-            'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+            'model' => 'opencode/minimax-m2.5-free',
         ],
     ],
 ];

@@ -42,6 +42,10 @@ final readonly class SelectedFilesMaintenanceTask extends AbstractProviderTask
     {
         $selectionResult = $this->processExecutor->execute($this->selectionCommand, $this->workingDirectory, $this->timeoutSeconds);
         if (!$selectionResult->successful()) {
+            if ($this->selectionReturnedNoMatches($selectionResult)) {
+                return TaskResult::skipped('No candidate files were selected.');
+            }
+
             return $this->selectionFailure($selectionResult);
         }
 
@@ -96,6 +100,15 @@ final readonly class SelectedFilesMaintenanceTask extends AbstractProviderTask
         }
 
         return array_slice(array_values(array_unique($paths)), 0, $this->maxFiles);
+    }
+
+    private function selectionReturnedNoMatches(ProcessResult $processResult): bool
+    {
+        return !$processResult->timedOut
+            && $processResult->exceptionMessage === null
+            && $processResult->exitCode === 1
+            && trim($processResult->stdout) === ''
+            && trim($processResult->stderr) === '';
     }
 
     /**

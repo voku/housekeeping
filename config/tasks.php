@@ -4,6 +4,42 @@ declare(strict_types=1);
 
 $packageRoot = dirname(__DIR__);
 
+$blindSpotContextFiles = [
+    $packageRoot . '/README.md',
+    $packageRoot . '/QUICKSTART.md',
+    $packageRoot . '/AGENTS.md',
+    $packageRoot . '/TODO.md',
+    $packageRoot . '/config/tasks.php',
+    $packageRoot . '/crontab.example',
+];
+
+$documentationFiles = [
+    $packageRoot . '/README.md',
+    $packageRoot . '/QUICKSTART.md',
+    $packageRoot . '/AGENTS.md',
+];
+
+$documentationContextFiles = [
+    $packageRoot . '/composer.json',
+    $packageRoot . '/config/tasks.php',
+    $packageRoot . '/bin/agent-cron',
+    $packageRoot . '/crontab.example',
+    $packageRoot . '/TODO.md',
+];
+
+$skillContextFiles = [
+    $packageRoot . '/README.md',
+    $packageRoot . '/QUICKSTART.md',
+    $packageRoot . '/AGENTS.md',
+    $packageRoot . '/TODO.md',
+    $packageRoot . '/composer.json',
+    $packageRoot . '/config/tasks.php',
+];
+
+$todoFiles = [
+    $packageRoot . '/TODO.md',
+];
+
 return [
     'max_run_seconds' => 900,
     'max_tasks_per_run' => 4,
@@ -32,22 +68,39 @@ return [
             'interval_seconds' => 3600,
             'priority' => 150,
             'provider' => 'local-null-provider',
-            'context_files' => [$packageRoot . '/README.md', $packageRoot . '/QUICKSTART.md', $packageRoot . '/config/tasks.php', $packageRoot . '/crontab.example'],
+            'context_files' => $blindSpotContextFiles,
         ],
         'docs:refresh' => [
             'enabled' => true,
             'interval_seconds' => 86400,
             'priority' => 100,
             'provider' => 'local-null-provider',
-            'input_files' => [$packageRoot . '/README.md', $packageRoot . '/QUICKSTART.md'],
-            'context_files' => [$packageRoot . '/composer.json', $packageRoot . '/config/tasks.php', $packageRoot . '/bin/agent-cron', $packageRoot . '/crontab.example'],
+            'input_files' => $documentationFiles,
+            'context_files' => $documentationContextFiles,
+        ],
+        'skills:sync' => [
+            'enabled' => true,
+            'interval_seconds' => 86400,
+            'priority' => 95,
+            'provider' => 'local-null-provider',
+            'working_directory' => $packageRoot,
+            'selection_command' => [
+                'bash',
+                '-lc',
+                'find . -path "./.git" -prune -o -path "./vendor" -prune -o -path "./var" -prune -o -type f -name "SKILL.md" -print | sed "s#^\\./##" | head -n 12',
+            ],
+            'context_files' => $skillContextFiles,
+            'prompt' => 'Review the selected SKILL.md files and keep them aligned with the current repository code, commands, AGENTS routing, and TODO workflow when present. Fix stale task names, file paths, validation commands, and workflow guidance inside the skill files only. Do not change application code as part of this task.',
+            'success_message' => 'Skill file sync completed.',
+            'timeout_seconds' => 120,
+            'max_files' => 12,
         ],
         'todo:refine' => [
             'enabled' => true,
             'interval_seconds' => 21600,
             'priority' => 90,
             'provider' => 'local-null-provider',
-            'input_files' => [$packageRoot . '/TODO.md'],
+            'input_files' => $todoFiles,
         ],
         'self-improve:housekeeping' => [
             'enabled' => true,
@@ -122,6 +175,7 @@ return [
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
             'command' => ['codex'],
+            'model' => 'gpt-5.4',
             'resource_command' => ['codex-cli-usage', 'json'],
         ],
         'gemini' => [
@@ -154,7 +208,7 @@ return [
             'cooldown_seconds' => 1800,
             'timeout_seconds' => 600,
             'command' => ['opencode'],
-            'arguments' => ['--model', 'opencode/minimax-m2.5-free'],
+            'model' => 'opencode/minimax-m2.5-free',
         ],
     ],
 ];

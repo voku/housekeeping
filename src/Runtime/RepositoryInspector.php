@@ -129,7 +129,11 @@ final readonly class RepositoryInspector
         $extension = strtolower($fileInfo->getExtension());
         $directory = str_contains($relativePath, '/') ? dirname($relativePath) : '.';
 
-        if (in_array($basename, ['readme', 'readme.md', 'changelog', 'changelog.md', 'contributing.md', 'license', 'license.md'], true)) {
+        if (in_array($basename, ['readme', 'readme.md', 'changelog', 'changelog.md', 'contributing.md', 'license', 'license.md', 'agents.md'], true)) {
+            return true;
+        }
+
+        if ($basename === 'skill.md') {
             return true;
         }
 
@@ -162,7 +166,7 @@ final readonly class RepositoryInspector
     private function keyFiles(string $repositoryRoot): array
     {
         $paths = [];
-        foreach (['composer.json', 'config/tasks.php', 'bin/agent-cron', 'README.md', 'QUICKSTART.md', 'TODO.md', 'crontab.example'] as $relativePath) {
+        foreach (['composer.json', 'config/tasks.php', 'bin/agent-cron', 'README.md', 'QUICKSTART.md', 'AGENTS.md', 'TODO.md', 'crontab.example'] as $relativePath) {
             if (is_file($repositoryRoot . '/' . $relativePath)) {
                 $paths[] = $relativePath;
             }
