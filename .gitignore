@@ -2,6 +2,7 @@
 /config/*.php
 !/config/tasks.php
 !/config/project-template.php
+!/config/example-project.php
 /var/logs/*.log
 /var/logs/*/
 /var/state/*.json
