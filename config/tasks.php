@@ -7,6 +7,9 @@ $packageRoot = dirname(__DIR__);
 $blindSpotContextFiles = [
     $packageRoot . '/README.md',
     $packageRoot . '/QUICKSTART.md',
+    $packageRoot . '/docs/README.md',
+    $packageRoot . '/docs/scheduling.md',
+    $packageRoot . '/docs/configuration.md',
     $packageRoot . '/AGENTS.md',
     $packageRoot . '/TODO.md',
     $packageRoot . '/config/tasks.php',
@@ -16,6 +19,9 @@ $blindSpotContextFiles = [
 $documentationFiles = [
     $packageRoot . '/README.md',
     $packageRoot . '/QUICKSTART.md',
+    $packageRoot . '/docs/README.md',
+    $packageRoot . '/docs/scheduling.md',
+    $packageRoot . '/docs/configuration.md',
     $packageRoot . '/AGENTS.md',
 ];
 
@@ -30,6 +36,9 @@ $documentationContextFiles = [
 $skillContextFiles = [
     $packageRoot . '/README.md',
     $packageRoot . '/QUICKSTART.md',
+    $packageRoot . '/docs/README.md',
+    $packageRoot . '/docs/scheduling.md',
+    $packageRoot . '/docs/configuration.md',
     $packageRoot . '/AGENTS.md',
     $packageRoot . '/TODO.md',
     $packageRoot . '/composer.json',
@@ -108,10 +117,13 @@ return [
             'priority' => 80,
             'provider' => 'local-null-provider',
             'working_directory' => $packageRoot,
-            'scope_paths' => ['src', 'config', 'tests', 'README.md', 'QUICKSTART.md'],
+            'scope_paths' => ['src', 'config', 'tests', 'docs', 'README.md', 'QUICKSTART.md'],
             'context_files' => [
                 $packageRoot . '/README.md',
                 $packageRoot . '/QUICKSTART.md',
+                $packageRoot . '/docs/README.md',
+                $packageRoot . '/docs/scheduling.md',
+                $packageRoot . '/docs/configuration.md',
                 $packageRoot . '/config/tasks.php',
                 $packageRoot . '/src/Runtime/TaskRunner.php',
                 $packageRoot . '/src/Task/BlindSpotAnalysisTask.php',
