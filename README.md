@@ -205,7 +205,7 @@ php bin/agent-cron housekeeping:run --dry-run
 
 That gives you a quick sanity check before cron sees the new schedule.
 
-The starter tasks map well to common maintenance jobs:
+The built-in task types map well to common maintenance jobs:
 
 - `docs:refresh`: keep tracked docs current
 - `skills:sync`: keep repo skill files current
