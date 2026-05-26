@@ -41,13 +41,13 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 
 1. Clone or point to the repository you want Housekeeping to maintain.
 2. Copy [`config/project-template.php`](config/project-template.php) to `config/project-a.php`.
-3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Then keep, disable, or remove the starter tasks in the top-level `'tasks'` array depending on what you want the cron job to maintain.
+3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Then keep, disable (`'enabled' => false`), or remove the starter tasks in the top-level `'tasks'` array depending on what you want the cron job to maintain.
 4. Export `HOUSEKEEPING_CONFIG=/absolute/path/to/housekeeping/config/project-a.php` so local commands and coding agents automatically use the target-project config.
 5. Run `php bin/agent-cron housekeeping:doctor`, `php bin/agent-cron housekeeping:list`, and `php bin/agent-cron housekeeping:run --dry-run`.
 6. Only enable external providers after you are happy with the dry-run behavior and prompts.
 7. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
 
-The template intentionally starts with the generic discovery, learning, docs, skill-sync, and TODO tasks. Cron itself stays simple: it always runs `housekeeping:run`, while the real "what should happen?" list lives in `config/project-a.php`.
+The template intentionally starts with `project:discover`, `commits:learn`, `blindspots:analyze`, `docs:refresh`, `skills:sync`, and `todo:refine`. Cron itself stays simple: it always runs `housekeeping:run`, while the real "what should happen?" list lives in `config/project-a.php`.
 
 In practice that means:
 
@@ -57,7 +57,7 @@ In practice that means:
 - disable or delete tasks you do not want yet
 - add more task blocks later when you are ready for things like dependency audits or weekend test-improvement passes
 
-This is where the agentic part helps: Housekeeping can keep doing small maintenance waves while you sleep or over a weekend. It should still behave like a careful junior developer, and you review the resulting patch or file edits before anything gets committed or merged.
+Once that task list matches your goals, the agentic part starts to help. Housekeeping can keep doing small maintenance waves while you sleep or over a weekend. It should still behave like a careful junior developer, and you review the resulting patch or file edits before anything gets committed or merged.
 `housekeeping:doctor` now also validates that enabled tasks do not point at missing configured `input_files` or `context_files`, so stale dogfood/project paths fail fast.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
