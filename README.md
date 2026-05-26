@@ -57,7 +57,7 @@ In practice that means:
 - disable or delete tasks you do not want yet
 - add more task blocks later when you are ready for things like dependency audits or weekend test-improvement passes
 
-Once that task list matches your goals, the agentic part starts to help. Housekeeping can keep doing small maintenance waves while you sleep or over a weekend. It should still behave like a careful junior developer, and you review the resulting patch or file edits before anything gets committed or merged.
+Once that task list matches your goals, the agentic part starts to help. Housekeeping can keep doing small maintenance waves while you sleep or over a weekend. It should still behave like a careful junior developer. You review the resulting patch or file edits before anything gets committed or merged.
 `housekeeping:doctor` now also validates that enabled tasks do not point at missing configured `input_files` or `context_files`, so stale dogfood/project paths fail fast.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
@@ -213,7 +213,7 @@ The built-in task types map well to common maintenance jobs:
 - `deps:audit`: review dependency updates
 - `phpstan:suggest-fixes`: suggest static-analysis fixes
 
-So a realistic setup is: let `todo:refine` clean up the backlog overnight, and let docs/skills tasks keep guidance fresh during the week. Later, add a test-focused or audit-style task for longer unattended windows like a weekend. Housekeeping is meant to do repetitive low-risk maintenance work autonomously, but a human should still review every resulting change.
+So a realistic setup is: let `todo:refine` clean up the backlog overnight. Let docs/skills tasks keep guidance fresh during the week. Later, add a test-focused or audit-style task for longer unattended windows like a weekend. Housekeeping is meant to do repetitive low-risk maintenance work autonomously. A human should still review every resulting change.
 
 The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`). OpenCode ships without a default quota probe because its free-tier model selection is configured directly in the provider config, but you can still add any compatible local `resource_command` later.
 
