@@ -41,13 +41,23 @@ Housekeeping is meant to be installed from its own checkout, not added to anothe
 
 1. Clone or point to the repository you want Housekeeping to maintain.
 2. Copy [`config/project-template.php`](config/project-template.php) to `config/project-a.php`.
-3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Adjust the documentation, skill, context, and TODO file lists to match that destination repository.
+3. Edit only the target-project paths in `config/project-a.php`, starting with `$targetProjectRoot`. Then keep, disable, or remove the starter tasks in the `'tasks'` section depending on what you want the cron job to maintain.
 4. Export `HOUSEKEEPING_CONFIG=/absolute/path/to/housekeeping/config/project-a.php` so local commands and coding agents automatically use the target-project config.
 5. Run `php bin/agent-cron housekeeping:doctor`, `php bin/agent-cron housekeeping:list`, and `php bin/agent-cron housekeeping:run --dry-run`.
 6. Only enable external providers after you are happy with the dry-run behavior and prompts.
 7. Keep cron-driven agents in patch mode: they should never run `git commit` or create commits on their own.
 
-The template intentionally starts with the generic discovery, learning, docs, skill-sync, and TODO tasks. Add stack-specific audit or fixer tasks later only when they match the destination project.
+The template intentionally starts with the generic discovery, learning, docs, skill-sync, and TODO tasks. Cron itself stays simple: it always runs `housekeeping:run`, while the real "what should happen?" list lives in `config/project-a.php`.
+
+In practice that means:
+
+- keep `docs:refresh` when you want README / AGENTS / quick-start style docs to stay aligned
+- keep `todo:refine` when you want TODO cleanup and backlog refinement to happen overnight
+- keep `skills:sync` when the repository uses `SKILL.md` files that should stay current
+- disable or delete tasks you do not want yet
+- add more task blocks later when you are ready for things like dependency audits or weekend test-improvement passes
+
+This is where the agentic part helps: Housekeeping can keep doing small maintenance waves while you sleep or over a weekend, but it should still behave like a careful junior developer. You review the resulting patch or file edits before anything gets committed or merged.
 `housekeeping:doctor` now also validates that enabled tasks do not point at missing configured `input_files` or `context_files`, so stale dogfood/project paths fail fast.
 
 See [QUICKSTART.md](QUICKSTART.md) for a full example.
@@ -174,6 +184,36 @@ For real use, treat `config/tasks.php` as the control plane for one target repos
 - Set `input_files` and `context_files` to the actual docs and key files you want the doc-sync task to compare. In this repository's default dogfood config, `docs:refresh` tracks `README.md`, `QUICKSTART.md`, and `AGENTS.md`, `skills:sync` owns the `skills/*/SKILL.md` files, and `todo:refine` owns `TODO.md`.
 
 The safest operating model is one Housekeeping workspace per maintained project so state, logs, prompts, and provider budgets stay isolated. If you share one workspace across multiple cron jobs, give each job its own config file with separate state, log, and lock paths.
+
+### Adding or removing scheduled tasks
+
+The cron entry usually does **not** change when you want different maintenance behavior. You normally edit `config/project-a.php` instead:
+
+- **add a task**: copy an existing task block or enable one of the optional ones from [`config/tasks.php`](config/tasks.php)
+- **pause a task**: set `'enabled' => false`
+- **remove a task**: delete that task block from the `'tasks'` array
+- **change how often it runs**: adjust `interval_seconds`
+- **change what it can touch**: update `input_files`, `context_files`, `working_directory`, or other task-specific options
+
+After every task change, run:
+
+```bash
+php bin/agent-cron housekeeping:doctor
+php bin/agent-cron housekeeping:list
+php bin/agent-cron housekeeping:run --dry-run
+```
+
+That gives you a quick sanity check before cron sees the new schedule.
+
+The starter tasks map well to common maintenance jobs:
+
+- `docs:refresh`: keep tracked docs current
+- `skills:sync`: keep repo skill files current
+- `todo:refine`: refine TODOs and backlog notes
+- `deps:audit`: review dependency updates
+- `phpstan:suggest-fixes`: suggest static-analysis fixes
+
+So a realistic setup is: let `todo:refine` clean up the backlog overnight, let docs/skills tasks keep guidance fresh during the week, and later add a test-focused or audit-style task for longer unattended windows like a weekend. Housekeeping is meant to do the repetitive low-risk maintenance work autonomously, but a human should still review every resulting change.
 
 The `housekeeping:providers` command compares external coding agents deterministically by sorting ready providers by parsed free capacity, next reset, remaining internal budget, and provider name. The default config wires optional local probe commands for Codex (`codex-cli-usage json`), Gemini (`gemini-cli-usage json`), Copilot (`copilot-api check-usage --json`), and Claude Code (`claude --version`). OpenCode ships without a default quota probe because its free-tier model selection is configured directly in the provider config, but you can still add any compatible local `resource_command` later.
 
