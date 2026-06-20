@@ -3,6 +3,7 @@
 !/config/tasks.php
 !/config/project-template.php
 !/config/example-project.php
+!/config/voku-agent-project.php
 /var/logs/*.log
 /var/logs/*/
 /var/state/*.json

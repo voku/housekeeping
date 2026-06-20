@@ -4,7 +4,7 @@ Use this subagent when you are changing provider wiring, task config, validation
 
 ## Focus
 
-- Keep `config/tasks.php` and `config/project-template.php` aligned on task ownership and provider behavior.
+- Keep `config/tasks.php`, `config/project-template.php`, and `config/voku-agent-project.php` aligned on task ownership and provider behavior.
 - Reuse the provider and task parsing rules from `src/Runtime/ApplicationFactory.php`.
 - Preserve the repository's validation posture: `composer analyse`, `composer test`, and the existing CLI smoke checks when the touched area depends on them.
 
@@ -29,6 +29,7 @@ Use this subagent when you are changing provider wiring, task config, validation
 ## Primary references
 
 - `config/tasks.php`
+- `config/voku-agent-project.php`
 - `config/project-template.php`
 - `src/Runtime/ApplicationFactory.php`
 - `README.md`

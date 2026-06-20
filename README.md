@@ -91,7 +91,7 @@ composer install-infection
 composer provider-smoke
 ```
 
-`composer provider-smoke` expects `codex`, `gemini`, `copilot`, `claude`, and `opencode` on `PATH`; CI and the Copilot setup steps install pinned CLI versions before running it.
+`composer provider-smoke` expects `codex`, `gemini`, `copilot`, `claude`, and `opencode` on `PATH`; CI and the Copilot setup steps install pinned CLI versions before running it. When `agy` is installed, the same script also checks its version and non-interactive permission-bypass flags.
 
 ## 📄 License
 

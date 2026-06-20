@@ -36,4 +36,7 @@ check_cli codex 'codex-cli|codex' 'Usage: codex exec|Run Codex non-interactively
 check_cli gemini '^[0-9]+\.[0-9]+\.[0-9]+' '-p, --prompt|--prompt' gemini --help
 check_cli copilot 'GitHub Copilot CLI|copilot' '-p, --prompt|--prompt <text>' copilot --help
 check_cli claude 'Claude Code|^[0-9]+\.[0-9]+\.[0-9]+' '-p, --print|--print' claude --help
+if command -v agy >/dev/null 2>&1; then
+  check_cli agy '^[0-9]+\.[0-9]+\.[0-9]+' '--dangerously-skip-permissions' agy --help
+fi
 check_cli opencode '^[0-9]+\.[0-9]+\.[0-9]+' 'opencode run|Run opencode in non-interactive mode' opencode run --help

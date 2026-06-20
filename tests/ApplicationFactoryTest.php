@@ -36,6 +36,7 @@ final class ApplicationFactoryTest extends TestCase
         self::assertArrayNotHasKey('gemini', $providers);
         self::assertArrayNotHasKey('copilot', $providers);
         self::assertArrayNotHasKey('claude', $providers);
+        self::assertArrayNotHasKey('agy', $providers);
         self::assertArrayNotHasKey('opencode', $providers);
     }
 
@@ -78,6 +79,11 @@ final class ApplicationFactoryTest extends TestCase
                     'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
                     'working_directory' => __DIR__,
                 ],
+                'agy' => [
+                    'enabled' => true,
+                    'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
+                    'working_directory' => __DIR__,
+                ],
                 'opencode' => [
                     'enabled' => true,
                     'command' => ['php', '-r', 'fwrite(STDOUT, "ok");'],
@@ -86,11 +92,12 @@ final class ApplicationFactoryTest extends TestCase
             ],
         ]);
 
-        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot', 'claude', 'opencode'], array_keys($providers));
+        self::assertSame(['local-null-provider', 'codex', 'gemini', 'copilot', 'claude', 'agy', 'opencode'], array_keys($providers));
         self::assertTrue($providers['codex']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['gemini']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['copilot']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['claude']->isAvailable($this->runContext($providers)));
+        self::assertTrue($providers['agy']->isAvailable($this->runContext($providers)));
         self::assertTrue($providers['opencode']->isAvailable($this->runContext($providers)));
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace HousekeepingAgentCron\Tests;
 
+use HousekeepingAgentCron\Provider\AgyProvider;
 use HousekeepingAgentCron\Provider\CodexProvider;
 use HousekeepingAgentCron\Provider\ClaudeProvider;
 use HousekeepingAgentCron\Provider\CopilotProvider;
@@ -316,6 +317,77 @@ PROMPT);
         $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded);
         self::assertNotContains('--dangerously-skip-permissions', $decoded);
+    }
+
+    public function testClaudeProviderAllowsConfiguredPermissionBypass(): void
+    {
+        $provider = new ClaudeProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+            true,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame('--dangerously-skip-permissions', $decoded[0] ?? null);
+        self::assertSame('--print', $decoded[1] ?? null);
+    }
+
+    public function testAgyProviderUsesPrintModelAndConfiguredPermissionBypass(): void
+    {
+        $provider = new AgyProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+            true,
+            'gemini-2.5-pro',
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertSame([
+            '--model',
+            'gemini-2.5-pro',
+            '--dangerously-skip-permissions',
+            '--print',
+            $this->expectedDocsPrompt(),
+        ], $decoded);
+    }
+
+    public function testAgyProviderDefaultsToPrintModeWithoutPermissionBypass(): void
+    {
+        $provider = new AgyProvider(
+            new ProcessExecutor(),
+            ['php', '-r', 'echo json_encode(array_slice($argv, 1), JSON_UNESCAPED_SLASHES);', '--'],
+            [],
+            __DIR__,
+            30,
+        );
+
+        $result = $provider->execute(new ProviderRequest('docs:refresh', 'Sync docs with code.', ['documents' => ['README.md' => '# Docs']]));
+
+        self::assertTrue($result->successful);
+        $stdout = $result->context['stdout'] ?? null;
+        self::assertIsString($stdout);
+        $decoded = json_decode($stdout, true);
+        self::assertIsArray($decoded);
+        self::assertNotContains('--dangerously-skip-permissions', $decoded);
+        self::assertSame('--print', $decoded[0] ?? null);
     }
 
     public function testOpenCodeProviderUsesRunPromptArgument(): void

@@ -64,7 +64,7 @@ If you keep the Housekeeping checkout nested inside the maintained repository in
 ```
 
 Keep one Housekeeping workspace per maintained project if you want isolated state, logs, budgets, and prompts.
-Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`, `opencode run`).
+Provider-backed coding agents inherit `paths.repository_root` by default, so you only need to set a provider `working_directory` when you intentionally want them somewhere else. Their adapters also add the provider-specific non-interactive CLI shape automatically (`codex exec`, `gemini --prompt`, `copilot --prompt`, `claude --print`, `agy --print`, `opencode run`).
 If you want Housekeeping to auto-pick a provider for one task but still bias that task toward a specific agent, set `'provider' => 'auto'` and add `preferred_providers` in priority order.
 The project template keeps `self-improve:housekeeping` and the PHP-specific audit/fix tasks out of the copied config on purpose, so the destination project gets the generic maintenance automation first instead of spending early cron budget on Housekeeping itself or on stack-specific commands you may not use. That starter config now also includes a dedicated `skills:sync` pass which auto-discovers `SKILL.md` files and skips cleanly if the repository does not use skill files.
 
@@ -83,6 +83,8 @@ php bin/agent-cron housekeeping:run --dry-run
 This lets you confirm the task list, provider status, and file discovery before any provider-backed work runs.
 For real runs that you want to tail in a terminal or cron log, add `--verbose` to emit timestamped per-task `[run]`, `[ok]`, `[skip]`, and `[fail]` progress lines.
 When you enable a real provider, keep it in patch mode: cron-triggered Housekeeping runs should never run `git commit` or create commits on their own.
+
+The template includes disabled `claude` and `agy` providers with `append_yolo => true`. Enabling either one adds `--dangerously-skip-permissions`, so use them only in an isolated account and trusted repository. Remove that key or set it to `false` when interactive permission enforcement is required.
 
 For OpenCode specifically, the bundled template already includes a ready-to-enable free-tier model selection:
 
@@ -105,6 +107,18 @@ For a first real smoke test, prefer a single `commits:learn` run before scheduli
 ```bash
 php bin/agent-cron housekeeping:run --task=commits:learn
 ```
+
+For local `voku/agent-*` sibling repositories, the tracked auto-mode config avoids maintaining one copied file per package:
+
+```bash
+export HOUSEKEEPING_CONFIG=/absolute/path/to/housekeeping/config/voku-agent-project.php
+export HOUSEKEEPING_AGENT_PROJECT=agent-recall-compiler
+php bin/agent-cron housekeeping:doctor
+php bin/agent-cron housekeeping:list
+php bin/agent-cron housekeeping:run --dry-run
+```
+
+Use `HOUSEKEEPING_AGENT_PROJECT_ROOT=/different/path/to/agent-recall-compiler` for a non-sibling checkout. Each project gets separate state, log, and lock paths. Provider-backed tasks use `auto` mode with Claude Code and `agy` first, then the IT-Portal provider fallbacks.
 
 If you want the first real run to process more than the default top four due tasks, raise `max_tasks_per_run` in the config before scheduling it. In this repository's dogfood config, the default top four are now `project:discover`, `commits:learn`, `blindspots:analyze`, and `docs:refresh`; set the limit to `5` if you also want `skills:sync` in that same cron wave. `todo:refine` comes after that.
 

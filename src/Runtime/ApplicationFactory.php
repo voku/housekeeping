@@ -6,6 +6,7 @@ namespace HousekeepingAgentCron\Runtime;
 
 use HousekeepingAgentCron\Contract\HousekeepingTask;
 use HousekeepingAgentCron\Contract\ProviderAdapter;
+use HousekeepingAgentCron\Provider\AgyProvider;
 use HousekeepingAgentCron\Provider\CodexProvider;
 use HousekeepingAgentCron\Provider\ClaudeProvider;
 use HousekeepingAgentCron\Provider\CopilotProvider;
@@ -272,6 +273,7 @@ final class ApplicationFactory
         $appendYolo = ($providerConfig['append_yolo'] ?? false) === true;
 
         return match ($name) {
+            'agy' => new AgyProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
             'codex' => new CodexProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
             'gemini' => new GeminiProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),
             'copilot' => new CopilotProvider($this->processExecutor, $command, $arguments, $workingDirectory, $timeoutSeconds, $appendYolo, $model),

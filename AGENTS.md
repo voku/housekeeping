@@ -10,7 +10,7 @@ Housekeeping keeps its repo-specific subagents as provider-neutral `SKILL.md` fi
 | `skills/blindspot-curator/SKILL.md` | You need to review recent runs, prompt drift, missed patterns, or self-improvement guidance. | `src/Task/BlindSpotAnalysisTask.php`, `src/Task/SelfImprovementTask.php`, `README.md`, `TODO.md` |
 | `skills/doc-sync-editor/SKILL.md` | You are updating `README.md`, `QUICKSTART.md`, or this file to match the real code and workflow. | `src/Task/DocumentationRefreshTask.php`, `config/tasks.php`, `config/project-template.php` |
 | `skills/todo-board-refiner/SKILL.md` | You are touching `TODO.md` or any future board-style TODO workflow. | `src/Task/TodoRefinementTask.php`, `TODO.md`, `README.md` |
-| `skills/guardrail-validator/SKILL.md` | You are changing config, provider wiring, validation, or rollout guardrails and need to keep the repo safe. | `config/tasks.php`, `src/Runtime/ApplicationFactory.php`, `README.md`, `composer.json` |
+| `skills/guardrail-validator/SKILL.md` | You are changing config, provider wiring, validation, or rollout guardrails and need to keep the repo safe. | `config/tasks.php`, `config/voku-agent-project.php`, `src/Runtime/ApplicationFactory.php`, `README.md`, `composer.json` |
 
 ## Default working loop
 

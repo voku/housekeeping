@@ -127,7 +127,17 @@ return [
             'cooldown_seconds' => 3600,
             'timeout_seconds' => 600,
             'command' => ['claude'],
+            'append_yolo' => true,
             'resource_command' => ['claude', '--version'],
+        ],
+        'agy' => [
+            'enabled' => false,
+            'daily_budget' => 5,
+            'cooldown_seconds' => 3600,
+            'timeout_seconds' => 600,
+            'command' => ['agy'],
+            'append_yolo' => true,
+            'resource_command' => ['agy', '--version'],
         ],
         'opencode' => [
             'enabled' => false,

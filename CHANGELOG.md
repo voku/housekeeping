@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.3.0 - 2026-06-20
+
+- Added first-class Antigravity CLI (`agy`) provider support, explicit opt-in `--dangerously-skip-permissions` configuration for both Claude Code and `agy`, and an auto-mode config for sibling `voku/agent-*` projects based on the IT-Portal provider setup.
+
 ## 0.2.0 - 2026-05-26
 
 - Hardened config loading so commands now fail cleanly when `--config` or `HOUSEKEEPING_CONFIG` points at a missing or unreadable file instead of surfacing a raw PHP warning.
