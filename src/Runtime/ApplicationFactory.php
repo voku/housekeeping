@@ -16,6 +16,7 @@ use HousekeepingAgentCron\Provider\OpenCodeProvider;
 use HousekeepingAgentCron\State\JsonStateStore;
 use HousekeepingAgentCron\Task\CommitLearningTask;
 use HousekeepingAgentCron\Task\DependencyAuditTask;
+use HousekeepingAgentCron\Task\LearningsConsolidateTask;
 use HousekeepingAgentCron\Task\BlindSpotAnalysisTask;
 use HousekeepingAgentCron\Task\DocumentationRefreshTask;
 use HousekeepingAgentCron\Task\PhpstanFixSuggestionTask;
@@ -250,6 +251,7 @@ final class ApplicationFactory
                 $timeoutSeconds,
                 $preferredProviders,
             ),
+            'learnings:consolidate' => new LearningsConsolidateTask($intervalSeconds, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds),
             'deps:audit' => new DependencyAuditTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
             'phpstan:suggest-fixes' => new PhpstanFixSuggestionTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),
             'slop:scan' => new SlopScanTask($intervalSeconds, $providerName, $this->processExecutor, $workingDirectory, $command, $timeoutSeconds, $preferredProviders),

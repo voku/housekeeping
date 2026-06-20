@@ -148,6 +148,18 @@ return [
             'working_directory' => $packageRoot,
             'command' => ['composer', 'outdated', '--direct', '--format=json'],
         ],
+        // The scheduled "sleep cycle": runs a deterministic consolidation command
+        // that writes reviewable candidate proposals only (never approves). The
+        // command is project-specific, so this task is opt-in: set 'command' and
+        // 'enabled' => true in your project config (see config/it-portal.php).
+        'learnings:consolidate' => [
+            'enabled' => false,
+            'interval_seconds' => 86400,
+            'priority' => 45,
+            'working_directory' => $packageRoot,
+            'command' => [],
+            'timeout_seconds' => 300,
+        ],
         'phpstan:suggest-fixes' => [
             'enabled' => true,
             'interval_seconds' => 43200,

@@ -177,6 +177,17 @@ return [
             'working_directory' => $targetProjectRoot,
             'command' => ['composer', 'outdated', '--direct', '--format=json'],
         ],
+        // The scheduled "sleep cycle". Opt-in: enable it and point 'command' at
+        // your repository's deterministic consolidation step, which must only
+        // write reviewable candidate proposals (never approve durable guidance).
+        'learnings:consolidate' => [
+            'enabled' => false,
+            'interval_seconds' => 86400,
+            'priority' => 45,
+            'working_directory' => $targetProjectRoot,
+            'command' => [],
+            'timeout_seconds' => 300,
+        ],
         'slop:scan' => [
             'enabled' => true,
             'interval_seconds' => 43200,
