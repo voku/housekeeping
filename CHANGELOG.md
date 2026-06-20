@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.4.0 - 2026-06-20
+
+- Added LearningsConsolidateTask with scheduling support, update configs and tests
+
 ## 0.3.0 - 2026-06-20
 
 - Added first-class Antigravity CLI (`agy`) provider support, explicit opt-in `--dangerously-skip-permissions` configuration for both Claude Code and `agy`, and an auto-mode config for sibling `voku/agent-*` projects based on the IT-Portal provider setup.
