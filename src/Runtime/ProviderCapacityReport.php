@@ -23,6 +23,8 @@ final readonly class ProviderCapacityReport
         public ?array $probeCommand,
         public ?string $probeMessage,
         public array $externalMetrics,
+        public ?int $warmupLastAt = null,
+        public ?string $warmupMessage = null,
     ) {
     }
 
@@ -44,6 +46,8 @@ final readonly class ProviderCapacityReport
             'probe_command' => $this->probeCommand,
             'probe_message' => $this->probeMessage,
             'external_metrics' => $this->externalMetrics,
+            'warmup_last_at' => $this->warmupLastAt,
+            'warmup_message' => $this->warmupMessage,
         ];
     }
 }

@@ -30,6 +30,8 @@ final class ProviderCapacityReportTest extends TestCase
                     'reset_at' => 1700000000,
                 ],
             ],
+            1699999000,
+            'Warmup ping sent.',
         );
 
         self::assertSame([
@@ -51,6 +53,8 @@ final class ProviderCapacityReportTest extends TestCase
                     'reset_at' => 1700000000,
                 ],
             ],
+            'warmup_last_at' => 1699999000,
+            'warmup_message' => 'Warmup ping sent.',
         ], $report->toArray());
     }
 }

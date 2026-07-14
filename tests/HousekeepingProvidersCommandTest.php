@@ -84,6 +84,8 @@ final class HousekeepingProvidersCommandTest extends TestCase
                     'cooldown_seconds' => 0,
                     'working_directory' => __DIR__,
                     'resource_command' => $this->resourceCommand('grüße gemini', 90, 3600),
+                    'warmup_command' => [PHP_BINARY, '-r', 'exit(0);'],
+                    'warmup_interval_seconds' => 100,
                 ],
             ],
         ], true) . ';');
@@ -96,6 +98,7 @@ final class HousekeepingProvidersCommandTest extends TestCase
             $display = $tester->getDisplay();
             self::assertStringContainsString('Recommended provider: gemini', $display);
             self::assertStringContainsString('External capacity', $display);
+            self::assertStringContainsString('Last warmup', $display);
             self::assertMatchesRegularExpression('/\bProvider\s+Status\s+Budget\b/', $display);
             self::assertMatchesRegularExpression('/\bgemini\s+ready\s+20\/20 left\b/', $display);
             self::assertMatchesRegularExpression('/\bcodex\s+ready\s+9\/10 left\b/', $display);
@@ -125,6 +128,17 @@ final class HousekeepingProvidersCommandTest extends TestCase
             self::assertIsArray($firstProvider['external_metrics'] ?? null);
             self::assertIsArray($firstProvider['external_metrics'][0] ?? null);
             self::assertSame('grüße gemini', $firstProvider['external_metrics'][0]['label'] ?? null);
+            // Warmup already fired during the earlier table-output run above, so this
+            // second (JSON) run correctly finds it not due yet and skips re-firing.
+            self::assertIsInt($firstProvider['warmup_last_at'] ?? null);
+
+            $state = json_decode((string) file_get_contents($stateFile), true);
+            self::assertIsArray($state);
+            $stateProviders = $state['providers'] ?? null;
+            self::assertIsArray($stateProviders);
+            $stateGemini = $stateProviders['gemini'] ?? null;
+            self::assertIsArray($stateGemini);
+            self::assertIsInt($stateGemini['last_warmup_at'] ?? null);
         } finally {
             (new Filesystem())->remove($dir);
         }

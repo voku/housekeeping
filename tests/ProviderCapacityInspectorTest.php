@@ -623,6 +623,154 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertGreaterThanOrEqual($before + 7199, $reports[0]->externalResetAt);
     }
 
+    public function testWarmupFiresWhenDueAndPersistsLastWarmupAtInState(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $stateStore = new InMemoryStateStore(['providers' => []]);
+        $before = time();
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'alpha' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'warmup_command' => ['php', '-r', 'exit(0);'],
+                    'warmup_interval_seconds' => 100,
+                ],
+            ],
+        ], $stateStore->load(), true, null, $stateStore);
+
+        self::assertCount(1, $reports);
+        self::assertSame('Warmup ping sent.', $reports[0]->warmupMessage);
+        self::assertNotNull($reports[0]->warmupLastAt);
+        self::assertGreaterThanOrEqual($before, $reports[0]->warmupLastAt);
+
+        $providersState = $stateStore->state['providers'] ?? null;
+        self::assertIsArray($providersState);
+        $alphaState = $providersState['alpha'] ?? null;
+        self::assertIsArray($alphaState);
+        $lastWarmupAt = $alphaState['last_warmup_at'] ?? null;
+        self::assertIsInt($lastWarmupAt);
+        self::assertGreaterThanOrEqual($before, $lastWarmupAt);
+    }
+
+    public function testWarmupSkipsSecondPingInsideInterval(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = time();
+        $stateStore = new InMemoryStateStore([
+            'providers' => [
+                'alpha' => ['last_warmup_at' => $now],
+            ],
+        ]);
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'alpha' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'warmup_command' => ['php', '-r', 'fwrite(STDERR, "should-not-run"); exit(1);'],
+                    'warmup_interval_seconds' => 3600,
+                ],
+            ],
+        ], $stateStore->load(), true, null, $stateStore);
+
+        self::assertNull($reports[0]->warmupMessage);
+        self::assertSame($now, $reports[0]->warmupLastAt);
+        $providersState = $stateStore->state['providers'] ?? null;
+        self::assertIsArray($providersState);
+        $alphaState = $providersState['alpha'] ?? null;
+        self::assertIsArray($alphaState);
+        self::assertSame($now, $alphaState['last_warmup_at'] ?? null);
+    }
+
+    public function testWarmupDoesNotPersistLastWarmupAtOnFailureAndRetriesNextCall(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $stateStore = new InMemoryStateStore(['providers' => []]);
+
+        $config = [
+            'providers' => [
+                'alpha' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'warmup_command' => ['php', '-r', 'exit(1);'],
+                    'warmup_interval_seconds' => 3600,
+                ],
+            ],
+        ];
+
+        $reports = $inspector->inspect($config, $stateStore->load(), true, null, $stateStore);
+        self::assertNull($reports[0]->warmupLastAt);
+        self::assertStringContainsString('exit code 1', (string) $reports[0]->warmupMessage);
+        self::assertSame(['providers' => []], $stateStore->state);
+
+        // A second call moments later must retry rather than treat the failed
+        // attempt as a completed warmup for the next warmup_interval_seconds.
+        $reportsAgain = $inspector->inspect($config, $stateStore->load(), true, null, $stateStore);
+        self::assertNull($reportsAgain[0]->warmupLastAt);
+        self::assertStringContainsString('exit code 1', (string) $reportsAgain[0]->warmupMessage);
+    }
+
+    public function testWarmupIsNotConfiguredWhenCommandIsEmpty(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $stateStore = new InMemoryStateStore(['providers' => []]);
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'alpha' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                ],
+            ],
+        ], $stateStore->load(), true, null, $stateStore);
+
+        self::assertNull($reports[0]->warmupMessage);
+        self::assertNull($reports[0]->warmupLastAt);
+        self::assertSame(['providers' => []], $stateStore->state);
+    }
+
+    public function testWarmupNeverFiresWithoutAStateStore(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'alpha' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'warmup_command' => ['php', '-r', 'fwrite(STDERR, "should-not-run"); exit(1);'],
+                    'warmup_interval_seconds' => 1,
+                ],
+            ],
+        ], []);
+
+        self::assertNull($reports[0]->warmupMessage);
+        self::assertNull($reports[0]->warmupLastAt);
+    }
+
+    public function testWarmupNeverFiresDuringAutomaticRoutingEvenWithStateStore(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $stateStore = new InMemoryStateStore(['providers' => []]);
+
+        $reports = $inspector->inspect([
+            'providers' => [
+                'alpha' => [
+                    'enabled' => true,
+                    'working_directory' => __DIR__,
+                    'warmup_command' => ['php', '-r', 'fwrite(STDERR, "should-not-run"); exit(1);'],
+                    'warmup_interval_seconds' => 1,
+                ],
+            ],
+        ], $stateStore->load(), false, null, $stateStore);
+
+        self::assertNull($reports[0]->warmupMessage);
+        self::assertNull($reports[0]->warmupLastAt);
+        self::assertSame(['providers' => []], $stateStore->state);
+    }
+
     public function testFailureMessagePrefersTimeoutExceptionOutputAndExitCode(): void
     {
         $inspector = new ProviderCapacityInspector();

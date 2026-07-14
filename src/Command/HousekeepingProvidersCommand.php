@@ -36,7 +36,8 @@ final class HousekeepingProvidersCommand extends Command
     {
         try {
             $config = $this->factory->loadConfig($this->configFile);
-            $reports = $this->inspector->inspect($config, $this->factory->stateStore($config)->load());
+            $stateStore = $this->factory->stateStore($config);
+            $reports = $this->inspector->inspect($config, $stateStore->load(), true, null, $stateStore);
 
             if ($input->getOption('json') === true) {
                 $json = json_encode([
@@ -63,11 +64,12 @@ final class HousekeepingProvidersCommand extends Command
                     $this->formatCooldown($report->cooldownRemainingSeconds),
                     $this->formatExternalCapacity($report),
                     $this->formatResetAt($report->externalResetAt),
+                    $this->formatResetAt($report->warmupLastAt),
                     $report->probeMessage ?? '-',
                 ];
             }
 
-            $io->table(['Provider', 'Status', 'Budget', 'Cooldown', 'External capacity', 'Next reset', 'Probe'], $rows);
+            $io->table(['Provider', 'Status', 'Budget', 'Cooldown', 'External capacity', 'Next reset', 'Last warmup', 'Probe'], $rows);
             $recommendedProvider = $this->recommendedProvider($reports);
             if ($recommendedProvider !== null) {
                 $io->success('Recommended provider: ' . $recommendedProvider);

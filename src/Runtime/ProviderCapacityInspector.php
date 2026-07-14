@@ -6,11 +6,16 @@ namespace HousekeepingAgentCron\Runtime;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use HousekeepingAgentCron\Contract\StateStore;
 use Throwable;
 
 final readonly class ProviderCapacityInspector
 {
     private const int DEFAULT_TIMEOUT_SECONDS = 60;
+
+    // Anthropic-style rolling usage windows are ~5h; pinging a bit inside that
+    // window lets the reset land before real work needs the capacity.
+    private const int DEFAULT_WARMUP_INTERVAL_SECONDS = 18000;
 
     public function __construct(private ProcessExecutor $processExecutor = new ProcessExecutor())
     {
@@ -21,7 +26,7 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $state
      * @return list<ProviderCapacityReport>
      */
-    public function inspect(array $config, array $state, bool $runExternalProbes = true, ?int $currentRunStartedAt = null): array
+    public function inspect(array $config, array $state, bool $runExternalProbes = true, ?int $currentRunStartedAt = null, ?StateStore $stateStore = null): array
     {
         $providers = $config['providers'] ?? null;
         if (!is_array($providers)) {
@@ -29,6 +34,8 @@ final readonly class ProviderCapacityInspector
         }
         $now = time();
         $today = gmdate('Y-m-d', $now);
+        $runWarmupPings = $stateStore !== null;
+        $warmupFired = false;
 
         $reports = [];
         foreach ($providers as $providerName => $providerConfig) {
@@ -38,7 +45,11 @@ final readonly class ProviderCapacityInspector
             /** @var array<string, mixed> $typedProviderConfig */
             $typedProviderConfig = $providerConfig;
 
-            $reports[] = $this->inspectProvider($providerName, $typedProviderConfig, $state, $today, $now, $runExternalProbes, $currentRunStartedAt);
+            $reports[] = $this->inspectProvider($providerName, $typedProviderConfig, $state, $today, $now, $runExternalProbes, $currentRunStartedAt, $runWarmupPings, $warmupFired);
+        }
+
+        if ($stateStore !== null && $warmupFired) {
+            $stateStore->save($state);
         }
 
         usort($reports, $this->compare(...));
@@ -50,7 +61,7 @@ final readonly class ProviderCapacityInspector
      * @param array<string, mixed> $providerConfig
      * @param array<string, mixed> $state
      */
-    private function inspectProvider(string $providerName, array $providerConfig, array $state, string $today, int $now, bool $runExternalProbes, ?int $currentRunStartedAt = null): ProviderCapacityReport
+    private function inspectProvider(string $providerName, array $providerConfig, array &$state, string $today, int $now, bool $runExternalProbes, ?int $currentRunStartedAt, bool $runWarmupPings, bool &$warmupFired): ProviderCapacityReport
     {
         $enabled = ($providerConfig['enabled'] ?? false) === true;
         $budget = $this->configuredDailyBudget($providerConfig);
@@ -68,6 +79,13 @@ final readonly class ProviderCapacityInspector
                 'status' => 'not-configured',
                 'probe_message' => 'Probe skipped because provider is disabled.',
             ]);
+
+        $warmup = ($runExternalProbes && $runWarmupPings && $enabled)
+            ? $this->maybeWarmupProvider($providerName, $providerConfig, $state, $now)
+            : ['fired' => false, 'last_warmup_at' => $this->providerWarmupLastAt($state, $providerName), 'message' => null];
+        if ($warmup['fired']) {
+            $warmupFired = true;
+        }
 
         $status = 'ready';
         if (!$enabled) {
@@ -97,7 +115,66 @@ final readonly class ProviderCapacityInspector
             $probe['probe_command'] ?? null,
             $probe['probe_message'] ?? null,
             $probe['external_metrics'] ?? [],
+            $warmup['last_warmup_at'],
+            $warmup['message'],
         );
+    }
+
+    /**
+     * @param array<string, mixed> $providerConfig
+     * @param array<string, mixed> $state
+     * @return array{fired: bool, last_warmup_at: int|null, message: string|null}
+     */
+    private function maybeWarmupProvider(string $providerName, array $providerConfig, array &$state, int $now): array
+    {
+        $lastWarmupAt = $this->providerWarmupLastAt($state, $providerName);
+        $command = $this->stringList($providerConfig['warmup_command'] ?? []);
+        if ($command === []) {
+            return ['fired' => false, 'last_warmup_at' => $lastWarmupAt, 'message' => null];
+        }
+
+        $interval = $this->positiveInt($providerConfig['warmup_interval_seconds'] ?? null) ?: self::DEFAULT_WARMUP_INTERVAL_SECONDS;
+        if ($lastWarmupAt !== null && $now - $lastWarmupAt < $interval) {
+            return ['fired' => false, 'last_warmup_at' => $lastWarmupAt, 'message' => null];
+        }
+
+        $workingDirectory = $this->configuredWorkingDirectory($providerConfig);
+        $timeoutSeconds = $this->configuredTimeoutSeconds($providerConfig);
+        $process = $this->processExecutor->execute($command, $workingDirectory, $timeoutSeconds);
+        if (!$process->successful()) {
+            // Do not persist last_warmup_at on failure: a broken/unauthenticated
+            // provider must keep retrying next cycle, not silently look "warmed"
+            // for a full warmup_interval_seconds while never having reached it.
+            return [
+                'fired' => false,
+                'last_warmup_at' => $lastWarmupAt,
+                'message' => $this->failureMessage($process),
+            ];
+        }
+
+        $providersState = $state['providers'] ?? null;
+        $providersState = is_array($providersState) ? $providersState : [];
+        $providerState = $providersState[$providerName] ?? null;
+        $providerState = is_array($providerState) ? $providerState : [];
+        $providerState['last_warmup_at'] = $now;
+        $providersState[$providerName] = $providerState;
+        $state['providers'] = $providersState;
+
+        return [
+            'fired' => true,
+            'last_warmup_at' => $now,
+            'message' => 'Warmup ping sent.',
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $state
+     */
+    private function providerWarmupLastAt(array $state, string $providerName): ?int
+    {
+        $lastWarmupAt = $this->stateValue($state, 'providers.' . $providerName . '.last_warmup_at');
+
+        return is_int($lastWarmupAt) ? $lastWarmupAt : null;
     }
 
     /**

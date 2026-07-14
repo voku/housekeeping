@@ -187,6 +187,28 @@ return [
             'timeout_seconds' => 300,
         ],
     ],
+    // Optional per-provider "warmup ping": if 'warmup_command' is a non-empty
+    // command, `housekeeping:providers` fires it whenever the provider is
+    // enabled and 'warmup_interval_seconds' (default 18000 = 5h) has elapsed
+    // since 'last_warmup_at' in state. It's a real, cheap invocation meant to
+    // start the provider's rolling usage window early so the reset lands
+    // before real task work needs the capacity. It never touches
+    // daily_budget/cooldown_seconds accounting.
+    //
+    // Commands below were dogfooded for real against each installed CLI
+    // (2026-07-14). Findings:
+    // - codex: works out of the box, ~7-18k tokens per ping (fixed tool/schema
+    //   overhead dominates; reasoning-effort overrides didn't reduce it).
+    // - claude: works out of the box, cheap and fast (~6s, tiny reply).
+    // - copilot: works, but costs ~18k input tokens / ~6.8 AI credits per
+    //   ping — likely too expensive to justify a warmup-only invocation.
+    // - gemini: CLI accepts the invocation shape, but this account's free
+    //   tier throws IneligibleTierError ("no longer supported ... migrate to
+    //   Antigravity"); left in place since it's still enabled=>false.
+    // - agy: CLI accepts the invocation shape, but requires a prior
+    //   interactive `agy` OAuth login; fails non-interactively until then.
+    // - opencode: CLI wasn't installed on the dogfood machine, so its
+    //   one-shot syntax is unverified; left empty rather than guessed.
     'providers' => [
         'local-null-provider' => [
             'enabled' => true,
@@ -201,6 +223,7 @@ return [
             'command' => ['codex'],
             'model' => 'gpt-5.4',
             'resource_command' => ['codex-cli-usage', 'json'],
+            'warmup_command' => ['codex', 'exec', 'hi', '--sandbox', 'read-only', '--skip-git-repo-check'],
         ],
         'gemini' => [
             'enabled' => false,
@@ -209,6 +232,9 @@ return [
             'timeout_seconds' => 600,
             'command' => ['gemini'],
             'resource_command' => ['gemini-cli-usage', 'json'],
+            // Syntactically correct, but this account's free tier currently
+            // rejects it (IneligibleTierError); harmless while enabled=>false.
+            'warmup_command' => ['gemini', '-p', 'hi'],
         ],
         'copilot' => [
             'enabled' => false,
@@ -217,6 +243,9 @@ return [
             'timeout_seconds' => 600,
             'command' => ['copilot'],
             'resource_command' => ['copilot-api', 'check-usage', '--json'],
+            // Works, but ~18k input tokens / ~6.8 AI credits per ping in
+            // testing — weigh that cost before enabling.
+            'warmup_command' => ['copilot', '-p', 'hi', '--allow-all-tools'],
         ],
         'claude' => [
             'enabled' => false,
@@ -226,6 +255,7 @@ return [
             'command' => ['claude'],
             'append_yolo' => true,
             'resource_command' => ['claude', '--version'],
+            'warmup_command' => ['claude', '-p', 'hi', '--model', 'haiku'],
         ],
         'agy' => [
             'enabled' => false,
@@ -235,6 +265,9 @@ return [
             'command' => ['agy'],
             'append_yolo' => true,
             'resource_command' => ['agy', '--version'],
+            // Syntactically correct, but needs a prior interactive `agy`
+            // OAuth login; fails non-interactively until then.
+            'warmup_command' => ['agy', '-p', 'hi'],
         ],
         'opencode' => [
             'enabled' => false,
@@ -243,6 +276,7 @@ return [
             'timeout_seconds' => 600,
             'command' => ['opencode'],
             'model' => 'opencode/minimax-m2.5-free',
+            'warmup_command' => [],
         ],
     ],
 ];

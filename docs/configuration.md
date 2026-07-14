@@ -42,6 +42,17 @@ The dogfood config keeps docs under review by tracking these kinds of files:
 
 When a task uses `'provider' => 'auto'`, Housekeeping picks the first ready provider from the global readiness ranking unless that task also has `preferred_providers`.
 
+## 🔥 Provider warmup pings
+
+Rolling usage windows (e.g. Anthropic's ~5h window) reset from whenever they were first touched, not on a fixed clock. Running `housekeeping:providers` on its own short cron schedule lets Housekeeping nudge that reset earlier:
+
+| Field | What it does |
+| --- | --- |
+| `warmup_command` | a real, cheap CLI invocation (e.g. a one-token prompt) fired when the provider is enabled and due; empty/unset disables it |
+| `warmup_interval_seconds` | how often to fire, per provider; defaults to `18000` (5h) when omitted |
+
+Warmup pings are exempt from `daily_budget` and `cooldown_seconds` — they're a window-reset trick, not task usage — and only fire from `housekeeping:providers` (never from the automatic `housekeeping:run` routing probe). `config/tasks.php` ships real, dogfooded `warmup_command` values per provider (`codex`, `gemini`, `copilot`, `claude`, `agy`); `opencode` is left empty since its CLI wasn't available to verify. A provider still needs `enabled => true` for its warmup to ever fire, so filled-in commands for currently-disabled providers (e.g. `gemini`, `agy`) stay dormant. See the comment above `'providers' => [` in `config/tasks.php` for what actually worked in testing versus what needs extra setup (account tier, login) first.
+
 ## 🎯 Practical defaults
 
 | Goal | Recommendation |
