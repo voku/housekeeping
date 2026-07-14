@@ -8,6 +8,8 @@ use HousekeepingAgentCron\Contract\StateStore;
 
 final class InMemoryStateStore implements StateStore
 {
+    public int $saveCount = 0;
+
     /** @param array<string, mixed> $state */
     public function __construct(public array $state = ['tasks' => [], 'providers' => [], 'runs' => []])
     {
@@ -21,5 +23,6 @@ final class InMemoryStateStore implements StateStore
     public function save(array $state): void
     {
         $this->state = $state;
+        ++$this->saveCount;
     }
 }

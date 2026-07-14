@@ -82,9 +82,10 @@ final readonly class ProviderCapacityInspector
 
         $warmup = ($runExternalProbes && $runWarmupPings && $enabled)
             ? $this->maybeWarmupProvider($providerName, $providerConfig, $state, $now)
-            : ['fired' => false, 'last_warmup_at' => $this->providerWarmupLastAt($state, $providerName), 'message' => null];
+            : ['fired' => false, 'last_warmup_at' => $this->providerWarmupLastAt($state, $providerName), 'message' => null, 'state' => $state];
         if ($warmup['fired']) {
             $warmupFired = true;
+            $state = $warmup['state'];
         }
 
         $status = 'ready';
@@ -123,19 +124,19 @@ final readonly class ProviderCapacityInspector
     /**
      * @param array<string, mixed> $providerConfig
      * @param array<string, mixed> $state
-     * @return array{fired: bool, last_warmup_at: int|null, message: string|null}
+     * @return array{fired: bool, last_warmup_at: int|null, message: string|null, state: array<string, mixed>}
      */
-    private function maybeWarmupProvider(string $providerName, array $providerConfig, array &$state, int $now): array
+    private function maybeWarmupProvider(string $providerName, array $providerConfig, array $state, int $now): array
     {
         $lastWarmupAt = $this->providerWarmupLastAt($state, $providerName);
         $command = $this->stringList($providerConfig['warmup_command'] ?? []);
         if ($command === []) {
-            return ['fired' => false, 'last_warmup_at' => $lastWarmupAt, 'message' => null];
+            return ['fired' => false, 'last_warmup_at' => $lastWarmupAt, 'message' => null, 'state' => $state];
         }
 
         $interval = $this->positiveInt($providerConfig['warmup_interval_seconds'] ?? null) ?: self::DEFAULT_WARMUP_INTERVAL_SECONDS;
         if ($lastWarmupAt !== null && $now - $lastWarmupAt < $interval) {
-            return ['fired' => false, 'last_warmup_at' => $lastWarmupAt, 'message' => null];
+            return ['fired' => false, 'last_warmup_at' => $lastWarmupAt, 'message' => null, 'state' => $state];
         }
 
         $workingDirectory = $this->configuredWorkingDirectory($providerConfig);
@@ -149,6 +150,7 @@ final readonly class ProviderCapacityInspector
                 'fired' => false,
                 'last_warmup_at' => $lastWarmupAt,
                 'message' => $this->failureMessage($process),
+                'state' => $state,
             ];
         }
 
@@ -164,6 +166,7 @@ final readonly class ProviderCapacityInspector
             'fired' => true,
             'last_warmup_at' => $now,
             'message' => 'Warmup ping sent.',
+            'state' => $state,
         ];
     }
 

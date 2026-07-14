@@ -729,6 +729,7 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertNull($reports[0]->warmupMessage);
         self::assertNull($reports[0]->warmupLastAt);
         self::assertSame(['providers' => []], $stateStore->state);
+        self::assertSame(0, $stateStore->saveCount);
     }
 
     public function testWarmupNeverFiresWithoutAStateStore(): void
@@ -769,6 +770,107 @@ final class ProviderCapacityInspectorTest extends TestCase
         self::assertNull($reports[0]->warmupMessage);
         self::assertNull($reports[0]->warmupLastAt);
         self::assertSame(['providers' => []], $stateStore->state);
+        self::assertSame(0, $stateStore->saveCount);
+    }
+
+    public function testMaybeWarmupProviderSkipsWhenCommandNotConfigured(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $result = $this->invokePrivate($inspector, 'maybeWarmupProvider', 'alpha', [
+            'working_directory' => __DIR__,
+        ], ['providers' => []], 1_000_000);
+
+        self::assertIsArray($result);
+        self::assertFalse($result['fired']);
+        self::assertNull($result['message']);
+        self::assertNull($result['last_warmup_at']);
+    }
+
+    public function testMaybeWarmupProviderUsesConfiguredIntervalOverDefault(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = 1_000_000;
+
+        $result = $this->invokePrivate($inspector, 'maybeWarmupProvider', 'alpha', [
+            'working_directory' => __DIR__,
+            'warmup_command' => ['php', '-r', 'exit(0);'],
+            'warmup_interval_seconds' => 50,
+        ], ['providers' => ['alpha' => ['last_warmup_at' => $now - 100]]], $now);
+
+        // 100s elapsed: due against the configured 50s interval, but the
+        // 18000s default would still call this "not due" — proves the
+        // configured value is actually used instead of being discarded.
+        self::assertIsArray($result);
+        self::assertTrue($result['fired']);
+        self::assertSame($now, $result['last_warmup_at']);
+    }
+
+    public function testMaybeWarmupProviderTreatsExactIntervalBoundaryAsDue(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = 1_000_000;
+
+        $result = $this->invokePrivate($inspector, 'maybeWarmupProvider', 'alpha', [
+            'working_directory' => __DIR__,
+            'warmup_command' => ['php', '-r', 'exit(0);'],
+            'warmup_interval_seconds' => 50,
+        ], ['providers' => ['alpha' => ['last_warmup_at' => $now - 50]]], $now);
+
+        // Elapsed time exactly equals the interval: due, not "one second early".
+        self::assertIsArray($result);
+        self::assertTrue($result['fired']);
+    }
+
+    public function testMaybeWarmupProviderFiresImmediatelyWhenNeverWarmedBefore(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+
+        $result = $this->invokePrivate($inspector, 'maybeWarmupProvider', 'alpha', [
+            'working_directory' => __DIR__,
+            'warmup_command' => ['php', '-r', 'exit(0);'],
+            'warmup_interval_seconds' => 50,
+        ], ['providers' => []], 10);
+
+        // No last_warmup_at recorded yet: must fire regardless of how small
+        // $now - 0 would otherwise compare against the interval.
+        self::assertIsArray($result);
+        self::assertTrue($result['fired']);
+    }
+
+    public function testMaybeWarmupProviderSkipsWithFiredFalseWhenNotYetDue(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = 1_000_000;
+
+        $result = $this->invokePrivate($inspector, 'maybeWarmupProvider', 'alpha', [
+            'working_directory' => __DIR__,
+            'warmup_command' => ['php', '-r', 'fwrite(STDERR, "should-not-run"); exit(1);'],
+            'warmup_interval_seconds' => 50,
+        ], ['providers' => ['alpha' => ['last_warmup_at' => $now - 10]]], $now);
+
+        self::assertIsArray($result);
+        self::assertFalse($result['fired']);
+        self::assertNull($result['message']);
+        self::assertSame($now - 10, $result['last_warmup_at']);
+    }
+
+    public function testMaybeWarmupProviderReturnsFiredFalseOnProcessFailure(): void
+    {
+        $inspector = new ProviderCapacityInspector();
+        $now = 1_000_000;
+
+        $result = $this->invokePrivate($inspector, 'maybeWarmupProvider', 'alpha', [
+            'working_directory' => __DIR__,
+            'warmup_command' => ['php', '-r', 'exit(1);'],
+            'warmup_interval_seconds' => 50,
+        ], ['providers' => []], $now);
+
+        self::assertIsArray($result);
+        self::assertFalse($result['fired']);
+        self::assertNull($result['last_warmup_at']);
+        self::assertIsString($result['message']);
+        self::assertStringContainsString('exit code 1', $result['message']);
     }
 
     public function testFailureMessagePrefersTimeoutExceptionOutputAndExitCode(): void
