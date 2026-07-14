@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Added opt-in provider warmup pings (`warmup_command`/`warmup_interval_seconds`) so `housekeeping:providers` can nudge a rolling usage window to reset early, exempt from `daily_budget`/`cooldown_seconds` accounting.
 - Dogfooded real `warmup_command` invocations against every installed CLI and filled them into `config/tasks.php`: codex and claude work cleanly (claude is cheap, codex has ~7-18k tokens of fixed per-call overhead); copilot works but costs ~18k tokens/~6.8 AI credits per ping; gemini's shape is correct but this account's free tier is currently ineligible; agy's shape is correct but needs an interactive OAuth login first; opencode wasn't installed, so its syntax is left unverified.
 - Fixed a warmup regression found during release testing: a failed warmup ping (auth error, timeout, non-zero exit) was persisting `last_warmup_at` anyway, silently blocking retries for the full `warmup_interval_seconds` window and reporting a bogus success timestamp in `housekeeping:providers`. Failures now leave state untouched so the next run retries.
+- Hardened warmup test coverage against 8 mutants Infection's CI job caught escaping (the `fired` flag and the interval-boundary comparison had no test actually pinning down their true/false value). `maybeWarmupProvider()` no longer mutates state by reference — it returns the updated state instead — so its `fired`/`last_warmup_at`/`message` outcome can be asserted directly per branch.
 
 ## 0.4.0 - 2026-06-20
 
