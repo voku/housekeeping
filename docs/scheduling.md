@@ -43,14 +43,50 @@ php bin/agent-cron housekeeping:run --dry-run
 | `skills:sync` | keep `SKILL.md` files aligned | maintain repo-specific agent skills |
 | `todo:refine` | refine tracked TODO files | clean up backlog items overnight |
 | `deps:audit` | inspect dependency updates | review stale or risky packages |
+| `learnings:consolidate` | wake the repository's deterministic Learning maintenance pass | turn accumulated evidence into reviewable candidates without auto-approval |
 | `phpstan:suggest-fixes` | inspect static-analysis output | suggest low-risk fixes |
 | `self-improve:housekeeping` | let Housekeeping maintain itself in a bounded way | slower meta-maintenance wave |
+
+## 🌙 Learning sleep cycle
+
+`learnings:consolidate` is the cadence layer, not the Learning policy owner. Configure it with the target repository's current deterministic maintenance command, for example:
+
+```php
+'learnings:consolidate' => [
+    'enabled' => true,
+    'interval_seconds' => 86400,
+    'priority' => 45,
+    'working_directory' => $targetProjectRoot,
+    'command' => [
+        PHP_BINARY,
+        $targetProjectRoot . '/vendor/bin/agent-loop',
+        'learn',
+        'dream',
+        '--write-candidates',
+        '--format=json',
+    ],
+    'timeout_seconds' => 300,
+],
+```
+
+The ownership boundary is deliberate:
+
+```text
+Housekeeping          -> cadence, locking, timeout, reporting
+agent-learning Dream  -> recurring-evidence, promotion, staleness and conflict semantics
+human reviewer        -> approve / reject durable guidance
+consumer owner        -> deterministic enforcement when justified
+```
+
+A scheduled run may correctly produce no candidate at all. Do not add Housekeeping-side finding-count thresholds merely to force activity. The Learning owner decides when evidence is strong enough; Housekeeping only makes sure the maintenance pass actually gets a chance to run.
+
+Keep the task opt-in until the target repository has `voku/agent-loop` / `voku/agent-learning` installed and its Learning root is configured. The scheduled command may create reviewable candidates, but it must never approve, apply, retire, or activate durable guidance on its own.
 
 ## 🌙 Why unattended runs help
 
 | Window | Good fit | Why it helps |
 | --- | --- | --- |
-| Overnight | `todo:refine`, `docs:refresh` | wake up to a cleaner backlog and fresher docs |
+| Overnight | `todo:refine`, `docs:refresh`, `learnings:consolidate` | wake up to a cleaner backlog, fresher docs, and reviewed Learning candidates waiting for human attention |
 | During the day | `commits:learn`, `blindspots:analyze`, `skills:sync` | keep context and guidance current between real work |
 | Weekend | test-focused, audit-style, or larger doc waves | use idle time for repetitive low-risk maintenance |
 
