@@ -12,11 +12,12 @@ use HousekeepingAgentCron\Runtime\TaskResult;
  * Runs the repository's deterministic learning-consolidation step on a schedule.
  *
  * This is the automated "sleep cycle": it executes a configured command that
- * turns recall usage and validated findings into *reviewable candidate
- * proposals* (for example `agent-loop learn guidance-evaluate --write-candidates`).
- * It deliberately never approves, applies, or activates durable guidance — a
- * maintainer still reviews every candidate. The command itself owns that safe
- * posture; this task only schedules it and reports the outcome.
+ * asks the Learning owner to evaluate accumulated findings, recall usage, outcome
+ * history, staleness and conflicts and to write reviewable candidates when
+ * justified (for example `agent-loop learn dream --write-candidates --format=json`).
+ * It deliberately never approves, applies, retires, or activates durable
+ * guidance — a maintainer still reviews every candidate. The command itself owns
+ * the Learning semantics; this task only schedules it and reports the outcome.
  */
 final readonly class LearningsConsolidateTask extends AbstractIntervalTask
 {
