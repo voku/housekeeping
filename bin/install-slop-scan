@@ -3,8 +3,8 @@
 
 declare(strict_types=1);
 
-$version = '0.1.2';
-$expectedSha256 = '57e8ef2fcd659b76a28a1280b997de99cff79b1de48c4647b7dcd815ea24a69a';
+$version = '0.1.15';
+$expectedSha256 = 'efef5de6e80687efb045164799c7ff4000651090d8ae18c11feb90c416e9fefb';
 $sourceUrl = 'https://github.com/voku/slop-scan/releases/download/' . $version . '/slop-scan.phar';
 $targetDir = dirname(__DIR__) . '/tools';
 $targetFile = $targetDir . '/slop-scan.phar';
