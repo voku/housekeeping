@@ -75,7 +75,11 @@ jobs:
               ))
             ' "${evidence}/state.json" > /dev/null
 
-            if [[ -n "$(git -C "${checkout}" status --porcelain)" ]]; then
+            if ! checkout_status="$(git -C "${checkout}" status --porcelain)"; then
+              echo "::error::Unable to read checkout status: voku/${repo}"
+              exit 1
+            fi
+            if [[ -n "${checkout_status}" ]]; then
               echo "::error::Housekeeping mutated the target checkout: voku/${repo}"
               exit 1
             fi
