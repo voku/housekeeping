@@ -1,0 +1,130 @@
+name: Agent stack housekeeping proof
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/agent-stack-housekeeping.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-stack-housekeeping-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: Run real project discovery across public agent-* repos
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+      - name: Install Housekeeping runtime
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress
+      - name: Discover all active public agent-* repositories
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/agent-stack
+          gh api --paginate 'users/voku/repos?type=owner&per_page=100' > build/agent-stack/repository-pages.jsonl
+          jq -s '
+            [ .[][] | select(.archived == false and .private == false)
+              | .name
+              | select(test("^agent-[a-z0-9][a-z0-9-]*$")) ]
+            | sort | unique
+          ' build/agent-stack/repository-pages.jsonl > build/agent-stack/repositories.json
+          jq -e 'length > 0' build/agent-stack/repositories.json > /dev/null
+          echo "Discovered $(jq 'length' build/agent-stack/repositories.json) active public agent-* repositories."
+      - name: Execute existing Housekeeping project discovery and collect PR inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > build/agent-stack/results.jsonl
+          while IFS= read -r repo; do
+            echo "::group::voku/${repo}"
+            checkout="${RUNNER_TEMP}/housekeeping-agent-${repo}"
+            evidence="build/agent-stack/${repo}"
+            mkdir -p "${evidence}"
+            git clone --quiet --depth=5 --filter=blob:none "https://github.com/voku/${repo}.git" "${checkout}"
+            head_sha="$(git -C "${checkout}" rev-parse HEAD)"
+
+            export HOUSEKEEPING_CONFIG="${GITHUB_WORKSPACE}/config/voku-agent-project.php"
+            export HOUSEKEEPING_AGENT_PROJECT="${repo}"
+            export HOUSEKEEPING_AGENT_PROJECT_ROOT="${checkout}"
+
+            php bin/agent-cron housekeeping:doctor --json > "${evidence}/doctor.json"
+            jq -e '.ok == true' "${evidence}/doctor.json" > /dev/null
+            php bin/agent-cron housekeeping:run --task=project:discover -v > "${evidence}/run.log"
+            php bin/agent-cron housekeeping:state > "${evidence}/state.json"
+
+            jq -e --arg root "${checkout}" '
+              .metadata.project.repository_root == $root
+              and .runs[-1].status == "completed"
+              and (.runs[-1].results | any(
+                .task == "project:discover" and .successful == true and .skipped == false
+              ))
+            ' "${evidence}/state.json" > /dev/null
+
+            if ! checkout_status="$(git -C "${checkout}" status --porcelain)"; then
+              echo "::error::Unable to read checkout status: voku/${repo}"
+              exit 1
+            fi
+            if [[ -n "${checkout_status}" ]]; then
+              echo "::error::Housekeeping mutated the target checkout: voku/${repo}"
+              exit 1
+            fi
+
+            gh api --paginate "repos/voku/${repo}/pulls?state=open&per_page=100" |
+              jq -s 'map(length) | add // 0' > "${evidence}/open-pr-count.json"
+            open_prs="$(jq -r '.' "${evidence}/open-pr-count.json")"
+
+            jq -cn --arg repo "${repo}" --arg sha "${head_sha}" --argjson open_prs "${open_prs}" \
+              --slurpfile state "${evidence}/state.json" '{
+                repository: ("voku/" + $repo),
+                head_sha: $sha,
+                open_prs: $open_prs,
+                task: "project:discover",
+                status: $state[0].runs[-1].status,
+                documentation_files: ($state[0].metadata.project.documentation_files | length),
+                todo_files: ($state[0].metadata.project.todo_files | length),
+                key_files: ($state[0].metadata.project.key_files | length),
+                source_mutated: false
+              }' >> build/agent-stack/results.jsonl
+            echo "voku/${repo}: discovery completed, open PRs: ${open_prs}, checkout clean"
+            echo "::endgroup::"
+          done < <(jq -r '.[]' build/agent-stack/repositories.json)
+
+          jq -s '{schema_version: "1.0", repositories: ., total_repositories: length, total_open_prs: (map(.open_prs) | add // 0)}' \
+            build/agent-stack/results.jsonl > build/agent-stack/report.json
+
+          {
+            echo '## Real agent-* housekeeping'
+            echo
+            echo 'Scope: active public voku/agent-* repositories. Existing project:discover task, no coding-agent provider, read-only target checkouts.'
+            echo
+            echo '| Repository | HEAD | Open PRs | Docs | TODOs | Outcome |'
+            echo '| --- | --- | ---: | ---: | ---: | --- |'
+            jq -r '.repositories[] | "| \(.repository) | \(.head_sha[0:12]) | \(.open_prs) | \(.documentation_files) | \(.todo_files) | \(.status) |"' \
+              build/agent-stack/report.json
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          jq -e '.total_repositories > 0 and all(.repositories[]; .status == "completed" and .source_mutated == false)' \
+            build/agent-stack/report.json > /dev/null
+      - name: Upload immutable housekeeping receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-stack-housekeeping-${{ github.sha }}
+          path: build/agent-stack/
+          if-no-files-found: warn
+          retention-days: 14
