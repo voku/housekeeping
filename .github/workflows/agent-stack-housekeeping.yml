@@ -110,7 +110,7 @@ jobs:
             echo
             echo '| Repository | HEAD | Open PRs | Docs | TODOs | Outcome |'
             echo '| --- | --- | ---: | ---: | ---: | --- |'
-            jq -r '.repositories[] | "| \\(.repository) | \\(.head_sha[0:12]) | \\(.open_prs) | \\(.documentation_files) | \\(.todo_files) | \\(.status) |"' \
+            jq -r '.repositories[] | "| \(.repository) | \(.head_sha[0:12]) | \(.open_prs) | \(.documentation_files) | \(.todo_files) | \(.status) |"' \
               build/agent-stack/report.json
           } >> "${GITHUB_STEP_SUMMARY}"
 
